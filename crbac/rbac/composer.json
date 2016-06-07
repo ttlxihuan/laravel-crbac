@@ -1,0 +1,28 @@
+{
+    "name": "xihuan/laravel-crbac",
+    "type": "library",
+    "description": "基于 laravel5.1 + 权限管理，一键安装",
+    "keywords": ["rbac", "laravel"],
+    "homepage": "https://github.com/Seldaek/monolog",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "奚欢",
+            "email": "ttlxihuan@163.com",
+            "homepage": "",
+            "role": "PHP开发"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0",
+        "laravel/framework": "5.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "XiHuan\\Crbac": "src"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    }
+}
