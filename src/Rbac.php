@@ -68,7 +68,7 @@ class Rbac {
      * 返回值：array
      */
     public function menus() {
-        if ($this->menus) {
+        if (is_array($this->menus)) {
             return $this->menus;
         }
         $menus = Menu::menus($this->admin); //取出用户所有菜单

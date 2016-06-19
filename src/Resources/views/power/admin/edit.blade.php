@@ -38,7 +38,7 @@
 <div class="field-group clear">
     <label class="field-label"><span class="redD">*</span>所在菜单组 :</label>
     <div class="field-value">
-        <input type="text" name="menu_group_id" class="width100" id="single-power_group_menu-id" placeholder="所在权限组ID" value="{{$item?$item->power_menu_group_id:''}}" required="true" number="true" readonly="readonly"/>
+        <input type="text" name="power_menu_group_id" class="width100" id="single-power_group_menu-id" placeholder="所在权限组ID" value="{{$item?$item->power_menu_group_id:''}}" required="true" number="true" readonly="readonly"/>
         <input type="text" class="width200" placeholder="所在权限组名" id="single-power_group_menu-name" value="{{$item?$item->menuGroup->name:''}}" disabled="disabled"/>
         <input type="button" onclick="open_window('{{route('power.group.menu.select','single')}}');" value="选择组"/>
     </div>

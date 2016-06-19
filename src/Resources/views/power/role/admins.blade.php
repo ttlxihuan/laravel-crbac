@@ -4,9 +4,9 @@
 <h4 style="text-align: center;">角色：<span style="font-size: 14px;">{{$role->name}}</span></h4>
 @section('nimble')
 @if(Route::input('bind_style')==='bind')
-<a href="../unbind/{{$role->getKey()}}.html">新增管理员</a>
+@if(isControllerPower('addAdmin'))<a href="../unbind/{{$role->getKey()}}.html">新增管理员</a>@endif
 @else
-<a href="../bind/{{$role->getKey()}}.html">移除管理员</a>
+@if(isControllerPower('removeAdmin'))<a href="../bind/{{$role->getKey()}}.html">移除管理员</a>@endif
 @endif
 @stop
 <form>

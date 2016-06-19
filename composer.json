@@ -3,7 +3,7 @@
     "type": "library",
     "description": "基于 laravel5.1 + 权限管理，一键安装",
     "keywords": ["rbac", "laravel"],
-    "homepage": "https://github.com/Seldaek/monolog",
+    "homepage": "https://github.com/ttlxihuan/laravel/crbac/rbac",
     "license": "MIT",
     "authors": [
         {
@@ -16,6 +16,11 @@
     "require": {
         "php": ">=5.6.0",
         "laravel/framework": "5.*"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "php artisan crbac:table"
+        ]
     },
     "autoload": {
         "psr-4": {

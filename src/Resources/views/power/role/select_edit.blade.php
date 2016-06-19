@@ -16,7 +16,7 @@
     </div>
 </div>
 <script type="text/javascript">
-    function remove_role_item(elem, vid) {
+    function remove_power_role_item(elem, vid) {
         $(elem).parent().remove();
         var ids = $('#many-power_role-id').val().split(/\D+/g),
                 newIds = [];

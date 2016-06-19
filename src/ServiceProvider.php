@@ -181,12 +181,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      */
     protected function addStaticRoute($router) {
         $router->pattern('static_file', '(.*)');
-        $router->get('static/css/{static_file}.css', ['uses' => function($static_file) {//获取样式文件
-                return $this->cacheResponse('css/' . $static_file . '.css', 'text/css');
-            }, 'as' => 'power.static.css']);
-        $router->get('static/js/{static_file}.js', ['uses' => function($static_file) {//获取JS文件
-                return $this->cacheResponse('js/' . $static_file . '.js', 'text/javascript');
-            }, 'as' => 'power.static.js']);
+        foreach (['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png'] as $ext => $type) {
+            $router->get('static/' . $ext . '/{static_file}.' . $ext, ['uses' => function($static_file)use($ext, $type) {//获取样式文件
+                    return $this->cacheResponse($ext . '/' . $static_file . '.' . $ext, $type);
+                }, 'as' => 'power.static.' . $ext]);
+        }
     }
     /**
      * Cache the response 1 year (31536000 sec)
