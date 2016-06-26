@@ -1,2 +1,1 @@
-# laravel
-laravel相关扩展
+基于laravel5权限管理系统
