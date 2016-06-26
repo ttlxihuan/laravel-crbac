@@ -74,7 +74,7 @@ class Admin extends Model implements Authenticatable {
      * 返回值：void
      */
     public function savePassword() {
-        if (isset($this->attributes['password']) && $this->attributes['password'] !== $this->original['password']) {
+        if (isset($this->attributes['password']) && (empty($this->original['password']) || ($this->attributes['password'] !== $this->original['password']))) {
             $this->attributes['password'] = Hash::make($this->attributes['password']);
         }
     }

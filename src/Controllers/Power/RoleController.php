@@ -133,7 +133,7 @@ class RoleController extends Controller {
             if (isPower('all_power_items')) {//是否允许修改所有权限
                 $lists = Item::with('menus')->get()->groupBy('power_item_group_id');
             } else {
-                $lists = Crbac::items(auth()->user(), 'menus')->groupBy('power_item_group_id');
+                $lists = Item::items(auth()->user(), 'menus')->groupBy('power_item_group_id');
             }
             $group_lists = ItemGroup::all();
             $items = $role->items->modelKeys();

@@ -12,6 +12,6 @@
     <li>
         <a href="/"><span class="text">欢迎您 {{Auth::user()->realname}}</span></a>
         <a href="{{route('update_admin_password')}}"><i class="icon-key"></i> 修改密码</a>
-        <a href=""><i class="icon-key"></i> 退出</a>
+        <a href="/auth/logout"><i class="icon-key"></i> 退出</a>
     </li>
 </ul>
