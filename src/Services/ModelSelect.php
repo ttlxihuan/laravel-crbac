@@ -92,7 +92,7 @@ class ModelSelect {
         return $this;
     }
     /*
-     * 作用：添加order规则处理
+     * 作用：设置排序键名
      * 参数：$orderBy string 设置排序键名
      *       $byKey string 设置排序类型键名
      * 返回值：void
@@ -102,28 +102,28 @@ class ModelSelect {
         $this->byKey = $byKey;
     }
     /*
-     * 作用：获取分页串处理
-     * 参数：$descClassName 倒序样式类名
-     *       $ascClassName 正序样式类名
+     * 作用：获取排序串
+     * 参数：$descClassName 到排序样式名
+     *      $ascClassName   正排序样式名
+     *      $defaultClassName 未排序样式名
      * 返回值：Closure
      */
-    public function orderToString($descClassName = 'order-desc', $ascClassName = 'order-asc') {
+    public function orderToString($descClassName = 'order-desc', $ascClassName = 'order-asc', $defaultClassName = 'order-by') {
         $input = $this->input;
         array_forget($input, [$this->orderKey, $this->byKey]);
         $query = http_build_query($input);
-        return function($name, $getUrl = true, $defaultBy = 'desc') use($query, $descClassName, $ascClassName) {
+        return function($name, $getUrl = true, $defaultBy = 'asc') use($query, $descClassName, $ascClassName, $defaultClassName) {
             $by = null;
             if (isset($this->input[$this->orderKey]) && $this->input[$this->orderKey] === $name && isset($this->input[$this->byKey])) {
                 $by = $this->input[$this->byKey];
             }
+            if (!$getUrl) {
+                return is_null($by) ? $defaultClassName : $defaultClassName . ' ' . ${$by . 'ClassName'};
+            }
             if (!in_array($by, ['desc', 'asc'], true)) {
                 $by = $defaultBy;
             }
-            if ($getUrl) {
-                return Request::url() . ($query ? '?' . $query . '&' : '?') . http_build_query([$this->orderKey => $name, $this->byKey => $by == 'asc' ? 'desc' : 'asc']);
-            } else {
-                return $by == 'asc' ? $ascClassName : $descClassName;
-            }
+            return Request::url() . ($query ? '?' . $query . '&' : '?') . http_build_query([$this->orderKey => $name, $this->byKey => $by == 'asc' ? 'desc' : 'asc']);
         };
     }
     /*
