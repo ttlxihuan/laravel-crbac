@@ -18,14 +18,12 @@
 .crumbs>div{margin-right: 20px;}
 h5.widget-title{text-indent: 20px;font-size: 20px;background-color: aquamarine;margin: 0px;padding: 5px 0px;border-top: 2px solid black;}
 /*排序处理*/
-.order-desc,.order-asc{position: relative;cursor: pointer;}
-.order-desc:before,.order-desc:after,.order-asc:before,.order-asc:after{display:inline-block;position: absolute;right: 0px;width: 20px;height: 20px;}
-.order-desc:before,.order-asc:before{content: '∧';top:0px;}
-.order-desc:after,.order-asc:after{content: '∨';bottom: 0px;}
-.order-desc:before{color: #009900;}
-.order-desc:after{color: #9A9A9A;}
-.order-asc:before{color: #9A9A9A;}
-.order-asc:after{color: #009900;}
+.order-by{position: relative;cursor: pointer;}
+.order-by:before,.order-by:after{display:inline-block;position: absolute;right: 0px;width: 20px;height: 20px;color: #9A9A9A;}
+.order-by:before{content: '∧';top:0px;}
+.order-by:after{content: '∨';bottom: 0px;}
+.order-desc:after{color: #009900;}
+.order-asc:before{color: #009900;}
 /*增减选项处理*/
 .item-remove{display: inline-block;position: absolute;top: -10px;right: -10px;text-align: center;z-index: 100;background-color: #FFF;border-radius: 100%;border: 1px blue solid;width: 15px;height: 15px;line-height: 15px;font-style: normal;font-weight: bold;font-size: 12px;cursor: pointer;}
 .item-remove:hover{color: red;border-color: red;}
