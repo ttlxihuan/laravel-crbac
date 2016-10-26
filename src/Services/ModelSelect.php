@@ -170,14 +170,13 @@ class ModelSelect {
     }
     /*
      * 作用：修改数据
-     * 参数：$callback Closure
-     *       $perPage int|null 每页条数
-     *       $perPageColumns array 分页取字段集
+     * 参数：$callback 条件回调处理
+     *      $perPage 分页分页条数
      * 返回值：Illuminate\Pagination\AbstractPaginator
      */
-    public function lists(Closure $callback = null, $perPage = 0, $perPageColumns = array('*')) {
+    public function lists(Closure $callback = null, $perPage = 20) {
         if ($callback) {
-            $callback($this->builder);
+            $callback($this->builder, $this);
         }
         if (is_null($perPage)) {
             return $this->builder->get();
@@ -186,18 +185,29 @@ class ModelSelect {
             $perPage = $this->builder->getModel()->getPerPage();
         }
         if ($this->builder->getQuery()->groups) {
-            $Bindings = $this->builder->getQuery()
-                    ->getConnection()
-                    ->prepareBindings($this->builder->getBindings());
             $BuilderPage = clone $this->builder;
             $BuilderPage->getQuery()->orders = null; //去掉无意义的排序
-            $total = \DB::Connection($this->builder->getModel()->getConnectionName())->select('select count(1) as num from (' . $BuilderPage->select($perPageColumns)->toSql() . ') as t', $Bindings)[0]->num; //取出总记录数
-            $paginator = $this->builder->getQuery()->getConnection()->getPaginator();
-            $page = $paginator->getCurrentPage($total);
-            $results = $this->builder->forPage($page, $perPage)->get($perPageColumns);
-            $lists = $paginator->make($results, $total, $perPage);
+            $total = \DB::Connection($this->builder->getModel()->getConnectionName())
+                            ->selectOne('select count(1) as num from (' . $BuilderPage->toSql() . ') as t', $BuilderPage->getBindings())->num; //取出总记录数
+            //兼容老板框架
+            if (method_exists($this->builder->getQuery()->getConnection(), 'getPaginator')) {
+                $paginator = $this->builder->getQuery()->getConnection()->getPaginator();
+                $page = $paginator->getCurrentPage($total);
+            } else {
+                $page = Paginator::resolveCurrentPage();
+            }
+            $results = $this->builder->forPage($page, $perPage)->get();
+            //兼容老板框架
+            if (isset($paginator)) {
+                $lists = $paginator->make($results, $total, $perPage);
+            } else {
+                $lists = new LengthAwarePaginator($results, $total, $perPage, $page, [
+                    'path' => Paginator::resolveCurrentPath(),
+                    'pageName' => 'page',
+                ]);
+            }
         } else {
-            $lists = $this->builder->paginate($perPage, $perPageColumns);
+            $lists = $this->builder->paginate($perPage);
         }
         return $lists->appends(Request::all());
     }
