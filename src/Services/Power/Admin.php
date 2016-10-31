@@ -35,6 +35,6 @@ class Admin extends Service {
      * 返回值：void
      */
     protected function editAfter($result, BaseService $service) {
-        $this->roleRelateEdit($result, RoleAdmin::class, false);
+        $this->roleRelateEdit($result, RoleAdmin::class, 'admin_id', false);
     }
 }
