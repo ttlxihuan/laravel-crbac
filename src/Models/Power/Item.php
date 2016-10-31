@@ -55,7 +55,7 @@ class Item extends Model {
      * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles() {
-        return $this->belongsToMany(Role::class, 'power_role_item', $this->primaryKey, 'power_role_id');
+        return $this->belongsToMany(Role::class, 'power_role_item', 'power_item_id', 'power_role_id');
     }
     /*
      * 作用：通过权限码获取权限项数据
