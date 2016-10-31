@@ -34,6 +34,6 @@ class Item extends Service {
      * 返回值：void
      */
     protected function editAfter($result, BaseService $service) {
-        $this->roleRelateEdit($result, RoleItem::class);
+        $this->roleRelateEdit($result, RoleItem::class, 'power_item_id');
     }
 }
