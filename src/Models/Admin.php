@@ -66,7 +66,7 @@ class Admin extends Model implements Authenticatable {
      * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles() {
-        return $this->belongsToMany(Role::class, 'power_role_admin', $this->primaryKey, 'power_role_id');
+        return $this->belongsToMany(Role::class, 'power_role_admin', 'admin_id', 'power_role_id');
     }
     /*
      * 作用：设置保存密码
