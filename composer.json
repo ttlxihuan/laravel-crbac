@@ -17,17 +17,17 @@
         "php": ">=5.5.0",
         "laravel/framework": "5.*"
     },
-    "scripts": {
-        "post-install-cmd": [
-            "php artisan crbac:table"
-        ]
-    },
     "autoload": {
         "psr-4": {
             "XiHuan\\Crbac\\": "src/"
         },
         "files": [
             "src/helpers.php"
+        ]
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "php artisan crbac:table"
         ]
     }
 }
