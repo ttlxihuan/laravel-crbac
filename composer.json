@@ -24,7 +24,7 @@
     },
     "autoload": {
         "psr-4": {
-            "XiHuan\\Crbac\\": "src"
+            "XiHuan\\Crbac\\": "src/"
         },
         "files": [
             "src/helpers.php"
