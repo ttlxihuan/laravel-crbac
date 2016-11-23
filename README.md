@@ -23,7 +23,7 @@ git clone https://github.com/ttlxihuan/laravel-crbac
 
 使用composer安装
 ```
-composer require xihuan/laravel-crbac
+composer require xihuan/laravel-crbac dev-master
 ```
 
 
