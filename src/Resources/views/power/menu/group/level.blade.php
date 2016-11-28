@@ -11,13 +11,14 @@
     <input type="button" class=" btn-success ajax-submit-data" value="保存"/>
 </div>
 <script type="text/javascript">
+    var setMenu;
     //添加菜单
     function addMenu(level, elem, parent_id) {
         level++;
         var _$ = $(elem),
                 ids = getData(elem),
                 myWindow = open_window('{{route("power.menu.select","callback")}}');
-        myWindow.addMenu = function (id, name) {
+        setMenu = function (id, name) {
             var exist = false;
             ids = getData(elem);
             $.each(ids, function (k, v) {
@@ -78,7 +79,7 @@
         return _$.data('ids', ids), ids;
     }
     function power_menu_select_callback(id, name, win) {
-        win.addMenu(id, name);
+        setMenu(id, name);
     }
 </script>
 <script type="text/html" id="add-menu-html">
