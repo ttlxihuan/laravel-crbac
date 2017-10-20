@@ -39,7 +39,6 @@ abstract class Controller extends BaseController {
             $crumbs_ids = array_map(function($model) {
                 return $model->getKey();
             }, $crumbs);
-//            dd($crumbs_ids);
             $view->with(compact('menus', 'crumbs', 'crumbs_ids'));
         });
     }
@@ -87,10 +86,10 @@ abstract class Controller extends BaseController {
         }
         $redirect = null;
         if ($result) {
-//            $redirect = Request::get('_referrer') ?: URL::previous();
-//            if (Request::has('_redirect')) {
-//                $redirect = Request::get('_redirect');
-//            }
+            $redirect = Request::get('_referrer') ?: URL::previous();
+            if (Request::has('_redirect')) {
+                $redirect = Request::get('_redirect');
+            }
         }
         return $service->prompt($title . ($result ? '成功' : '失败'), null, $redirect);
     }
