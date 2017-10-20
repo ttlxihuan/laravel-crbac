@@ -6,9 +6,9 @@
         </title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <script type="text/javascript" src="/power/static/js/jquery.min.js"></script>
-        <script type="text/javascript" src="/power/static/js/jquery.validate.js"></script>
-        <link rel="stylesheet" href="/power/static/css/base.css" />
+        <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+        <script type="text/javascript" src="/static/js/jquery.validate.js"></script>
+        <link rel="stylesheet" href="/static/css/base.css" />
         @section('css') @show
     </head>
     <body>
@@ -17,6 +17,6 @@
         @endif
         <!--主内容-->
         @yield('main')
-        <script src="/power/static/js/public.js"></script>
+        <script src="/static/js/public.js"></script>
     </body>
 </html>

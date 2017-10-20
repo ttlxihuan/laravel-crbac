@@ -34,6 +34,7 @@ if (!function_exists('prompt')) {
             return view('prompt', $data);
         }
     }
+
 }
 if (!function_exists('currentRouteUses')) {
     /*
@@ -43,8 +44,9 @@ if (!function_exists('currentRouteUses')) {
      */
     function currentRouteUses() {
         $uses = array_get(app('Illuminate\Routing\Route')->getAction(), 'uses', '');
-        return is_string($uses) ? $uses : '';
+        return is_string($uses) ? str_replace('App\\Http\\Controllers\\', '', $uses) : '';
     }
+
 }
 if (!function_exists('isPower')) {
     /*
@@ -57,6 +59,7 @@ if (!function_exists('isPower')) {
     function isPower($code, $default = false) {
         return Auth::check() ? Crbac::allow($code, $default) : false;
     }
+
 }
 if (!function_exists('isControllerPower')) {
     /*
@@ -76,6 +79,7 @@ if (!function_exists('isControllerPower')) {
         }
         return $controller && $action ? isPower($controller . '@' . $action, $default) : $default;
     }
+
 }
 if (!function_exists('isAction')) {
     /*
@@ -98,6 +102,7 @@ if (!function_exists('isAction')) {
         }
         return $isAction && (empty($method) || array_intersect($route->methods(), (array) $method));
     }
+
 }
 if (!function_exists('auth_model')) {
     /*
@@ -108,6 +113,7 @@ if (!function_exists('auth_model')) {
     function auth_model() {
         return Crbac::authModel();
     }
+
 }
 if (!function_exists('lang')) {
     /*
@@ -120,6 +126,7 @@ if (!function_exists('lang')) {
     function lang($key, array $replace = array(), $locale = null) {
         return app('translator')->get($key, $replace, $locale);
     }
+
 }
 if (!function_exists('validate_url')) {
     /*
@@ -135,4 +142,5 @@ if (!function_exists('validate_url')) {
         }
         return $service->toUrl($model, $field);
     }
+
 }

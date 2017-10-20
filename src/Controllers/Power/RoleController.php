@@ -51,15 +51,7 @@ class RoleController extends Controller {
         ];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
-        list($lists, $toOrder) = $this->listsSelect(Role::class, $where, $order, $default, function($builder) {
-            if (!isPower('all_power_items')) {//是否允许修改所有权限
-                $builder->whereIn('power_role_id', function($query) {
-                    $query->from('power_role_admin')
-                            ->where('admin_id', '=', auth()->user()->getKey())
-                            ->select('power_role_id');
-                });
-            }
-        });
+        list($lists, $toOrder) = $this->listsSelect(Role::class, $where, $order, $default);
         $description = $this->description;
         return view('power.role.lists', compact('lists', 'description', 'toOrder'));
     }

@@ -17,5 +17,6 @@ class TablePowerRoute extends Migration {
         $table->increments('power_route_id')->comment('主键');
         $table->string('uses', 100)->notnull()->comment('控制器@方法');
         $table->string('url', 100)->notnull()->comment('路由地址串');
+        $table->enum('is_usable', ['yes', 'no'])->notnull()->default('yes')->comment('是否有效可用');
     }
 }

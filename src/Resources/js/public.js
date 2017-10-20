@@ -99,7 +99,7 @@
         showLoad: function () {
             this.showMask();
             if (!load) {
-                load = $('<img class="public-load" src="/img/load.gif"/>');
+                load = $('<img class="public-load" src="/static/img/load.gif"/>');
                 $('body').append(load);
             } else {
                 load.show();
@@ -191,12 +191,8 @@
             if (!data.validate().form()) {
                 return false;
             }
-            _data = data.serialize();
-        } else {
-            data.find(':enabled').each(function () {
-                this.name && (_data[this.name] = $.trim(this.value));
-            });
         }
+        _data = data.serializeArray();
         timeout = timeout === undefined || !$.isNumeric(timeout) ? 10000 : parseInt(timeout);
         dataType = dataType === undefined ? 'json' : dataType;
         return $._ajax({

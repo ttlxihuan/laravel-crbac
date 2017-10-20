@@ -19,6 +19,15 @@
                 @endforeach
             </select>
         </li>
+        <li>
+            可用 :
+            <select  name="is_usable" >
+                <option value="" >请选择</option>
+                @foreach(['yes'=>'是','no'=>'否'] as $key=>$val)
+                <option value="{{$key}}"<?php if (Input::get('is_usable') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
+                @endforeach
+            </select>
+        </li>
         <li><input type="submit" class=" btn-info" value="查询"/></li>
     </ul>
 </form>
@@ -29,6 +38,7 @@
         <tr>
             <th>{{$description}}地址</th>
             <th width="35%">控制器@方法</th>
+            <th width="80">路由可用</th>
             <th width="80">权限状态</th>
             <th width="150">操作</th>
         </tr>
@@ -38,6 +48,7 @@
         <tr>
             <td>{{$item->url}}</td>
             <td>{{$item->uses}}</td>
+            <td>{{$item->is_usable}}</td>
             <td>
                 @if($item->item)
                 {{$item->item->statusName()}}

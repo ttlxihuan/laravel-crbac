@@ -23,7 +23,7 @@ class Role extends Service {
         $removeIds = array_diff($itemIds, $items); //不需要的
         $insertIds = array_diff($items, $itemIds); //未添加的
         if (!isPower('all_power_items')) {//是否允许修改所有权限
-            $allowIds = Crbac::items(auth()->user())->modelKeys();
+            $allowIds = Item::items(auth()->user())->modelKeys();
             $removeIds = array_intersect($removeIds, $allowIds);
             $insertIds = array_intersect($insertIds, $allowIds);
         }

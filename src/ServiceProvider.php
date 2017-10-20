@@ -63,7 +63,14 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $router->filter('power_code', function($route, $request) {
             if ($request->ajax() && $request->header('GET-ROUTER-USERS') === 'true') {
                 $uses = currentRouteUses();
-                return prompt(compact('uses'));
+                $item = $uses ? Models\Power\Item::findCode($uses) : null;
+                if ($item) {
+                    $data = array_only($item->toArray(), ['code', 'status', 'power_item_group_id']);
+                    $data['power_item_group_name'] = array_get($item->group->toArray(), 'name');
+                    $data['roles'] = array_pluck($item->roles, 'name', 'power_role_id') ?: [];
+                    $item = $data;
+                }
+                return prompt(compact('uses', 'item'));
             }
         });
         $router->filter('power_check', function() {
@@ -97,15 +104,15 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
             $this->addPowerItemGroupRoute($router);
             //管理员相关
             $this->addPowerAdminRoute($router);
-            //静态文件
-            $this->addStaticRoute($router);
         });
+        //静态文件
+        $this->addStaticRoute($router);
         //判断是否存在
         $router->get('usable/{model}/{field}.html', ['uses' => function(\Illuminate\Http\Request $request, $model, $field) {
                 $service = new Services\ExistService();
                 $val = $request->input($field);
                 return $val && $service->check($model, $field, $val, $request->input('id')) ? 'false' : 'true';
-            }, 'as' => 'exist_validate'])->where(['model' => '((\\w+)(/\\w+)?)', 'field' => '\\w+']);
+            }, 'as' => 'exist_validate'])->where(['model' => '((\\w+)(/\\w+)*)', 'field' => '\\w+']);
     }
     /*
      * 作用：添加权限项路由
@@ -181,11 +188,15 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      */
     protected function addStaticRoute($router) {
         $router->pattern('static_file', '(.*)');
-        foreach (['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png'] as $ext => $type) {
-            $router->get('static/' . $ext . '/{static_file}.' . $ext, ['uses' => function($static_file)use($ext, $type) {//获取样式文件
+        foreach (['css' => 'text/css', 'js' => 'text/javascript'] as $ext => $type) {
+            $router->get('static/' . $ext . '/{static_file}.' . $ext, ['uses' => function($static_file)use($ext, $type) {//获取文件
                     return $this->cacheResponse($ext . '/' . $static_file . '.' . $ext, $type);
                 }, 'as' => 'power.static.' . $ext]);
         }
+        $router->get('static/img/{static_file}.{file_ext}', ['uses' => function($static_file, $file_ext) {//获取文件
+                        return $this->cacheResponse('img/' . $static_file . '.' . $file_ext, 'image/' . $file_ext);
+                    }, 'as' => 'power.static.img'])
+                ->where('file_ext', 'png|gif');
     }
     /**
      * Cache the response 1 year (31536000 sec)

@@ -16,9 +16,8 @@ class Admin extends Model implements Authenticatable {
 
     use \Illuminate\Auth\Authenticatable,
         StatusTrait;
-
     public static $_validator_rules = [//验证规则
-        'realname' => 'required|between:2,30|unique:admin', // varchar(32) NOT NULL COMMENT '真实姓名',
+        'realname' => 'required|between:2,30', // varchar(32) NOT NULL COMMENT '真实姓名',
         'username' => 'required|between:3,30|unique:admin', // varchar(32) NOT NULL COMMENT '登录用户名',
         'password' => 'required|between:6,20', // varchar(64) NOT NULL COMMENT '登录密码',
         'email' => 'email|between:6,55', // varchar(64) NOT NULL COMMENT '邮箱名',
@@ -33,6 +32,7 @@ class Admin extends Model implements Authenticatable {
         'power_menu_group_id' => '菜单组', // int(11) NOT NULL DEFAULT '0' COMMENT '菜单组ID',
         'status' => '用户状态', // enum('disable','enable') NOT NULL DEFAULT 'enable' COMMENT '启用或禁用，enable为启用',
     ];
+    protected static $validates = ['username']; //允许验证可用字段
     protected $table = 'admin'; //表名
     protected $primaryKey = 'admin_id'; //主键名
 
@@ -52,6 +52,7 @@ class Admin extends Model implements Authenticatable {
         //没有
         return route('logout');
     }
+
     /*
      * 作用：关联菜单组
      * 参数：无
@@ -60,6 +61,7 @@ class Admin extends Model implements Authenticatable {
     public function menuGroup() {
         return $this->hasOne(MenuGroup::class, 'power_menu_group_id', 'power_menu_group_id');
     }
+
     /*
      * 作用：关联角色
      * 参数：无
@@ -68,6 +70,7 @@ class Admin extends Model implements Authenticatable {
     public function roles() {
         return $this->belongsToMany(Role::class, 'power_role_admin', 'admin_id', 'power_role_id');
     }
+
     /*
      * 作用：设置保存密码
      * 参数：无
@@ -78,4 +81,5 @@ class Admin extends Model implements Authenticatable {
             $this->attributes['password'] = Hash::make($this->attributes['password']);
         }
     }
+
 }

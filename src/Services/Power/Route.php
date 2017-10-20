@@ -22,9 +22,11 @@ class Route extends Service {
         foreach (Router::getRoutes()->getIterator() as $route) {
             $uses = array_get($route->getAction(), 'uses');
             if ($uses && is_string($uses)) {
+                $action = explode('@', $uses);
                 $inserts[] = [
                     'uses' => str_replace('App\\Http\\Controllers\\', '', $uses),
                     'url' => $route->uri(),
+                    'is_usable' => class_exists($action[0]) && method_exists($action[0], $action[1]) ? 'yes' : 'no',
                 ];
             }
         }

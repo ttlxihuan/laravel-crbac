@@ -27,7 +27,7 @@ class ExistService extends Service {
             $model = new $modelClass;
             $builder = $model->where($field, '=', $val);
             if ($id) {
-                $builder->where($model->getKeyName(), '=', $id);
+                $builder->where($model->getKeyName(), '!=', $id);
             }
             return (bool) $builder->count();
         }
@@ -45,6 +45,7 @@ class ExistService extends Service {
             'crbac/menu' => \XiHuan\Crbac\Models\Power\Menu::class,
             'crbac/menu/group' => \XiHuan\Crbac\Models\Power\MenuGroup::class,
             'crbac/role' => \XiHuan\Crbac\Models\Power\Role::class,
+            'crbac/admin' => \XiHuan\Crbac\Models\Admin::class,
         ];
         if ($name) {
             return array_search($model, $models);

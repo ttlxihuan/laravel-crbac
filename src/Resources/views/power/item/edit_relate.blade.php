@@ -44,13 +44,29 @@ if ($item && !$item instanceof \XiHuan\Crbac\Models\Power\Item) {
             },
             success: function (json) {
                 if (json.status === 'success') {
-                    typeof callback==='function'&&callback();
                     $('#power-code').val(json.message.uses);
+                    if(json.message.item){
+                        $('#status-' + json.message.item.status).attr('checked', true);
+                        $('#single-power_group_item-id').val(json.message.item.power_item_group_id);
+                        $('#single-power_group_item-name').val(json.message.item.power_item_group_name);
+                        var role = [], role_name = '';
+                        for(var key in json.message.item.roles){
+                            role.push(key);
+                            role_name += '<span class="add-item">' + json.message.item.roles[key] + '<i class="item-remove" onclick="remove_power_role_item(this,' + key + ')">X</i></span>';
+                        }
+                        $('#many-power_role-id').val(role.join(','));
+                        $('#many-power_role-name').html(role_name);
+                    }
+                    typeof callback==='function' && callback(json.message);
                     return false;
                 }
             }, error: function () {
                 alert('请求地址404！');
                 $('#power-code').val('');
+                $('#single-power_group_item-id').val('');
+                $('#single-power_group_item-name').val('');
+                $('#many-power_role-id').val('');
+                $('#many-power_role-name').html('');
                 return false;
             }
         });

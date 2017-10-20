@@ -4,7 +4,7 @@
 <div class="field-group clear">
     <label class="field-label"><span class="redD">*</span>真实姓名 :</label>
     <div class="field-value">
-        <input type="text" name="realname" placeholder="真实姓名" value="{{$item?$item->realname:''}}" required="true" minlength="2" maxlength="30" remote="{{validate_url($item?$item:$modelClass,'realname')}}"/>
+        <input type="text" name="realname" placeholder="真实姓名" value="{{$item?$item->realname:''}}" required="true" minlength="2" maxlength="30"/>
     </div>
 </div>
 <div class="field-group clear">

@@ -10,7 +10,7 @@
     <div class="field-value" id="many-power_role-name">
         @if($item)
         @foreach($item->roles as $role)
-        <span class="add-item">{{$role->name}}<i class="item-remove" onclick="remove_role_item(this,{{$role->getKey()}})">X</i></span>
+        <span class="add-item">{{$role->name}}<i class="item-remove" onclick="remove_power_role_item(this,{{$role->getKey()}})">X</i></span>
         @endforeach
         @endif
     </div>
