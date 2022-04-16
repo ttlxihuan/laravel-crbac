@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'accepted'             => ':attribute 必须被接受.',
+    'accepted'             => ':attribute 必须接受.',
     'active_url'           => ':attribute 不是一个有效的网址.',
     'after'                => ':attribute 日期必须在 :date 之后.',
     'alpha'                => ':attribute 仅只能包含字母.',

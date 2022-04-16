@@ -53,8 +53,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         if (!$this->hasPowerAuthGuard()) {
             return;
         }
-        // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
-        view()->addLocation(realpath(__DIR__ . '/../views'));
         // 添加特定路由配置
         $router = $this->app['router'];
         //通用公用路由
@@ -69,6 +67,8 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 ->where('ctr', '(.*)');
         //路由匹配处理，主要针对其它路由进行权限处理
         $router->matched(function () {
+            // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
+            view()->addLocation(realpath(__DIR__ . '/../views'));
             $route = request()->route();
             $action = $route->getAction();
             if (empty($action['middleware'])) {
@@ -260,7 +260,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $this->app->singleton('crbac.seeder', function () {
             return new CrbacTableSeederCommand();
         });
-        $this->commands('crbac.table', 'crbac.seeder');
+        $this->app->singleton('crbac.lang', function () {
+            return new Console\CrbacCopyLangCommand();
+        });
+        $this->commands('crbac.table', 'crbac.seeder', 'crbac.lang');
     }
 
 }
