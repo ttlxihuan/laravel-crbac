@@ -26,6 +26,21 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $this->app['events']->listen('auth.logout', function () {
             Crbac::setAdmin();
         });
+        // 如果没有绑定登录则自动追加
+        $this->app->booted(function () {
+            // 添加特定路由配置
+            $this->app['router']->group([
+                'namespace' => 'Laravel\Crbac\Controllers\Power',
+                'prefix' => 'crbac/',
+                    ], function ($router) {
+                        if (!$router->has('logout')) {
+                            $router->get('logout', ['uses' => 'AdminController@logout', 'as' => 'logout', 'middleware' => $this->getAuthMiddleware()]);
+                        }
+                        if (!$router->has('login')) {
+                            $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
+                        }
+                    });
+        });
         AliasLoader::getInstance(['Crbac' => Facade::class]);
         $this->registerCommands();
     }
@@ -38,6 +53,8 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         if (!$this->hasPowerAuthGuard()) {
             return;
         }
+        // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
+        view()->addLocation(realpath(__DIR__ . '/../views'));
         // 添加特定路由配置
         $router = $this->app['router'];
         //通用公用路由
@@ -46,8 +63,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                     'prefix' => 'crbac/',
                     'as' => 'mvc-crbac',
                     'uses' => function () {
-                        // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
-                        view()->addLocation(realpath(__DIR__ . '/../views'));
                         return $this->response();
                     }])
                 ->where('type', 'power|static|usable')
@@ -60,10 +75,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 $action['middleware'] = [];
             }
             if (isset($action['as']) && $action['as'] == 'mvc-crbac' && $route->parameter('type') == 'power') {
-                array_push($action['middleware'], 'auth');
-                if (version_compare(app()->version(), '5.2.0', '>=')) {
-                    array_push($action['middleware'], 'web');
-                }
+                $action['middleware'] = $this->getAuthMiddleware();
             }
             // 有授权则追加权限中间件
             foreach ($action['middleware'] as $middleware) {
@@ -74,6 +86,17 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 }
             }
         });
+    }
+
+    /**
+     * 获取中间件
+     */
+    protected function getAuthMiddleware($auth = 'auth') {
+        $middleware = [$auth];
+        if (version_compare(app()->version(), '5.2.0', '>=')) {
+            array_unshift($middleware, 'web');
+        }
+        return $middleware;
     }
 
     /**

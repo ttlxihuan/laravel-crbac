@@ -44,7 +44,7 @@ if (!function_exists('currentRouteUses')) {
      * @return string
      */
     function currentRouteUses() {
-        $uses = array_get(app('Illuminate\Routing\Route')->getAction(), 'uses', '');
+        $uses = app('Illuminate\Routing\Route')->getAction()['uses'] ?? '';
         return is_string($uses) ? $uses : '';
     }
 
@@ -76,7 +76,7 @@ if (!function_exists('isControllerPower')) {
             $controller = explode('@', currentRouteUses())[0];
         }
         if (empty($action)) {
-            $action = array_get(explode('@', currentRouteUses()), 1);
+            $action = explode('@', currentRouteUses())['uses'] ?? '';
         }
         return $controller && $action ? isPower($controller . '@' . $action, $default) : $default;
     }
@@ -91,7 +91,7 @@ if (!function_exists('isAction')) {
      */
     function isAction($action) {
         $route = Route::current();
-        $uses = array_get($route->getAction(), 'uses', '');
+        $uses = $route->getAction()['uses'] ?? '';
         if (empty($uses)) {
             return false;
         }
@@ -133,27 +133,6 @@ if (!function_exists('validate_url')) {
             $service = new Laravel\Crbac\Services\ExistService();
         }
         return $service->toUrl($model, $field);
-    }
-
-}
-
-if (!function_exists('request')) {
-
-    /**
-     * 获取请求体，兼容底版本
-     * @param string $key
-     * @param mixed $default
-     * @return mixed
-     */
-    function request($key = null, $default = null) {
-        if (is_null($key)) {
-            return app('request');
-        }
-        if (is_array($key)) {
-            return app('request')->only($key);
-        }
-        $value = app('request')->__get($key);
-        return is_null($value) ? $default : $value;
     }
 
 }
@@ -234,6 +213,115 @@ if (!function_exists('auth_model')) {
             return get_class($user);
         }
         return Laravel\Crbac\Models\Power\Admin::class;
+    }
+
+}
+
+//####################### 以下是兼容不同版本 #######################
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+
+if (!function_exists('request')) {
+
+    /**
+     * 获取请求体，兼容底版本
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    function request($key = null, $default = null) {
+        if (is_null($key)) {
+            return app('request');
+        }
+        if (is_array($key)) {
+            return app('request')->only($key);
+        }
+        $value = app('request')->__get($key);
+        return is_null($value) ? $default : $value;
+    }
+
+}
+if (!function_exists('array_get')) {
+
+    /**
+     * 提取数据
+     * @param \ArrayAccess|array $array
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    function array_get($array, $key, $default = null) {
+        return Arr::get($array, $key, $default);
+    }
+
+}
+if (!function_exists('array_set')) {
+
+
+    /**
+     * 设置数据
+     * @param \ArrayAccess|array $array
+     * @param string|null $key
+     * @param mixed $value
+     * @return array
+     */
+    function array_set(&$array, $key, $value) {
+        return Arr::set($array, $key, $value);
+    }
+
+}
+if (!function_exists('array_only')) {
+
+    /**
+     * 提取指定键名新数组
+     * @param array $array
+     * @param array|string $keys
+     * @return array
+     */
+    function array_only($array, $keys) {
+        return Arr::only($array, $keys);
+    }
+
+}
+
+
+if (!function_exists('array_except')) {
+
+    /**
+     * 提取指定除外键名新数组
+     * @param array $array
+     * @param array|string $keys
+     * @return array
+     */
+    function array_except($array, $keys) {
+        return Arr::except($array, $keys);
+    }
+
+}
+
+if (!function_exists('array_forget')) {
+
+    /**
+     * 删除数组中指定键元素
+     * @param array $array
+     * @param array|string $keys
+     * @return array
+     */
+    function array_forget(&$array, $keys) {
+        return Arr::forget($array, $keys);
+    }
+
+}
+
+if (!function_exists('studly_case')) {
+
+    /**
+     * 重组字符串分隔符并转换大小写大写再合并
+     * @param string $value
+     * @return v
+     */
+    function studly_case($value) {
+        return Str::studly($value);
     }
 
 }

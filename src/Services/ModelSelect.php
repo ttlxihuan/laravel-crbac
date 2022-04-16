@@ -8,6 +8,7 @@ namespace Laravel\Crbac\Services;
 
 use Closure,
     Request;
+use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class ModelSelect {
@@ -18,12 +19,12 @@ class ModelSelect {
     protected $orderKey = 'order'; //排序键名
     protected $byKey = 'by'; //排序类型键名
 
-    /*
-     * 作用：初始化
-     * 参数：$model Model|string Model对象或Model类名
-     *      $input array 要输入的参数，默认全部请求参数
-     *      $default array 默认要输入的参数
-     * 返回值：void
+    /**
+     * 初始化
+     * @param Eloquent $model
+     * @param array $input
+     * @param array $default
+     * @throws Exception
      */
     public function __construct($model, array $input = [], array $default = []) {
         if (is_string($model)) {
@@ -36,26 +37,28 @@ class ModelSelect {
         foreach ($default as $key => $val) {
             Request::input($key) !== null || Request::merge([$key => $val]);
         }
-        $this->input = $input? : Request::all();
+        $this->input = $input ?: Request::all();
         $this->builder = call_user_func($this->modelClass . '::query');
     }
-    /*
-     * 作用：调用 Builder 方法
-     * 参数：$method string 方法名
-     *      $parameters array 参数集
-     * 返回值：$this
+
+    /**
+     * 调用 Builder 方法
+     * @param string $method
+     * @param array $parameters
+     * @return $this
      */
     public function __call($method, $parameters) {
         call_user_func_array([$this->builder, $method], $parameters);
         return $this;
     }
-    /*
-     * 作用：添加where规则处理
-     * 参数：$where array 规则数组
-     * 返回值：$this
+
+    /**
+     * 添加where规则处理
+     * @param array $where
+     * @return $this
      */
     public function where(array $where) {
-        return $this->rule($where, function($field, $operator, $val) {
+        return $this->rule($where, function ($field, $operator, $val) {
                     if ($operator == 'not in') {//in查询处理
                         $this->builder->whereNotIn($field, $val);
                     } elseif ($operator == 'in') {//in查询处理
@@ -64,20 +67,22 @@ class ModelSelect {
                     $this->builder->where($field, $operator, $val);
                 });
     }
-    /*
-     * 作用：添加having规则处理
-     * 参数：$having array 规则数组
-     * 返回值：$this
+
+    /**
+     * 添加having规则处理
+     * @param array $having
+     * @return $this
      */
     public function having(array $having) {
-        return $this->rule($having, function($field, $operator, $val) {
+        return $this->rule($having, function ($field, $operator, $val) {
                     $this->builder->having($field, $operator, $val);
                 });
     }
-    /*
-     * 作用：添加order规则处理
-     * 参数：$orderBy array 规则数组
-     * 返回值：$this
+
+    /**
+     * 添加order规则处理
+     * @param array $orderBy
+     * @return $this
      */
     public function order(array $orderBy) {
         $name = array_get($this->input, $this->orderKey);
@@ -91,28 +96,29 @@ class ModelSelect {
         }
         return $this;
     }
-    /*
-     * 作用：设置排序键名
-     * 参数：$orderBy string 设置排序键名
-     *       $byKey string 设置排序类型键名
-     * 返回值：void
+
+    /**
+     * 设置排序键名
+     * @param string $orderKey
+     * @param string $byKey
      */
-    public function setOrderKey($orderKey = 'order', $byKey = 'by') {
+    public function setOrderKey(string $orderKey = 'order', string $byKey = 'by') {
         $this->orderKey = $orderKey;
         $this->byKey = $byKey;
     }
-    /*
-     * 作用：获取排序串
-     * 参数：$descClassName 到排序样式名
-     *      $ascClassName   正排序样式名
-     *      $defaultClassName 未排序样式名
-     * 返回值：Closure
+
+    /**
+     * 获取排序串
+     * @param string $descClassName
+     * @param string $ascClassName
+     * @param string $defaultClassName
+     * @return Closure
      */
     public function orderToString($descClassName = 'order-desc', $ascClassName = 'order-asc', $defaultClassName = 'order-by') {
         $input = $this->input;
         array_forget($input, [$this->orderKey, $this->byKey]);
         $query = http_build_query($input);
-        return function($name, $getUrl = true, $defaultBy = 'asc') use($query, $descClassName, $ascClassName, $defaultClassName) {
+        return function ($name, $getUrl = true, $defaultBy = 'asc') use ($query, $descClassName, $ascClassName, $defaultClassName) {
             $by = null;
             if (isset($this->input[$this->orderKey]) && $this->input[$this->orderKey] === $name && isset($this->input[$this->byKey])) {
                 $by = $this->input[$this->byKey];
@@ -126,11 +132,12 @@ class ModelSelect {
             return Request::url() . ($query ? '?' . $query . '&' : '?') . http_build_query([$this->orderKey => $name, $this->byKey => $by == 'asc' ? 'desc' : 'asc']);
         };
     }
-    /*
-     * 作用：规则处理
-     * 参数：$rules array 规则
-     *      $callback Closure
-     * 返回值：$this
+
+    /**
+     * 规则处理
+     * @param array $rules
+     * @param Closure $callback
+     * @return $this
      */
     protected function rule(array $rules, Closure $callback) {
         foreach ($rules as $field => $rule) {
@@ -168,11 +175,12 @@ class ModelSelect {
         }
         return $this;
     }
-    /*
-     * 作用：修改数据
-     * 参数：$callback 条件回调处理
-     *      $perPage 分页分页条数
-     * 返回值：Illuminate\Pagination\AbstractPaginator
+
+    /**
+     * 修改数据
+     * @param Closure $callback
+     * @param int $perPage
+     * @return Illuminate\Pagination\AbstractPaginator
      */
     public function lists(Closure $callback = null, $perPage = 20) {
         if ($callback) {
@@ -211,4 +219,5 @@ class ModelSelect {
         }
         return $lists->appends(Request::all());
     }
+
 }

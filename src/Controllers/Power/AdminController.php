@@ -6,7 +6,9 @@
 
 namespace Laravel\Crbac\Controllers\Power;
 
+use Illuminate\Support\Facades\Auth;
 use Laravel\Crbac\Models\Power\Admin;
+use Laravel\Crbac\Services\ModelEdit;
 use Illuminate\Support\Facades\Request;
 use Laravel\Crbac\Controllers\Controller;
 use Laravel\Crbac\Services\Power\Admin as AdminService;
@@ -15,6 +17,38 @@ class AdminController extends Controller {
 
     //备注说明
     protected $description = '管理员';
+
+    /**
+     * 登录
+     * @return mixed
+     */
+    public function login() {
+        if (Request::isMethod('GET')) {
+            return view('power.admin.login');
+        }
+        $service = new ModelEdit();
+        Admin::$_validator_rules['username']= preg_replace('/unique:power_admin[^\|]*/', '', Admin::$_validator_rules['username']);
+        if ($input = $service->validation(new Admin(), Request::all(), ['username', 'password'])) {
+            if (Auth::attempt($input)) {
+                if (Auth::user()->status !== 'enable') {
+                    Auth::logout();
+                    return prompt('账户异常', 'error');
+                }
+                return prompt('登录成功', 'success', '/', 0);
+            }
+            return prompt('账号或密码错误', 'error');
+        }
+        return $service->prompt();
+    }
+
+    /**
+     * 退出登录
+     * @return mixed
+     */
+    public function logout() {
+        Auth::logout();
+        return prompt('退出成功', 'success', route('login'), 0);
+    }
 
     /**
      * 编辑管理员信息
@@ -55,7 +89,7 @@ class AdminController extends Controller {
         ];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
-        list($lists, $toOrder) = $this->listsSelect(auth_model(), $where, $order, $default, function($builder) {
+        list($lists, $toOrder) = $this->listsSelect(auth_model(), $where, $order, $default, function ($builder) {
             $builder->with('menuGroup');
         });
         $description = $this->description;
