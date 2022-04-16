@@ -20,20 +20,9 @@ Installation
 git clone https://github.com/ttlxihuan/laravel-crbac
 ```
 
-
 使用composer安装
 ```
 composer require ttlphp/laravel-crbac dev-master
-```
-
-
-Configuration
--------------
-需要在laravel5中启用应用，需要作几个配置修改。
-
-打开 `config/app.php` 添加应用服务到容器:
-```php
-Laravel\Crbac\ServiceProvider::class,
 ```
 
 当使用手动安装时需要做以下几个修改
@@ -48,6 +37,23 @@ Laravel\Crbac\ServiceProvider::class,
 $vendorDir . '/laravel-crbac/src/helpers.php',
 ```
 
+Configuration
+-------------
+需要在laravel5中启用应用，需要作几个配置修改。
+
+打开 `config/app.php` 添加应用服务到容器:
+```php
+Laravel\Crbac\ServiceProvider::class,
+```
+打开 `config/auth.php` 添加授权模型:
+```php
+'model' => Laravel\Crbac\Models\Power\Admin::class,
+```
+配置数据，运行安装命令
+```cmd
+php artisan crbac:table
+```
+打开浏览器验证效果
 
 lang
 ---------

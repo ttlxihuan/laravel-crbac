@@ -20,10 +20,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $this->app->singleton('crbac', function ($app) {//取菜单，判断是否有权限
             return new Rbac($app);
         });
-        $this->app['events']->listen('auth.login', function($admin) {
+        $this->app['events']->listen('auth.login', function ($admin) {
             Crbac::setAdmin($admin);
         });
-        $this->app['events']->listen('auth.logout', function() {
+        $this->app['events']->listen('auth.logout', function () {
             Crbac::setAdmin();
         });
         AliasLoader::getInstance(['Crbac' => Facade::class]);
@@ -38,7 +38,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         if (!$this->hasPowerAuthGuard()) {
             return;
         }
-//        auth()->login(Models\Power\Admin::find(1));
         // 添加特定路由配置
         $router = $this->app['router'];
         //通用公用路由
@@ -46,7 +45,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                     'namespace' => 'Laravel\Crbac\Controllers\Power',
                     'prefix' => 'crbac/',
                     'as' => 'mvc-crbac',
-                    'uses' => function() {
+                    'uses' => function () {
                         // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
                         view()->addLocation(realpath(__DIR__ . '/../views'));
                         return $this->response();
@@ -54,7 +53,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 ->where('type', 'power|static|usable')
                 ->where('ctr', '(.*)');
         //路由匹配处理，主要针对其它路由进行权限处理
-        $router->matched(function() {
+        $router->matched(function () {
             $route = request()->route();
             $action = $route->getAction();
             if (empty($action['middleware'])) {
@@ -87,7 +86,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         if (method_exists($this->app['auth'], 'guard')) {
             // 多授权模型配置
             foreach ($config['auth.guards'] ?? [] as $guard) {
-                $provider = array_get($guard, 'provider');
+                $provider = $guard['provider'] ?? null;
                 if ($provider && $config["auth.providers.$provider.driver"] == 'eloquent') {
                     $model = $config["auth.providers.$provider.model"];
                     if ($model && class_exists($model) && is_a(new $model, Models\Power\Admin::class)) {
@@ -152,7 +151,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         if (file_exists($file) && isset($types[$actionParam])) {
             $contentType = $types[$actionParam];
             return [
-                'uses' => function()use($file, $contentType) {
+                'uses' => function ()use ($file, $contentType) {
                     $response = new class($file, 200, ['Content-Type' => $contentType]) extends Response {
 
                         private $file;
@@ -193,7 +192,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         if (!$method->isPublic() || !preg_match('/@methods\(\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)(\s*,\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)+)*\s*\)/i', $comment, $matches)) {
             return;
         }
-        $methods = array_map(function($item) {
+        $methods = array_map(function ($item) {
             return trim(ltrim($item, ','));
         }, array_slice($matches, 1));
         if (!in_array(request()->method(), $methods)) {
@@ -232,10 +231,10 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      * 注册所有命令
      */
     protected function registerCommands() {
-        $this->app->singleton('crbac.table', function() {
+        $this->app->singleton('crbac.table', function () {
             return new CrbacTableCommand();
         });
-        $this->app->singleton('crbac.seeder', function() {
+        $this->app->singleton('crbac.seeder', function () {
             return new CrbacTableSeederCommand();
         });
         $this->commands('crbac.table', 'crbac.seeder');
