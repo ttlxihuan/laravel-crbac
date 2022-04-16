@@ -1,5 +1,5 @@
 {
-    "name": "laravel/crbac",
+    "name": "ttlphp/laravel-crbac",
     "type": "library",
     "description": "基于 laravel5.1 + 权限管理，一键安装",
     "keywords": ["rbac", "laravel"],
