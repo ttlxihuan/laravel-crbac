@@ -1,7 +1,7 @@
 {
     "name": "ttlphp/laravel-crbac",
     "type": "library",
-    "description": "基于 laravel5.1 + 权限管理，一键安装",
+    "description": "基于 laravel5.0 + 权限管理，一键安装",
     "keywords": ["rbac", "laravel"],
     "homepage": "https://github.com/ttlxihuan/laravel-crbac",
     "license": "MIT",
@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": ">=7.0.0",
-        "laravel/framework": ">=5.0.*"
+        "laravel/framework": ">=5.0"
     },
     "autoload": {
         "psr-4": {
