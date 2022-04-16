@@ -4,7 +4,7 @@
  * 状态处理
  */
 
-namespace XiHuan\Crbac\Models;
+namespace Laravel\Crbac\Models;
 
 trait StatusTrait {
 

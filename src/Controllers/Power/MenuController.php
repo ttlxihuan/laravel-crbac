@@ -4,22 +4,23 @@
  * 菜单管理
  */
 
-namespace XiHuan\Crbac\Controllers\Power;
+namespace Laravel\Crbac\Controllers\Power;
 
-use Request;
-use XiHuan\Crbac\Models\Power\Menu;
-use XiHuan\Crbac\Models\Power\Route;
-use XiHuan\Crbac\Controllers\Controller;
+use Laravel\Crbac\Models\Power\Menu;
+use Laravel\Crbac\Models\Power\Route;
+use Illuminate\Support\Facades\Request;
+use Laravel\Crbac\Controllers\Controller;
 
 class MenuController extends Controller {
 
     //备注说明
     protected $description = '菜单';
 
-    /*
-     * 作用：编辑菜单数据
-     * 参数：$item XiHuan\Crbac\Models\Power\Menu 需要编辑的数据，默认为添加
-     * 返回值：view|array
+    /**
+     * 编辑菜单数据
+     * @param Menu $item
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function edit(Menu $item = null) {
         $result = $this->modelEdit($item, 'power.menu.edit', Menu::class);
@@ -30,21 +31,24 @@ class MenuController extends Controller {
         }
         return $result;
     }
-    /*
-     * 作用：删除菜单数据
-     * 参数：$item XiHuan\Crbac\Models\Power\Menu 需要删除的数据
-     * 返回值：view|array
+
+    /**
+     * 删除菜单数据
+     * @param Menu $item
+     * @return mixed
+     * @methods(GET)
      */
-    public function delete($item) {
+    public function delete(Menu $item) {
         if ($item->groups()->count()) {
             return prompt($this->description . '已经在使用中，无法删除！', 'error', -1);
         }
-        return parent::delete($item);
+        return $this->modelDelete($item);
     }
-    /*
-     * 作用：菜单列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 菜单列表
+     * @return view
+     * @methods(GET)
      */
     public function lists() {
         $where = ['name' => 'like', 'status',];
@@ -54,16 +58,19 @@ class MenuController extends Controller {
         $description = $this->description;
         return view('power.menu.lists', compact('lists', 'description', 'toOrder'));
     }
-    /*
-     * 作用：快捷选择列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 菜单快捷选择列表
+     * @param string $relation
+     * @return view
+     * @methods(GET)
      */
-    public function select() {
+    public function select(string $relation) {
         $where = ['name' => 'like',];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
         list($lists, $toOrder) = $this->listsSelect(Menu::class, $where, $order, $default);
-        return view('power.menu.select', compact('lists', 'toOrder'));
+        return view('power.menu.select', compact('lists', 'toOrder', 'relation'));
     }
+
 }

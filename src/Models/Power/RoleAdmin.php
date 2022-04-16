@@ -4,9 +4,9 @@
  * 角色与管理员关联
  */
 
-namespace XiHuan\Crbac\Models\Power;
+namespace Laravel\Crbac\Models\Power;
 
-use XiHuan\Crbac\Models\Model;
+use Laravel\Crbac\Models\Model;
 
 class RoleAdmin extends Model {
 

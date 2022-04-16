@@ -1,6 +1,6 @@
 <?php
 
-namespace XiHuan\Crbac;
+namespace Laravel\Crbac;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Contracts\Auth\Authenticatable as UserContract;
@@ -37,7 +37,7 @@ class Facade extends \Illuminate\Support\Facades\Facade {
                 $instance->setAdmin(Auth::user());
             }
         }
-        if (in_array($method, ['authModel', 'setAdmin', 'getAdmin']) || $instance->getAdmin()) {
+        if (in_array($method, ['setAdmin', 'getAdmin']) || $instance->getAdmin()) {
             return parent::__callStatic($method, $args);
         }
     }

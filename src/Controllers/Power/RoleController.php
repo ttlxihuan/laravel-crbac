@@ -4,45 +4,49 @@
  * 角色管理
  */
 
-namespace XiHuan\Crbac\Controllers\Power;
+namespace Laravel\Crbac\Controllers\Power;
 
-use Request;
-use XiHuan\Crbac\Models\Admin;
-use XiHuan\Crbac\Models\Power\Role;
-use XiHuan\Crbac\Models\Power\Item;
-use XiHuan\Crbac\Models\Power\RoleAdmin;
-use XiHuan\Crbac\Models\Power\ItemGroup;
-use XiHuan\Crbac\Controllers\Controller;
-use XiHuan\Crbac\Services\Power\Role as RoleService;
+use Laravel\Crbac\Models\Power\Admin;
+use Laravel\Crbac\Models\Power\Role;
+use Laravel\Crbac\Models\Power\Item;
+use Illuminate\Support\Facades\Request;
+use Laravel\Crbac\Models\Power\RoleAdmin;
+use Laravel\Crbac\Models\Power\ItemGroup;
+use Laravel\Crbac\Controllers\Controller;
+use Laravel\Crbac\Services\Power\Role as RoleService;
 
 class RoleController extends Controller {
 
     //备注说明
     protected $description = '角色';
 
-    /*
-     * 作用：编辑角色数据
-     * 参数：$item XiHuan\Crbac\Models\Power\Item 需要编辑的数据，默认为添加
-     * 返回值：view|array
+    /**
+     * 编辑角色数据
+     * @param Role $item
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function edit(Role $item = null) {
         return $this->modelEdit($item, 'power.role.edit', Role::class);
     }
-    /*
-     * 作用：删除角色数据
-     * 参数：$item XiHuan\Crbac\Models\Power\Item 角色数据
-     * 返回值：view|array
+
+    /**
+     * 删除角色数据
+     * @param Role $item
+     * @return mixed
+     * @methods(GET)
      */
-    public function delete($item) {
+    public function delete(Role $item) {
         if ($item->items()->count()) {
             return prompt($this->description . '已经在使用中，无法删除！', 'error', -1);
         }
-        return parent::delete($item);
+        return $this->modelDelete($item);
     }
-    /*
-     * 作用：角色列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 角色列表
+     * @return view
+     * @methods(GET)
      */
     public function lists() {
         $where = [
@@ -55,13 +59,15 @@ class RoleController extends Controller {
         $description = $this->description;
         return view('power.role.lists', compact('lists', 'description', 'toOrder'));
     }
-    /*
-     * 作用：管理员列表
-     * 参数：$type string 类型，unbind|bind
-     *      $role XiHuan\Crbac\Models\Power\Item 角色数据
-     * 返回值：view
+
+    /**
+     * 管理员列表
+     * @param string $type
+     * @param Role $role
+     * @return view
+     * @methods(GET)
      */
-    public function admins($type, Role $role) {
+    public function admins(string $type, Role $role) {
         $where = [
             'username' => 'like',
             'realname' => 'like',
@@ -69,56 +75,65 @@ class RoleController extends Controller {
         ];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
-        list($lists, $toOrder) = $this->listsSelect(auth_model(), $where, $order, $default, function($builder)use($role) {
+        list($lists, $toOrder) = $this->listsSelect(auth_model(), $where, $order, $default, function($builder)use($type, $role) {
             $builder->whereIn($builder->getModel()->getKeyName(), function($query)use($role) {
                 $query->from('power_role_admin')
                         ->where('power_role_id', '=', $role->getKey())
-                        ->select('admin_id');
-            }, 'and', \Route::input('bind_style') !== 'bind');
+                        ->select('power_admin_id');
+            }, 'and', $type !== 'bind');
         });
         $description = ($type == 'unbind' ? '未绑定在' : '已经绑定在') . $this->description . '下管理员';
         $title = ($type == 'unbind' ? '未绑定' : '已经绑定') . '管理员';
-        return view('power.role.admins', compact('lists', 'role', 'description', 'toOrder', 'title'));
+        return view('power.role.admins', compact('lists', 'role', 'description', 'toOrder', 'title', 'type'));
     }
-    /*
-     * 作用：快捷选择列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 快捷选择列表
+     * @param string $relation
+     * @return view
+     * @methods(GET)
      */
-    public function select() {
+    public function select(string $relation) {
         $where = ['name' => 'like'];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
         list($lists, $toOrder) = $this->listsSelect(Role::class, $where, $order, $default, function($builder) {
             $builder->where('status', '=', 'enable');
         });
-        return view('power.role.select', compact('lists', 'toOrder'));
+        return view('power.role.select', compact('lists', 'toOrder', 'relation'));
     }
-    /*
-     * 作用：移除指定管理员
-     * 参数：$item XiHuan\Crbac\Models\Power\Item 角色数据
-     *      $admin XiHuan\Crbac\Models\Admin 管理员数据
-     * 返回值：view|array
+
+    /**
+     * 移除指定管理员
+     * @param Role $item
+     * @param Admin $admin
+     * @return mixed
+     * @methods(GET)
      */
     public function removeAdmin(Role $item, Admin $admin) {
-        $builder = RoleAdmin::where('power_role_id', '=', $item->getKey())
-                ->where('admin_id', '=', $admin->getKey());
-        return parent::delete($builder);
+        $roleAdmin = RoleAdmin::where('power_role_id', '=', $item->getKey())
+                ->where('power_admin_id', '=', $admin->getKey())
+                ->first();
+        return $this->modelDelete($roleAdmin);
     }
-    /*
-     * 作用：添加指定管理员
-     * 参数：$item XiHuan\Crbac\Models\Power\Item 角色数据
-     *      $admin XiHuan\Crbac\Models\Admin 管理员数据
-     * 返回值：view|array
+
+    /**
+     * 添加指定管理员
+     * @param Role $item
+     * @param Admin $admin
+     * @return mixed
+     * @methods(GET)
      */
     public function addAdmin(Role $item, Admin $admin) {
-        RoleAdmin::firstOrCreate(['power_role_id' => $item->getKey(), 'admin_id' => $admin->getKey()]);
+        RoleAdmin::firstOrCreate(['power_role_id' => $item->getKey(), 'power_admin_id' => $admin->getKey()]);
         return prompt('管理员添加成功！', 'success', -1);
     }
-    /*
-     * 作用：角色对应的权限项编辑
-     * 参数：$role XiHuan\Crbac\Models\Power\Item 角色数据
-     * 返回值：view|array
+
+    /**
+     * 角色对应的权限项编辑
+     * @param Role $role
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function items(Role $role) {
         if (!Request::isMethod('post')) {
@@ -136,4 +151,5 @@ class RoleController extends Controller {
         $service->editItems($role);
         return $service->prompt('角色权限项编辑成功');
     }
+
 }

@@ -4,30 +4,32 @@
  * 管理员
  */
 
-namespace XiHuan\Crbac\Controllers\Power;
+namespace Laravel\Crbac\Controllers\Power;
 
-use Request;
-use XiHuan\Crbac\Models\Admin;
-use XiHuan\Crbac\Controllers\Controller;
-use XiHuan\Crbac\Services\Power\Admin as AdminService;
+use Laravel\Crbac\Models\Power\Admin;
+use Illuminate\Support\Facades\Request;
+use Laravel\Crbac\Controllers\Controller;
+use Laravel\Crbac\Services\Power\Admin as AdminService;
 
 class AdminController extends Controller {
 
     //备注说明
     protected $description = '管理员';
 
-    /*
-     * 作用：编辑管理员信息
-     * 参数：$item XiHuan\Crbac\Models\Admin 需要编辑的数据，默认为添加
-     * 返回值：view|array
+    /**
+     * 编辑管理员信息
+     * @param Admin $item
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function edit(Admin $item = null) {
         return $this->modelEdit($item, 'power.admin.edit', auth_model(), [], AdminService::class);
     }
-    /*
-     * 作用：修改密码
-     * 参数：无
-     * 返回值：view|array
+
+    /**
+     * 修改密码
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function password() {
         $option = ['email', 'password'];
@@ -39,10 +41,11 @@ class AdminController extends Controller {
         }
         return $result;
     }
-    /*
-     * 作用：管理员列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 管理员列表
+     * @return view
+     * @methods(GET)
      */
     public function lists() {
         $where = [
@@ -58,4 +61,5 @@ class AdminController extends Controller {
         $description = $this->description;
         return view('power.admin.lists', compact('lists', 'description', 'toOrder'));
     }
+
 }

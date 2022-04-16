@@ -4,51 +4,57 @@
  * 权限项组
  */
 
-namespace XiHuan\Crbac\Controllers\Power;
+namespace Laravel\Crbac\Controllers\Power;
 
-use XiHuan\Crbac\Models\Power\ItemGroup;
-use XiHuan\Crbac\Controllers\Controller;
+use Laravel\Crbac\Models\Power\ItemGroup;
+use Laravel\Crbac\Controllers\Controller;
 
 class ItemGroupController extends Controller {
 
     //备注说明
     protected $description = '权限项组';
 
-    /*
-     * 作用：编辑权限项组数据
-     * 参数：$item XiHuan\Crbac\Models\Power\ItemGroup 需要编辑的数据，默认为添加
-     * 返回值：view|array
+    /**
+     * 编辑权限项组数据
+     * @param ItemGroup $item
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function edit(ItemGroup $item = null) {
         return $this->modelEdit($item, 'power.item.group.edit', ItemGroup::class);
     }
-    /*
-     * 作用：删除权限项组数据
-     * 参数：$item XiHuan\Crbac\Models\Power\ItemGroup 需要删除的数据
-     * 返回值：view|array
+
+    /**
+     * 删除权限项组数据
+     * @param ItemGroup $item
+     * @return mixed
+     * @methods(GET)
      */
-    public function delete($item) {
+    public function delete(ItemGroup $item) {
         if ($item->items()->count()) {
             return prompt($this->description . '已经关联权限项无法删除！', 'error', -1);
         }
-        return parent::delete($item);
+        return $this->modelDelete($item);
     }
-    /*
-     * 作用：快捷选择列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 权限项组选择
+     * @param string $relation
+     * @return view
+     * @methods(GET)
      */
-    public function select() {
+    public function select(string $relation) {
         $where = ['name' => 'like'];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
         list($lists, $toOrder) = $this->listsSelect(ItemGroup::class, $where, $order, $default);
-        return view('power.item.group.select', compact('lists', 'toOrder'));
+        return view('power.item.group.select', compact('lists', 'toOrder', 'relation'));
     }
-    /*
-     * 作用：权限组列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 权限组列表
+     * @return view
+     * @methods(GET)
      */
     public function lists() {
         $where = [
@@ -60,4 +66,5 @@ class ItemGroupController extends Controller {
         $description = $this->description;
         return view('power.item.group.lists', compact('lists', 'description', 'toOrder'));
     }
+
 }

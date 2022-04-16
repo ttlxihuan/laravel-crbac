@@ -4,21 +4,20 @@
  * 角色管理
  */
 
-namespace XiHuan\Crbac\Services\Power;
+namespace Laravel\Crbac\Services\Power;
 
-use Input;
-use XiHuan\Crbac\Models\Power\Item;
-use XiHuan\Crbac\Models\Power\RoleItem;
-use XiHuan\Crbac\Models\Power\Role as RoleModel;
+use Laravel\Crbac\Models\Power\Item;
+use Laravel\Crbac\Models\Power\RoleItem;
+use Laravel\Crbac\Models\Power\Role as RoleModel;
 
 class Role extends Service {
-    /*
-     * 作用：修改权限项
-     * 参数：$role XiHuan\Crbac\Models\Power\Role 角色
-     * 返回值：void
+
+    /**
+     * 修改权限项
+     * @param RoleModel $role
      */
     public function editItems(RoleModel $role) {
-        $items = array_map('intval', (array) Input::get('items'));
+        $items = array_map('intval', (array) request('items'));
         $itemIds = $role->items->modelKeys();
         $removeIds = array_diff($itemIds, $items); //不需要的
         $insertIds = array_diff($items, $itemIds); //未添加的
@@ -33,12 +32,15 @@ class Role extends Service {
                     ->delete();
         }
         if ($insertIds) {//插入处理
-            $insertIds = array_pluck(Item::whereIn('power_item_id', $insertIds)
-                            ->get(['power_item_id']), 'power_item_id');
+            $insertIds = Item::whereIn('id', $insertIds)
+                    ->get(['id'])
+                    ->pluck('id')
+                    ->toArray();
             $inserts = array_map(function($itemId)use($role) {
                 return ['power_role_id' => $role->getKey(), 'power_item_id' => $itemId];
             }, $insertIds);
             RoleItem::insert($inserts);
         }
     }
+
 }

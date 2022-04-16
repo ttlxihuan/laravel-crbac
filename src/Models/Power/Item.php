@@ -4,10 +4,10 @@
  * 权限项
  */
 
-namespace XiHuan\Crbac\Models\Power;
+namespace Laravel\Crbac\Models\Power;
 
-use XiHuan\Crbac\Models\Model;
-use XiHuan\Crbac\Models\StatusTrait;
+use Laravel\Crbac\Models\Model;
+use Laravel\Crbac\Models\StatusTrait;
 use Illuminate\Contracts\Auth\Authenticatable as UserContract;
 
 class Item extends Model {
@@ -17,7 +17,7 @@ class Item extends Model {
     public static $_validator_rules = [//验证规则
         'name' => 'required|between:3,30', // varchar(35) not null comment '权限项名称',
         'code' => 'required|between:3,75|unique:power_item|string', // varchar(80) unique not null comment '权限项代码',
-        'power_item_group_id' => 'required|exists:power_item_group', //int unsigned not null comment '权限项组ID',
+        'power_item_group_id' => 'required|exists:power_item_group,id', //int unsigned not null comment '权限项组ID',
         'status' => 'required|in:disable,enable', // enum('disable','enable') NOT NULL DEFAULT 'enable' COMMENT '启用或禁用，enable为启用',
         'comment' => 'required|between:1,955', //  varchar(1000) not null default '' comment '备注说明',
     ];
@@ -30,7 +30,6 @@ class Item extends Model {
     ];
     public static $_validator_messages = []; //验证统一说明
     protected $table = 'power_item'; //表名
-    protected $primaryKey = 'power_item_id'; //主键名
     protected static $validates = ['name']; //允许验证可用字段
 
     /*
@@ -47,7 +46,7 @@ class Item extends Model {
      * 返回值：Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function group() {
-        return $this->hasOne(ItemGroup::class, 'power_item_group_id', 'power_item_group_id');
+        return $this->hasOne(ItemGroup::class, 'id', 'power_item_group_id');
     }
     /*
      * 作用：关联所在角色
@@ -84,7 +83,7 @@ class Item extends Model {
             $allow = RoleItem::where($item->getKeyName(), '=', $item->getKey())
                             ->whereIn('power_role_id', function($query)use($admin) {
                                 $query->from('power_role_admin')
-                                ->where('admin_id', '=', $admin->getKey())
+                                ->where('power_admin_id', '=', $admin->getKey())
                                 ->select('power_role_id');
                             })
                             ->count() ? $item : false;
@@ -117,13 +116,13 @@ class Item extends Model {
         return $builder->from('power_role_item')
                         ->whereIn('power_role_id', function($query) use($admin) {//关联权限
                             $query->from('power_role_admin')
-                            ->where('admin_id', '=', $admin->getKey())
+                            ->where('power_admin_id', '=', $admin->getKey())
                             ->select('power_role_id');
                         })
                         ->whereIn('power_role_id', function($query) {//禁用的不能提取
                             $query->from('power_role')
                             ->where('status', '=', 'enable')
-                            ->select('power_role_id');
+                            ->select('id');
                         })
                         ->select('power_item_id')
                         ->distinct();

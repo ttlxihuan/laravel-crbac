@@ -4,7 +4,7 @@
  * 创建表
  */
 
-namespace XiHuan\Crbac\Console;
+namespace Laravel\Crbac\Console;
 
 use Schema;
 use Illuminate\Console\Command;
@@ -17,12 +17,10 @@ class CrbacTableCommand extends Command {
     //控制台备注说明
     protected $description = '创建Crbac所需表';
 
-    /*
-     * 作用：执行控制台命令
-     * 参数：无
-     * 返回值：void
+    /**
+     * 执行控制台命令
      */
-    public function fire() {
+    public function handle() {
         $basePath = $this->laravel->basePath();
         $path = str_replace($basePath, '', __DIR__ . '/../Database/Tables');
         $this->call('migrate', ['--path' => $path]);
@@ -32,14 +30,15 @@ class CrbacTableCommand extends Command {
         }
         Schema::dropIfExists('migrations');
     }
-    /*
-     * 作用：获取控制命令选项
-     * 参数：无
-     * 返回值：array
+
+    /**
+     * 获取控制命令选项
+     * @return array
      */
     protected function getOptions() {
         return [
             ['empty', null, InputOption::VALUE_NONE, '只创建空表，不要插入基本数据'],
         ];
     }
+
 }

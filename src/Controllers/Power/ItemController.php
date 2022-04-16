@@ -4,25 +4,25 @@
  * 权限项
  */
 
-namespace XiHuan\Crbac\Controllers\Power;
+namespace Laravel\Crbac\Controllers\Power;
 
-use Request;
-use XiHuan\Crbac\Models\Power\Item;
-use XiHuan\Crbac\Models\Power\Route;
-use XiHuan\Crbac\Controllers\Controller;
-use XiHuan\Crbac\Services\Power\Route as RouteService;
+use Laravel\Crbac\Models\Power\Item;
+use Laravel\Crbac\Models\Power\Route;
+use Illuminate\Support\Facades\Request;
+use Laravel\Crbac\Controllers\Controller;
+use Laravel\Crbac\Services\Power\Route as RouteService;
 
 class ItemController extends Controller {
 
     //备注说明
     protected $description = '权限项';
 
-    /*
-     * 作用：编辑权限项数据
-     * 参数：$item XiHuan\Crbac\Models\Power\Item 需要编辑的数据，默认为添加
-     * 返回值：view|array
+    /**
+     * 编辑权限项数据
+     * @param Item $item
+     * @return mixed
+     * @methods(GET,POST)
      */
-    //修改
     public function edit(Item $item = null) {
         $result = $this->modelEdit($item, 'power.item.edit', Item::class);
         if (!$item && !Request::isMethod('post')) {
@@ -32,22 +32,24 @@ class ItemController extends Controller {
         }
         return $result;
     }
-    /*
-     * 作用：删除权限项
-     * 参数：$item XiHuan\Crbac\Models\Power\Item 需要删除的数据
-     * 返回值：view|array
+
+    /**
+     * 删除权限项
+     * @param Item $item
+     * @return mixed
+     * @methods(GET)
      */
-    //删除
-    public function delete($item) {
+    public function delete(Item $item) {
         if ($item->roles()->count() || $item->menus()->count()) {
             return prompt($this->description . '已经在使用中，无法删除！', 'error', -1);
         }
-        return parent::delete($item);
+        return $this->modelDelete($item);
     }
-    /*
-     * 作用：权限项列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 权限项列表
+     * @return view
+     * @methods(GET)
      */
     public function lists() {
         $where = [
@@ -62,10 +64,11 @@ class ItemController extends Controller {
         $description = $this->description;
         return view('power.item.lists', compact('lists', 'description', 'toOrder'));
     }
-    /*
-     * 作用：路由列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 路由列表
+     * @return view
+     * @methods(GET)
      */
     public function routes() {
         $where = [
@@ -89,19 +92,21 @@ class ItemController extends Controller {
         $default = ['status' => 'no'];
         list($lists) = $this->listsSelect(Route::class, $where, $order, $default, function($builder) {
             $builder->with('item')
-                    ->orderBy('power_route_id', 'desc');
+                    ->orderBy('id', 'desc');
         });
         $description = '路由';
         return view('power.item.routes', compact('lists', 'description'));
     }
-    /*
-     * 作用：更新路由列表
-     * 参数：无
-     * 返回值：view|array
+
+    /**
+     * 更新路由列表
+     * @return mixed
+     * @methods(GET)
      */
     public function updateRoutes() {
         $service = new RouteService();
         $service->update();
         return $service->prompt(null, null, -1);
     }
+
 }

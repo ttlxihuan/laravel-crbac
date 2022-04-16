@@ -4,9 +4,9 @@
  * 菜单组
  */
 
-namespace XiHuan\Crbac\Models\Power;
+namespace Laravel\Crbac\Models\Power;
 
-use XiHuan\Crbac\Models\Model;
+use Laravel\Crbac\Models\Model;
 
 class MenuGroup extends Model {
 
@@ -20,7 +20,6 @@ class MenuGroup extends Model {
     ];
     public static $_validator_messages = []; //验证统一说明
     protected $table = 'power_menu_group'; //表名
-    protected $primaryKey = 'power_menu_group_id'; //主键名
     protected static $validates = ['name']; //允许验证可用字段
 
     /*

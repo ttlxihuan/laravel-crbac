@@ -4,12 +4,11 @@
  * 管理员相关
  */
 
-namespace XiHuan\Crbac\Services\Power;
+namespace Laravel\Crbac\Services\Power;
 
-use Input;
-use XiHuan\Crbac\Models\Power\RoleAdmin;
-use XiHuan\Crbac\Services\Service as BaseService;
-use XiHuan\Crbac\Models\Admin as AdminModel;
+use Laravel\Crbac\Models\Power\RoleAdmin;
+use Laravel\Crbac\Services\Service as BaseService;
+use Laravel\Crbac\Models\Power\Admin as AdminModel;
 
 class Admin extends Service {
 
@@ -21,7 +20,7 @@ class Admin extends Service {
      * 返回值：Model|false
      */
     public function edit($item, array $option = []) {
-        $password = Input::Get('password');
+        $password = request('password');
         if ($item && empty($password)) {//不修改密码
             $rules = array_except(AdminModel::$_validator_rules, 'password');
             $option = array_keys($rules);
@@ -31,10 +30,10 @@ class Admin extends Service {
     /*
      * 作用：修改数据后处理
      * 参数：$result null|Model 修改的数据的结果
-     *       $service XiHuan\Crbac\Services\Service 编辑处理service
+     *       $service Laravel\Crbac\Services\Service 编辑处理service
      * 返回值：void
      */
     protected function editAfter($result, BaseService $service) {
-        $this->roleRelateEdit($result, RoleAdmin::class, 'admin_id', false);
+        $this->roleRelateEdit($result, RoleAdmin::class, 'power_admin_id', false);
     }
 }

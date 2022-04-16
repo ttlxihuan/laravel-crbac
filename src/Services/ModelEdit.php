@@ -4,24 +4,26 @@
  * Model编辑处理
  */
 
-namespace XiHuan\Crbac\Services;
+namespace Laravel\Crbac\Services;
 
-use Validator,
-    Closure,
+use Closure,
     Exception,
-    Request,
+    Illuminate\Support\Facades\Validator,
+    Illuminate\Support\Facades\Request,
     Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class ModelEdit extends Service {
-    /*
-     * 作用：验证处理
-     * 参数：$model string|Model 要修改的Model对象或类名
-     *      $input array 要输入的参数，默认全部请求参数
-     *      $option array 要验证的参数名，默认全部
-     * 返回值：false|array
+
+    /**
+     * 验证处理
+     * @param string|Model $model
+     * @param array $input
+     * @param array $option
+     * @return false|array
      */
     public function validation($model, array $input = [], array $option = []) {
+        $input = array_filter($input, function($val) { return !is_null($val);});
         $modelClass = $this->getModelClass($model);
         $rules = $this->getRules($modelClass);
         if (count($option)) {//只修改指定参数
@@ -51,14 +53,15 @@ class ModelEdit extends Service {
         }
         return false;
     }
-    /*
-     * 作用：修改数据
-     * 参数：$model Model|string 要修改的Model对象或类名
-     *      $input array 要输入的参数，默认全部请求参数
-     *      $option array 要修改的参数名，默认全部
-     *      $before Closure|null 写入修改数据之前回调处理，用于额外添加修改数据
-     *      $after Closure|null 写入修改数据之后回调处理，用于关联修改处理
-     * 返回值：false|Model
+
+    /**
+     * 修改数据
+     * @param Model|string $model
+     * @param array $input
+     * @param array $option
+     * @param Closure $before
+     * @param Closure $after
+     * @return false|Model
      */
     public function edit($model, array $input = [], array $option = [], Closure $before = null, Closure $after = null) {
         $data = $this->validation($model, $input, $option);
@@ -87,22 +90,23 @@ class ModelEdit extends Service {
         }
         return $model;
     }
-    /*
-     * 作用：修改数据
-     * 参数：$model Model|string 要修改的数据Model类名或Model对象
-     *      $input array 要输入的参数，默认全部请求参数
-     *      $option array 要修改的参数名，默认全部
-     *      $before Closure|null 写入修改数据之前回调处理，用于额外添加修改数据
-     *      $after Closure|null 写入修改数据之后回调处理，用于关联修改处理
-     * 返回值：false|Model
+
+    /**
+     * 修改数据将请求数据体作为数据源
+     * @param Model|string $model
+     * @param array $option
+     * @param Closure $before
+     * @param Closure $after
+     * @return false|Model
      */
     public function requestEdit($model, array $option = [], Closure $before = null, Closure $after = null) {
         return $this->edit($model, Request::all(), $option, $before, $after);
     }
-    /*
-     * 作用：上传处理
-     * 参数：$file Symfony\Component\HttpFoundation\File\UploadedFile 上传对象
-     * 返回值：bool
+
+    /**
+     * 上传处理
+     * @param UploadedFile $file
+     * @return false|string
      */
     public function upload(UploadedFile $file) {
         $directory = getcwd(); //获取上传文件基本目录
@@ -115,35 +119,39 @@ class ModelEdit extends Service {
         }
         return $this->setError('upload', $file->getClientOriginalName() . ' 文件上传失败');
     }
-    /*
-     * 作用：获取数据验证规则
-     * 参数：$modelClass string Model类名
-     * 返回值：array
+
+    /**
+     * 获取数据验证规则
+     * @param string $modelClass
+     * @return array
      */
     protected function getRules($modelClass) {
         return $this->getModelConstAttribute($modelClass, '_validator_rules');
     }
-    /*
-     * 作用：获取验证异常说明
-     * 参数：$modelClass string Model类名
-     * 返回值：array
+
+    /**
+     * 获取验证异常说明
+     * @param string $modelClass
+     * @return array
      */
     protected function getMessages($modelClass) {
         return $this->getModelConstAttribute($modelClass, '_validator_description');
     }
-    /*
-     * 作用：获取统一验证说明（不计较是哪个验证条件失败，统一说明）
-     * 参数：$modelClass string Model类名
-     * 返回值：array
+
+    /**
+     * 获取统一验证说明（不计较是哪个验证条件失败，统一说明）
+     * @param string $modelClass
+     * @return array
      */
     protected function getUnifyMessages($modelClass) {
         return $this->getModelConstAttribute($modelClass, '_validator_messages');
     }
-    /*
-     * 作用：获取Model的静态属性
-     * 参数：$modelClass string Model类名
-     *      $attribute string 属性名
-     * 返回值：array
+
+    /**
+     * 获取Model配置的静态属性
+     * @param string $modelClass
+     * @param string $attribute
+     * @return array
      */
     protected function getModelConstAttribute($modelClass, $attribute) {
         if (is_callable([$modelClass, studly_case('get' . strtolower($attribute)) . 'Validator'], true, $callable_name) && function_exists($callable_name)) {
@@ -154,10 +162,12 @@ class ModelEdit extends Service {
         }
         return [];
     }
-    /*
-     * 作用：获取Model的类名
-     * 参数：$model Model|string Model对象或类名
-     * 返回值：string
+
+    /**
+     * 获取Model的类名
+     * @param Model|string $model
+     * @return string
+     * @throws Exception
      */
     public function getModelClass($model) {
         if (is_string($model)) {
@@ -168,4 +178,5 @@ class ModelEdit extends Service {
             throw new Exception('程序异常！');
         }
     }
+
 }

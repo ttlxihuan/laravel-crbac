@@ -4,20 +4,20 @@
  * 菜单组管理
  */
 
-namespace XiHuan\Crbac\Services\Power;
+namespace Laravel\Crbac\Services\Power;
 
-use Input;
-use XiHuan\Crbac\Models\Power\MenuLevel;
-use XiHuan\Crbac\Models\Power\MenuGroup as MenuGroupModel;
+
+use Laravel\Crbac\Models\Power\MenuLevel;
+use Laravel\Crbac\Models\Power\MenuGroup as MenuGroupModel;
 
 class MenuGroup extends Service {
     /*
      * 作用：编辑菜单关系处理
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 要处理的菜单组
+     * 参数：$item Laravel\Crbac\Models\Power\MenuGroup 要处理的菜单组
      * 返回值：void
      */
     public function editMenuLevel(MenuGroupModel $item) {
-        $levels = (array) Input::get('level');
+        $levels = (array) request('level');
         $levels = array_values($levels);
         $delete = MenuLevel::where('power_menu_group_id', '=', $item->getKey()); //删除数据
         $useIds = [];
@@ -33,7 +33,7 @@ class MenuGroup extends Service {
     }
     /*
      * 作用：处理单层下菜单
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 要处理的菜单组
+     * 参数：$item Laravel\Crbac\Models\Power\MenuGroup 要处理的菜单组
      *      $menus array 菜单ID集
      *      $parent_id 上级菜单ID
      * 返回值：array
@@ -76,7 +76,7 @@ class MenuGroup extends Service {
     }
     /*
      * 作用：递归层级处理
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 要处理的菜单组
+     * 参数：$item Laravel\Crbac\Models\Power\MenuGroup 要处理的菜单组
      *      $_levels array 层级ID集
      *      $menu_id int 菜单ID
      *      $parent_id 上级菜单ID

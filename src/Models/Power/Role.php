@@ -4,10 +4,10 @@
  * 角色
  */
 
-namespace XiHuan\Crbac\Models\Power;
+namespace Laravel\Crbac\Models\Power;
 
-use XiHuan\Crbac\Models\Model;
-use XiHuan\Crbac\Models\StatusTrait;
+use Laravel\Crbac\Models\Model;
+use Laravel\Crbac\Models\StatusTrait;
 
 class Role extends Model {
 
@@ -24,7 +24,6 @@ class Role extends Model {
     ];
     public static $_validator_messages = []; //验证统一说明
     protected $table = 'power_role'; //表名
-    protected $primaryKey = 'power_role_id'; //主键名
     protected static $validates = ['name']; //允许验证可用字段
 
     /*
@@ -33,7 +32,7 @@ class Role extends Model {
      * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function items() {
-        return $this->belongsToMany(Item::class, 'power_role_item', $this->primaryKey, 'power_item_id');
+        return $this->belongsToMany(Item::class, 'power_role_item', 'power_role_id', 'power_item_id');
     }
 
     /**
@@ -45,10 +44,9 @@ class Role extends Model {
         $builder = parent::newQuery();
         //是否允许操作所有权限
         if (auth()->check() && !isPower('all_power_items')) {
-            dd(isPower('all_power_items'),auth()->id());
-            $builder->whereIn($this->table . '.power_role_id', function($query) {
+            $builder->whereIn($this->table . '.id', function($query) {
                 $query->from('power_role_admin')
-                        ->where('admin_id', '=', auth()->id())
+                        ->where('power_admin_id', '=', auth()->id())
                         ->select('power_role_id');
             });
         }

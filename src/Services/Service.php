@@ -4,7 +4,7 @@
  * 基本Service处理
  */
 
-namespace XiHuan\Crbac\Services;
+namespace Laravel\Crbac\Services;
 
 abstract class Service {
 

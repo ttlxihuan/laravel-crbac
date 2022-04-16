@@ -4,7 +4,7 @@
  * Model查询处理
  */
 
-namespace XiHuan\Crbac\Services;
+namespace Laravel\Crbac\Services;
 
 use Closure,
     Request;

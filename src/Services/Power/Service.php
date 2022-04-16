@@ -4,10 +4,10 @@
  * 数据编辑相关基本处理
  */
 
-namespace XiHuan\Crbac\Services\Power;
+namespace Laravel\Crbac\Services\Power;
 
-use XiHuan\Crbac\Services\ModelEdit;
-use XiHuan\Crbac\Services\Service as BaseService;
+use Laravel\Crbac\Services\ModelEdit;
+use Laravel\Crbac\Services\Service as BaseService;
 
 abstract class Service extends BaseService {
     /*
@@ -30,7 +30,7 @@ abstract class Service extends BaseService {
     /*
      * 作用：修改数据前处理
      * 参数：$data array 要修改的数据
-     *       $service XiHuan\Crbac\Services\Service 编辑处理service
+     *       $service Laravel\Crbac\Services\Service 编辑处理service
      *       $item Model|string 要编辑的Model或Model类名
      * 返回值：bool
      */
@@ -40,7 +40,7 @@ abstract class Service extends BaseService {
     /*
      * 作用：修改数据后处理
      * 参数：$result null|Model 修改的数据的结果
-     *       $service XiHuan\Crbac\Services\Service 编辑处理service
+     *       $service Laravel\Crbac\Services\Service 编辑处理service
      * 返回值：void
      */
     protected function editAfter($result, BaseService $service) {

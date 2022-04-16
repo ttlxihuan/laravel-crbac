@@ -10,16 +10,17 @@
  * @说明 是否存在处理
  */
 
-namespace XiHuan\Crbac\Services;
+namespace Laravel\Crbac\Services;
 
 class ExistService extends Service {
-    /*
-     * 作用：验证数据是否允许使用
-     * 参数：$model string 验证Model别名
-     *      $field string 字段名
-     *      $val string 值
-     *      $id int|null 排除ID值
-     * 返回值：bool
+
+    /**
+     * 验证数据是否允许使用
+     * @param string $model
+     * @param string $field
+     * @param mixed $val
+     * @param mixed $id
+     * @return mixed
      */
     public function check($model, $field, $val, $id = null) {
         $modelClass = $this->getModel($model);
@@ -32,39 +33,41 @@ class ExistService extends Service {
             return (bool) $builder->count();
         }
     }
-    /*
-     * 作用：获取Model别名的Model类名
-     * 参数：$model string Model别名
-     *      $name string|null Model类名
-     * 返回值：bool
+
+    /**
+     * 获取Model别名的Model类名
+     * @param string $model
+     * @param string $name
+     * @return mixed
      */
     private function getModel($model, $name = false) {
         $models = [
-            'crbac/item' => \XiHuan\Crbac\Models\Power\Item::class,
-            'crbac/item/group' => \XiHuan\Crbac\Models\Power\ItemGroup::class,
-            'crbac/menu' => \XiHuan\Crbac\Models\Power\Menu::class,
-            'crbac/menu/group' => \XiHuan\Crbac\Models\Power\MenuGroup::class,
-            'crbac/role' => \XiHuan\Crbac\Models\Power\Role::class,
-            'crbac/admin' => \XiHuan\Crbac\Models\Admin::class,
+            'crbac/item' => \Laravel\Crbac\Models\Power\Item::class,
+            'crbac/item/group' => \Laravel\Crbac\Models\Power\ItemGroup::class,
+            'crbac/menu' => \Laravel\Crbac\Models\Power\Menu::class,
+            'crbac/menu/group' => \Laravel\Crbac\Models\Power\MenuGroup::class,
+            'crbac/role' => \Laravel\Crbac\Models\Power\Role::class,
+            'crbac/admin' => \Laravel\Crbac\Models\Power\Admin::class,
         ];
         if ($name) {
             return array_search($model, $models);
         }
         return array_get($models, $model);
     }
-    /*
-     * 作用：生成验证URL地址
-     * 参数：$model string Model类名
-     *      $field string 字段名
-     * 返回值：url
+
+    /**
+     * 生成验证URL地址
+     * @param string|Model $model
+     * @param string $field
+     * @return url
      */
-    public function toUrl($model, $field) {
+    public function toUrl($model, string $field) {
         if (is_object($model)) {
-            $parameters = [get_class($model), $field, 'id' => $model->getKey()];
+            $parameters = ['id' => $model->getKey()];
         } else {
-            $parameters = [$model, $field];
+            $parameters = [];
         }
-        $parameters[0] = $this->getModel($parameters[0], true);
-        return route('exist_validate', $parameters);
+        return crbac_route('usable.' . $this->getModel($model, true) . '.' . $field, $parameters);
     }
+
 }

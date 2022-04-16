@@ -4,30 +4,30 @@
  * 编辑与角色关联数据
  */
 
-namespace XiHuan\Crbac\Services\Power;
+namespace Laravel\Crbac\Services\Power;
 
-use Input;
-use XiHuan\Crbac\Models\Power\Role;
+use Laravel\Crbac\Models\Power\Role;
 use Illuminate\Database\Eloquent\Model;
 
 trait RoleRelateEditTrait {
-    /*
-     * 作用：修改关联
-     * 参数：$result Model
-     *       $relateClass 关系Model类名
-     *       $allowAll 是否允许直接关联全部
-     * 返回值：void
+
+    /**
+     * 修改关联数据
+     * @param Model $result
+     * @param string $relateClass
+     * @param string $relationField
+     * @param bool $allowAll
      */
     protected function roleRelateEdit(Model $result, $relateClass, $relationField, $allowAll = true) {
-        $roles = Input::get('roles');
+        $roles = request('roles');
         if ($roles === 'all' && $allowAll) {//关联到所有角色
-            $role_ids = Role::get(['power_role_id'])
-                    ->pluck('power_role_id')
+            $role_ids = Role::get(['id'])
+                    ->pluck('id')
                     ->toArray();
         } elseif ($roles) {//写入部分角色
-            $role_ids = Role::whereIn('power_role_id', explode(',', $roles))
-                    ->get(['power_role_id'])
-                    ->pluck('power_role_id')
+            $role_ids = Role::whereIn('id', explode(',', $roles))
+                    ->get(['id'])
+                    ->pluck('id')
                     ->toArray();
         }
         if (isset($role_ids) && count($role_ids)) {//保存关联数据
@@ -49,4 +49,5 @@ trait RoleRelateEditTrait {
                     ->delete();
         }
     }
+
 }

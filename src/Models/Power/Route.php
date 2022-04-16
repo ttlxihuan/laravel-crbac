@@ -4,14 +4,13 @@
  * 路由记录
  */
 
-namespace XiHuan\Crbac\Models\Power;
+namespace Laravel\Crbac\Models\Power;
 
-use XiHuan\Crbac\Models\Model;
+use Laravel\Crbac\Models\Model;
 
 class Route extends Model {
 
     protected $table = 'power_route'; //表名
-    protected $primaryKey = 'power_route_id'; //主键名
 
     /*
      * 作用：关联权限项

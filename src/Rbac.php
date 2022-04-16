@@ -4,14 +4,14 @@
  * 权限管理对外基本操作
  */
 
-namespace XiHuan\Crbac;
+namespace Laravel\Crbac;
 
-use Request,
-    URL,
-    Illuminate\Support\Str;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Container\Container;
-use XiHuan\Crbac\Models\Power\Menu;
-use XiHuan\Crbac\Models\Power\Item;
+use Laravel\Crbac\Models\Power\Menu;
+use Laravel\Crbac\Models\Power\Item;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Contracts\Auth\Authenticatable as UserContract;
 
 class Rbac {
@@ -28,14 +28,6 @@ class Rbac {
      */
     public function __construct(Container $app) {
         $this->app = $app;
-    }
-    /*
-     * 作用：获取当前用户Model类名
-     * 参数：无
-     * 返回值：string
-     */
-    public function authModel() {
-        return $this->app['config']['auth.model'];
     }
     /*
      * 作用：设置登录人员
@@ -112,7 +104,7 @@ class Rbac {
     }
     /*
      * 作用：判断是否为当前方法
-     * 参数：$menu XiHuan\Crbac\Models\Power\Menu
+     * 参数：$menu Laravel\Crbac\Models\Power\Menu
      * 返回值：bool
      */
     private function isCurrentAction(Menu $menu) {
@@ -128,7 +120,7 @@ class Rbac {
     }
     /*
      * 作用：判断是否为当前控制器
-     * 参数：$menu XiHuan\Crbac\Models\Power\Menu
+     * 参数：$menu Laravel\Crbac\Models\Power\Menu
      * 返回值：bool
      */
     private function isCurrentController(Menu $menu) {
@@ -141,7 +133,7 @@ class Rbac {
     }
     /*
      * 作用：判断是否为上一页面地址
-     * 参数：$menu XiHuan\Crbac\Models\Power\Menu
+     * 参数：$menu Laravel\Crbac\Models\Power\Menu
      * 返回值：bool
      */
     private function isPreviousUrl(Menu $menu) {
@@ -216,7 +208,7 @@ class Rbac {
     /*
      * 作用：取出菜单上级结构
      * 参数：$lists Illuminate\Database\Eloquent\Collection
-     *       $menu XiHuan\Crbac\Models\Power\Menu
+     *       $menu Laravel\Crbac\Models\Power\Menu
      * 返回值：array
      */
     private function parentsLevel($lists, Menu $menu) {

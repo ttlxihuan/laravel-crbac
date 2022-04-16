@@ -1,26 +1,23 @@
 <?php
 
-namespace XiHuan\Crbac;
+namespace Laravel\Crbac;
 
-use Auth,
-    Crbac;
+use Crbac;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\AliasLoader;
-use XiHuan\Crbac\Console\CrbacTableCommand;
-use XiHuan\Crbac\Console\CrbacTableSeederCommand;
+use Laravel\Crbac\Console\CrbacTableCommand;
+use Laravel\Crbac\Console\CrbacTableSeederCommand;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider {
 
     //指示是否将提供程序的加载推迟。
     protected $defer = false;
 
-    /*
-     * 作用：注册服务供应商
-     * 参数：无
-     * 返回值：void
+    /**
+     * 注册服务
      */
     public function register() {
-        $this->app['crbac'] = $this->app->share(function ($app) {//取菜单，判断是否有权限
+        $this->app->singleton('crbac', function ($app) {//取菜单，判断是否有权限
             return new Rbac($app);
         });
         $this->app['events']->listen('auth.login', function($admin) {
@@ -32,268 +29,207 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         AliasLoader::getInstance(['Crbac' => Facade::class]);
         $this->registerCommands();
     }
-    /*
-     * 作用：引导应用程序事件
-     * 参数：无
-     * 返回值：void
+
+    /**
+     * 服务初始引导处理
      */
     public function boot() {
-        $this->app['config']->push('view.paths', __DIR__ . '/Resources/views');
+        // 没有开启支持授权处理即跳过
+        if (!$this->hasPowerAuthGuard()) {
+            return;
+        }
+//        auth()->login(Models\Power\Admin::find(1));
+        // 添加特定路由配置
         $router = $this->app['router'];
-        $this->addRouteFilter($router);
-        $this->addRoutes($router);
-    }
-    /*
-     * 作用：添加路由过滤处理
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addRouteFilter($router) {
-        $router->matched(function($route) {
+        //通用公用路由
+        $router->any('{type}/{ctr}.{act}/{one?}/{two?}/{three?}/{four?}/{five?}', [
+                    'namespace' => 'Laravel\Crbac\Controllers\Power',
+                    'prefix' => 'crbac/',
+                    'as' => 'mvc-crbac',
+                    'uses' => function() {
+                        // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
+                        view()->addLocation(realpath(__DIR__ . '/../views'));
+                        return $this->response();
+                    }])
+                ->where('type', 'power|static|usable')
+                ->where('ctr', '(.*)');
+        //路由匹配处理，主要针对其它路由进行权限处理
+        $router->matched(function() {
+            $route = request()->route();
             $action = $route->getAction();
-            if (in_array($route->getName(), ['power.static.css', 'power.static.js'])) {
+            if (empty($action['middleware'])) {
                 $action['middleware'] = [];
-            } elseif (isset($action['uses']) && is_string($action['uses']) && Auth::check()) {//未作登录的不做权限验证处理
-                Crbac::setAdmin($this->app['auth']->user());
-                $action['before'][] = 'power_check';
-                $action['before'][] = 'power_code';
             }
-            $route->setAction($action);
-        });
-        $router->filter('power_code', function($route, $request) {
-            if ($request->ajax() && $request->header('GET-ROUTER-USERS') === 'true') {
-                $uses = currentRouteUses();
-                $item = $uses ? Models\Power\Item::findCode($uses) : null;
-                if ($item) {
-                    $data = array_only($item->toArray(), ['code', 'status', 'power_item_group_id']);
-                    $data['power_item_group_name'] = array_get($item->group->toArray(), 'name');
-                    $data['roles'] = array_pluck($item->roles, 'name', 'power_role_id') ?: [];
-                    $item = $data;
+            if (isset($action['as']) && $action['as'] == 'mvc-crbac' && $route->parameter('type') == 'power') {
+                array_push($action['middleware'], 'auth');
+                if (version_compare(app()->version(), '5.2.0', '>=')) {
+                    array_push($action['middleware'], 'web');
                 }
-                return prompt(compact('uses', 'item'));
+            }
+            // 有授权则追加权限中间件
+            foreach ($action['middleware'] as $middleware) {
+                if ($middleware == 'auth' || strpos($middleware, 'auth:')) {
+                    array_push($action['middleware'], Middleware\PowerAuthenticate::class);
+                    $route->setAction($action);
+                    break;
+                }
             }
         });
-        $router->filter('power_check', function() {
-            $power = isControllerPower(null, null, true);
-            if (!$power) {
-                return prompt('没有权限操作', 'error');
-            }
-        });
     }
-    /*
-     * 作用：添加路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addRoutes($router) {
-        $routeConfig = [
-            'namespace' => 'XiHuan\Crbac\Controllers\Power',
-            'prefix' => 'power/',
-            'middleware' => ['auth'],
-        ];
-        $router->group($routeConfig, function($router) {
-            //权限项相关
-            $this->addPowerItemRoute($router);
-            //角色相关
-            $this->addPowerRoleRoute($router);
-            //菜单相关
-            $this->addPowerMenuRoute($router);
-            //菜单组相关
-            $this->addPowerMenuGroupRoute($router);
-            //权限项组相关
-            $this->addPowerItemGroupRoute($router);
-            //管理员相关
-            $this->addPowerAdminRoute($router);
-        });
-        //静态文件
-        $this->addStaticRoute($router);
-        //判断是否存在
-        $router->get('usable/{model}/{field}.html', ['uses' => function(\Illuminate\Http\Request $request, $model, $field) {
-                $service = new Services\ExistService();
-                $val = $request->input($field);
-                return $val && $service->check($model, $field, $val, $request->input('id')) ? 'false' : 'true';
-            }, 'as' => 'exist_validate'])->where(['model' => '((\\w+)(/\\w+)*)', 'field' => '\\w+']);
-    }
-    /*
-     * 作用：添加权限项路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addPowerItemRoute($router) {
-        //权限项相关
-        $this->addRouteResource('item', 'ItemController', $router, Models\Power\Item::class, ['select']);
-        //路由处理
-        $router->get('item/routes.html', 'ItemController@routes'); //现有路由列表
-        $router->get('item/update/routes.html', 'ItemController@updateRoutes'); //更新路由列表
-    }
-    /*
-     * 作用：添加角色路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addPowerRoleRoute($router) {
-        $this->addRouteResource('role', 'RoleController', $router, Models\Power\Role::class);
-        $router->get('role/admins/{bind_style}/{power_role}.html', 'RoleController@admins')->where('bind_style', 'bind|unbind'); //角色下管理员列表
-        $router->match(['get', 'post'], 'role/items/{power_role}.html', 'RoleController@items'); //角色下权限项编辑
-        $router->get('role/admin/remove/{power_role}/{admin}.html', 'RoleController@removeAdmin'); //角色下移除管理员
-        $router->get('role/admin/add/{power_role}/{admin}.html', 'RoleController@addAdmin'); //角色下添加管理员
-    }
-    /*
-     * 作用：添加菜单路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addPowerMenuRoute($router) {
-        $this->addRouteResource('menu', 'MenuController', $router, Models\Power\Menu::class);
-    }
-    /*
-     * 作用：添加菜单组路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addPowerMenuGroupRoute($router) {
-        $this->addRouteResource('group/menu', 'MenuGroupController', $router, Models\Power\MenuGroup::class);
-        $router->match(['get', 'post'], 'group/menu/level/{power_group_menu}.html', 'MenuGroupController@menus'); //菜单组下菜单层级编辑
-        $router->get('group/menu/select/level/{power_group_menu}.html', 'MenuGroupController@levelOption'); //菜单组下菜单层级列表连动处理
-        $router->get('group/menu/copy/{power_group_menu}.html', 'MenuGroupController@copy'); //复制菜单组
-        $router->model('copy_power_group_menu', Models\Power\MenuGroup::class);
-        $router->match(['get', 'post'], 'group/menu/pasted/{copy_power_group_menu}/{power_group_menu}.html', 'MenuGroupController@pasted'); //粘贴菜单组
-    }
-    /*
-     * 作用：添加权限项组路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addPowerItemGroupRoute($router) {
-        $this->addRouteResource('group/item', 'ItemGroupController', $router, Models\Power\ItemGroup::class);
-    }
-    /*
-     * 作用：添加管理员路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addPowerAdminRoute($router) {
-        $authModel = auth_model();
-        $authModel::saving(function(Models\Admin $model) {
-            $model->savePassword();
-        });
-        $this->addRouteResource('admin', 'AdminController', $router, $authModel, ['delete', 'select']);
-        //修改密码
-        $router->match(['get', 'post'], 'admin/update/password.html', ['uses' => 'AdminController@password', 'as' => 'update_admin_password']);
-    }
-    /*
-     * 作用：添加静态文件路由
-     * 参数：$router Illuminate\Routing\Router
-     * 返回值：void
-     */
-    protected function addStaticRoute($router) {
-        $router->pattern('static_file', '(.*)');
-        foreach (['css' => 'text/css', 'js' => 'text/javascript'] as $ext => $type) {
-            $router->get('static/' . $ext . '/{static_file}.' . $ext, ['uses' => function($static_file)use($ext, $type) {//获取文件
-                    return $this->cacheResponse($ext . '/' . $static_file . '.' . $ext, $type);
-                }, 'as' => 'power.static.' . $ext]);
-        }
-        $router->get('static/img/{static_file}.{file_ext}', ['uses' => function($static_file, $file_ext) {//获取文件
-                        return $this->cacheResponse('img/' . $static_file . '.' . $file_ext, 'image/' . $file_ext);
-                    }, 'as' => 'power.static.img'])
-                ->where('file_ext', 'png|gif');
-    }
+
     /**
-     * Cache the response 1 year (31536000 sec)
+     * 是否存在支持授权处理
+     * @return bool
      */
-    /*
-     * 作用：静态文件响应
-     * 参数：$file 静态文件
-     *      $contentType 文件类型
-     * 返回值：Illuminate\Http\Response
-     */
-    protected function cacheResponse($file, $contentType) {
-        $filePath = __DIR__ . '/Resources/' . $file;
-        $response = new Response(
-                file_get_contents($filePath), 200, array('Content-Type' => $contentType,)
-        );
-        $response->setSharedMaxAge(31536000);
-        $response->setMaxAge(31536000);
-        $response->setExpires(new \DateTime('+1 year'));
-        return $response;
+    protected function hasPowerAuthGuard() {
+        // 不同版本有差异
+        $config = $this->app['config'];
+        if (method_exists($this->app['auth'], 'guard')) {
+            // 多授权模型配置
+            foreach ($config['auth.guards'] ?? [] as $guard) {
+                $provider = array_get($guard, 'provider');
+                if ($provider && $config["auth.providers.$provider.driver"] == 'eloquent') {
+                    $model = $config["auth.providers.$provider.model"];
+                    if ($model && class_exists($model) && is_a(new $model, Models\Power\Admin::class)) {
+                        return true;
+                    }
+                }
+            }
+        } else {
+            // 单授权模型配置
+            $model = $config['auth.model'];
+            if ($model && class_exists($model) && is_a(new $model, Models\Power\Admin::class)) {
+                return true;
+            }
+        }
+        return false;
     }
-    /*
-     * 作用：添加指定路由
-     * 参数：$name string 目录名
-     *      $controller string 控制器类名
-     *      $router Illuminate\Routing\Router
-     *      $model string Model类名
-     *      $excepts array 排除指定路由
-     * 返回值：void
+
+    /**
+     * 权限处理相关响应
+     * @return mixed
      */
-    protected function addRouteResource($name, $controller, $router, $model, $excepts = []) {
-        $resource = ['lists', 'add', 'edit', 'delete', 'select'];
-        $as = 'power.' . str_replace(['/', '-', '_'], '.', $name);
-        $router->model(str_replace('.', '_', $as), $model);
-        foreach (array_diff($resource, $excepts) as $action) {
-            $function = 'addRoute' . $action;
-            $this->$function($router, $name, $as, $controller);
+    protected function response() {
+        $route = request()->route();
+        $type = $route->parameter('type');
+        $controllerParam = $route->parameter('ctr');
+        $actionParam = $route->parameter('act');
+        //必需合法
+        if (preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*([/\-\.][a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+$#', $controllerParam . '/' . $actionParam)) {
+            //控制器与方法解析匹配
+            switch ($type) {
+                case 'static':
+                    $action = $this->responseStatic($controllerParam, $actionParam);
+                    break;
+                case 'power':
+                    $action = $this->responsePower($controllerParam, $actionParam);
+                    break;
+                case 'usable':
+                    $service = new Services\ExistService();
+                    $val = request()->input($actionParam);
+                    return $val && $service->check($controllerParam, $actionParam, $val, request()->input('id')) ? 'false' : 'true';
+                default:
+                    $action = null;
+                    break;
+            }
+            if (is_array($action)) {
+                $route->setAction(array_merge($route->getAction(), $action));
+                return $route->run();
+            }
+        }
+        return abort(404);
+    }
+
+    /**
+     * 权限静态文件响应处理
+     * @param string $controllerParam
+     * @param string $actionParam
+     * @return mixed
+     */
+    protected function responseStatic(string $controllerParam, string $actionParam) {
+        $file = __DIR__ . "/../static/$controllerParam.$actionParam";
+        $types = ['css' => 'text/css', 'js' => 'text/javascript'];
+        if (file_exists($file) && isset($types[$actionParam])) {
+            $contentType = $types[$actionParam];
+            return [
+                'uses' => function()use($file, $contentType) {
+                    $response = new class($file, 200, ['Content-Type' => $contentType]) extends Response {
+
+                        private $file;
+
+                        public function __construct($file, int $status = 200, array $headers = array()) {
+                            parent::__construct('', $status, $headers);
+                            $this->file = $file;
+                        }
+
+                        public function sendContent() {
+                            readfile($this->file);
+                        }
+                    };
+                    $response->setSharedMaxAge(31536000);
+                    $response->setMaxAge(31536000);
+                    $response->setExpires(new \DateTime('+1 year'));
+                    return $response;
+                }
+            ];
         }
     }
-    /*
-     * 作用：添加列表路由
-     * 参数：$router Illuminate\Routing\Router
-     *      $name string  路径
-     *      $as string 别名
-     *      $controller string 控制器类名
-     * 返回值：void
+
+    /**
+     * 权限处理响应
+     * @param string $controllerParam
+     * @param string $actionParam
+     * @return mixed
      */
-    protected function addRouteLists($router, $name, $as, $controller) {
-        $router->get($name . '/lists.html', ['uses' => $controller . '@lists', 'as' => $as . '.lists']);
+    protected function responsePower(string $controllerParam, string $actionParam) {
+        $space = explode('/', $controllerParam);
+        $controller = 'Laravel\\Crbac\\Controllers\\Power\\' . implode('\\', array_map('studly_case', array_filter($space))) . 'Controller';
+        $action = studly_case($actionParam);
+        if (!method_exists($controller, $action)) {
+            return;
+        }
+        $method = new \ReflectionMethod($controller, $action);
+        $comment = $method->getDocComment();
+        if (!$method->isPublic() || !preg_match('/@methods\(\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)(\s*,\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)+)*\s*\)/i', $comment, $matches)) {
+            return;
+        }
+        $methods = array_map(function($item) {
+            return trim(ltrim($item, ','));
+        }, array_slice($matches, 1));
+        if (!in_array(request()->method(), $methods)) {
+            return;
+        }
+        //路由参数处理
+        $route = request()->route();
+        $parameters = array_except($route->parameters, ['type', 'ctr', 'act']);
+        $parametersKeys = array_keys($parameters);
+        array_push($parameters);
+        foreach ($method->getParameters() as $num => $parameter) {
+            if (empty($parametersKeys[$num])) {
+                break;
+            }
+            $key = $parametersKeys[$num];
+            $class = $parameter->getClass();
+            if ($class) {
+                $object = $this->app->make($class->name);
+                if (is_subclass_of($class->name, \Illuminate\Database\Eloquent\Model::class)) {
+                    $object = $object->find($parameters[$key]);
+                }
+                if (!$object) {
+                    return;
+                }
+                $parameters[$key] = $object;
+            }
+        }
+        $route->parameters = $parameters;
+        return [
+            'uses' => $controller . '@' . $action,
+            'controller' => $controller . '@' . $action
+        ];
     }
-    /*
-     * 作用：添加创建路由
-     * 参数：$router Illuminate\Routing\Router
-     *      $name string  路径
-     *      $as string 别名
-     *      $controller string 控制器类名
-     * 返回值：void
-     */
-    protected function addRouteAdd($router, $name, $as, $controller) {
-        $router->match(['get', 'post'], $name . '/add.html', ['uses' => $controller . '@add', 'as' => $as . '.add']);
-    }
-    /*
-     * 作用：添加编辑路由
-     * 参数：$router Illuminate\Routing\Router
-     *      $name string  路径
-     *      $as string 别名
-     *      $controller string 控制器类名
-     * 返回值：void
-     */
-    protected function addRouteEdit($router, $name, $as, $controller) {
-        $router->match(['get', 'post'], $name . '/edit/{' . str_replace('.', '_', $as) . '}.html', ['uses' => $controller . '@edit', 'as' => $as . '.edit']);
-    }
-    /*
-     * 作用：添加删除路由
-     * 参数：$router Illuminate\Routing\Router
-     *      $name string  路径
-     *      $as string 别名
-     *      $controller string 控制器类名
-     * 返回值：void
-     */
-    protected function addRouteDelete($router, $name, $as, $controller) {
-        $router->get($name . '/delete/{' . str_replace('.', '_', $as) . '}.html', ['uses' => $controller . '@delete', 'as' => $as . '.delete']);
-    }
-    /*
-     * 作用：添加快捷选择路由
-     * 参数：$router Illuminate\Routing\Router
-     *      $name string  路径
-     *      $as string 别名
-     *      $controller string 控制器类名
-     * 返回值：void
-     */
-    protected function addRouteSelect($router, $name, $as, $controller) {
-        $router->get($name . '/select/{select_relation}.html', ['uses' => $controller . '@select', 'as' => $as . '.select']);
-    }
-    /*
-     * 作用：注册所有的迁移命令
-     * 参数：无
-     * 返回值：void
+
+    /**
+     * 注册所有命令
      */
     protected function registerCommands() {
         $this->app->singleton('crbac.table', function() {
@@ -304,4 +240,5 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         });
         $this->commands('crbac.table', 'crbac.seeder');
     }
+
 }

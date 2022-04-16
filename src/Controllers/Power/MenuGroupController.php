@@ -4,56 +4,61 @@
  * 菜单组
  */
 
-namespace XiHuan\Crbac\Controllers\Power;
+namespace Laravel\Crbac\Controllers\Power;
 
-use Input,
-    Request,
-    Closure;
-use XiHuan\Crbac\Models\Power\Menu;
-use XiHuan\Crbac\Models\Power\MenuGroup;
-use XiHuan\Crbac\Controllers\Controller;
-use XiHuan\Crbac\Services\Power\MenuGroup as MenuGroupService;
+use Closure;
+use Laravel\Crbac\Models\Power\Menu;
+use Illuminate\Support\Facades\Request;
+use Laravel\Crbac\Models\Power\MenuGroup;
+use Laravel\Crbac\Controllers\Controller;
+use Laravel\Crbac\Services\Power\MenuGroup as MenuGroupService;
 
 class MenuGroupController extends Controller {
 
     //备注说明
     protected $description = '菜单组';
 
-    /*
-     * 作用：编辑菜单组数据
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 需要编辑的数据，默认为添加
-     * 返回值：view|array
+    /**
+     * 编辑菜单组数据
+     * @param MenuGroup $item
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function edit(MenuGroup $item = null) {
         return $this->modelEdit($item, 'power.menu.group.edit', MenuGroup::class);
     }
-    /*
-     * 作用：获取菜单下级列表
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 菜单组
-     * 返回值：array
+
+    /**
+     * 获取菜单下级列表
+     * @param MenuGroup $item
+     * @return mixed
+     * @methods(GET)
      */
-    //获取菜单级
     public function levelOption(MenuGroup $item) {
-        $parent_id = (int) Input::Get('parent_id');
+        $parent_id = (int) request('parent_id');
         return prompt([
             'options' => $item->menus()->where('parent_id', '=', $parent_id)->get(['power_menu_level.id', 'power_menu.name'])
         ]);
     }
-    /*
-     * 作用：删除菜单组数据
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 需要删除的菜单组
-     * 返回值：view|array
+
+    /**
+     * 删除菜单组数据
+     * @param MenuGroup $item
+     * @return mixed
+     * @methods(GET)
      */
-    public function delete($item) {
+    public function delete(MenuGroup $item) {
         if ($item->menus()->count() || $item->admins()->count()) {
             return prompt($this->description . '已经在使用中，无法删除！', 'error', -1);
         }
-        return parent::delete($item);
+        return $this->modelDelete($item);
     }
-    /*
-     * 作用：编辑菜单组中菜单层级
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 菜单组
-     * 返回值：view|array
+
+    /**
+     * 编辑菜单组中菜单层级
+     * @param MenuGroup $item
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function menus(MenuGroup $item) {
         if (!Request::isMethod('post')) {
@@ -62,7 +67,7 @@ class MenuGroupController extends Controller {
             $level = '1';
             $menu_lists = Menu::group($item->getKey());
             $lists = $menu_lists->groupBy('parent_id');
-            $level_lists = $menu_lists->lists('power_menu_id', 'level_id');
+            $level_lists = $menu_lists->pluck('id', 'level_id');
             return view('power.menu.group.level', compact('lists', 'title', 'parent_id', 'level', 'level_lists'))
                             ->with('menuGroup', $item);
         }
@@ -70,41 +75,48 @@ class MenuGroupController extends Controller {
         $service->editMenuLevel($item);
         return $service->prompt('菜单层级编辑成功');
     }
-    /*
-     * 作用：菜单组列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 菜单组列表
+     * @return view
+     * @methods(GET)
      */
     public function lists() {
         return $this->_lists();
     }
-    /*
-     * 作用：快捷选择列表
-     * 参数：无
-     * 返回值：view
+
+    /**
+     * 快捷选择列表
+     * @param string $relation
+     * @return view
+     * @methods(GET)
      */
-    public function select() {
+    public function select(string $relation) {
         $where = ['name' => 'like',];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
         list($lists, $toOrder) = $this->listsSelect(MenuGroup::class, $where, $order, $default);
-        return view('power.menu.group.select', compact('lists', 'toOrder'));
+        return view('power.menu.group.select', compact('lists', 'toOrder', 'relation'));
     }
-    /*
-     * 作用：复制菜单组列表
-     * 参数：$item XiHuan\Crbac\Models\Power\MenuGroup 菜单组
-     * 返回值：view
+
+    /**
+     * 复制菜单组列表
+     * @param MenuGroup $item
+     * @return view
+     * @methods(GET)
      */
     public function copy(MenuGroup $item) {
         return $this->_lists(function($builder)use($item) {
                     $builder->where($item->getKeyName(), '!=', $item->getKey());
                 })->with(['copy' => $item, 'title' => '复制菜单']);
     }
-    /*
-     * 作用：粘贴菜单组列表
-     * 参数：$copy XiHuan\Crbac\Models\Power\MenuGroup 复制菜单组
-     *      $pasted XiHuan\Crbac\Models\Power\MenuGroup 粘贴菜单组
-     * 返回值：view|array
+
+    /**
+     * 粘贴菜单组列表
+     * @param MenuGroup $copy
+     * @param MenuGroup $pasted
+     * @return mixed
+     * @methods(GET,POST)
      */
     public function pasted(MenuGroup $copy, MenuGroup $pasted) {
         if (!Request::isMethod('post')) {
@@ -113,10 +125,11 @@ class MenuGroupController extends Controller {
         }
         return $this->menus($pasted);
     }
-    /*
-     * 作用：获取列表
-     * 参数：$callback Closure 查询回调处理
-     * 返回值：view
+
+    /**
+     * 获取列表
+     * @param Closure $callback
+     * @return view
      */
     private function _lists(Closure $callback = null) {
         $where = [
@@ -128,4 +141,5 @@ class MenuGroupController extends Controller {
         $description = $this->description;
         return view('power.menu.group.lists', compact('lists', 'description', 'toOrder'));
     }
+
 }

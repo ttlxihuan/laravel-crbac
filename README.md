@@ -23,7 +23,7 @@ git clone https://github.com/ttlxihuan/laravel-crbac
 
 使用composer安装
 ```
-composer require xihuan/laravel-crbac dev-master
+composer require laravel/crbac dev-master
 ```
 
 
@@ -33,14 +33,15 @@ Configuration
 
 打开 `config/app.php` 添加应用服务到容器:
 ```php
-XiHuan\Crbac\ServiceProvider::class,
+Laravel\Crbac\ServiceProvider::class,
 ```
 
 当使用手动安装时需要做以下几个修改
 打开 `vendor/composer/autoload_psr4.php` 添加命令空间加载目录：
 ```php
-'XiHuan\\Crbac\\' => array($vendorDir . '/laravel-crbac/src'),
+'Laravel\\Crbac\\' => array($vendorDir . '/laravel-crbac/src'),
 ```
+打开 `vendor/composer/autoload_static.php` 添加命令空间加载目录，此文件有多处需要添加，暂不示例
 
 打开 `vendor/composer/autoload_files.php` 添加助手函数加载：
 ```php
@@ -66,11 +67,12 @@ table
 
  表名               | 说明
 :-------------------|:----------
+ power_role_admin   | 管理员表
  power_item         | 权限项表，记录所有权限项基础数据
  power_item_group   | 权限项组表，用于权限项分组，当前只设计一级。
  power_menu         | 菜单表，记录所有菜单基础数据，并且可以关联到权限项
  power_menu_group   | 菜单组表，用于区分不同菜单组的菜单结构。
- power_menu_level	  | 菜单层级表，记录菜单的组成层级结构。
+ power_menu_level   | 菜单层级表，记录菜单的组成层级结构。
  power_role         | 角色表。
  power_role_admin   | 角色与管理员关联表
  power_role_item    | 角色与权限项关联表
@@ -85,7 +87,4 @@ php artisan crbac:table
 
 attention
 -------------
-view中的JS及CSS未经过严格的兼容测试，一般支持CSS3的浏览器均无异常。由于个人的实力等方面限制不可避免的存在的细节或其它问题，如有发现问题也请及时提出，我将尽快的修正。
-以下为界面样式：
-<img src="example.png">
-
+view中的JS及CSS未经过严格的兼容测试，一般支持CSS3的浏览器均无异常。

@@ -4,24 +4,24 @@
  * 菜单管理
  */
 
-namespace XiHuan\Crbac\Services\Power;
+namespace Laravel\Crbac\Services\Power;
 
-use Input;
-use XiHuan\Crbac\Models\Power\MenuLevel;
-use XiHuan\Crbac\Models\Power\Menu as MenuModel;
-use XiHuan\Crbac\Models\Power\Item as ItemModel;
-use XiHuan\Crbac\Services\Service as BaseService;
+
+use Laravel\Crbac\Models\Power\MenuLevel;
+use Laravel\Crbac\Models\Power\Menu as MenuModel;
+use Laravel\Crbac\Models\Power\Item as ItemModel;
+use Laravel\Crbac\Services\Service as BaseService;
 
 class Menu extends Service {
     /*
      * 作用：修改数据前处理
      * 参数：$data array 要修改的数据
-     *       $service XiHuan\Crbac\Services\Service 编辑处理service
+     *       $service Laravel\Crbac\Services\Service 编辑处理service
      *       $item Model|string 要编辑的Model或Model类名
      * 返回值：bool
      */
     protected function editBefore(&$data, BaseService $service, $item) {
-        $code = Input::get('code');
+        $code = request('code');
         if (!$code) {
             return;
         }
@@ -39,12 +39,12 @@ class Menu extends Service {
     /*
      * 作用：修改数据后处理
      * 参数：$result null|Model 修改的数据的结果
-     *       $service XiHuan\Crbac\Services\Service 编辑处理service
+     *       $service Laravel\Crbac\Services\Service 编辑处理service
      * 返回值：void
      */
     protected function editAfter($result, BaseService $service) {
         //整理菜单组数据
-        $groups = (array) Input::get('group');
+        $groups = (array) request('group');
         $delete = MenuLevel::where($result->getKeyName(), '=', $result->getKey());
         if (!count($groups)) {//删除所有关联数据
             $delete->delete();
