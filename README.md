@@ -40,13 +40,13 @@ $vendorDir . '/laravel-crbac/src/helpers.php',
 
 Configuration
 -------------
-需要在laravel5中启用应用，需要作几个配置修改。
+需要在laravel中启用应用，需要作几个配置修改。
 
-打开 `config/app.php` 添加应用服务到容器:
+打开配置文件 `config/app.php` 添加应用服务到容器:
 ```php
 Laravel\Crbac\ServiceProvider::class,
 ```
-打开 `config/auth.php` 添加授权模型:
+打开配置文件 `config/auth.php` 添加授权模型:
 ```php
 'model' => Laravel\Crbac\Models\Power\Admin::class,
 ```
@@ -65,7 +65,7 @@ php artisan crbac:lang
 ```
 命令会复制预定中文字典复制到语言配置目录中。
 
-打开 `config/app.php` 修改默认语言
+打开配置文件 `config/app.php` 修改默认语言
 ```php
 'locale' => 'cn',
 ```
