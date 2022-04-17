@@ -152,7 +152,6 @@ if (!function_exists('crbac_route')) {
      * @return string
      */
     function crbac_route(string $name = null, array $parameters = [], $absolute = true) {
-        static $paths = null;
         if (is_null($name)) {
             return url()->current();
         }
@@ -166,18 +165,16 @@ if (!function_exists('crbac_route')) {
             if ($route->getName() !== 'mvc-crbac') {
                 return route($name, $parameters, $absolute);
             }
-            if (is_null($paths)) {
-                $path = $request->getPathInfo();
-                $prefix = $route->getPrefix();
-                if ($prefix) {
-                    $path = substr($path, strlen(trim($prefix, '/') . '/') + 1);
-                }
-                $paths = [];
-                foreach (explode('/', $path) as $path) {
-                    $paths[] = $path;
-                    if (strpos($path, '.') > 0) {
-                        break;
-                    }
+            $path = $request->getPathInfo();
+            $prefix = $route->getPrefix();
+            if ($prefix) {
+                $path = substr($path, strlen(trim($prefix, '/') . '/') + 1);
+            }
+            $paths = [];
+            foreach (explode('/', $path) as $path) {
+                $paths[] = $path;
+                if (strpos($path, '.') > 0) {
+                    break;
                 }
             }
             $type = array_shift($paths);
