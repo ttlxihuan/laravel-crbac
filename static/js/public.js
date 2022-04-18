@@ -26,10 +26,11 @@
                 if (fn.success && fn.success(json, textStatus, fn) === false) {
                     return;
                 }
+                if ((json.timeout === undefined || json.timeout <= 0) && _redirect(json)) {
+                    return;
+                }
                 var callback = $.isFunction(fn.callback) ? fn.callback : function () {
-                    if (json.redirect !== undefined && json.timeout > 0) {
-                        location.href = json.redirect;
-                    }
+                    _redirect(json);
                 };
                 if (json.redirect !== undefined && json.timeout > 0) {
                     json.message.info += '<i id="pop-timeout-redirect" class="fr">' + parseInt(json.timeout) + '</i>';
@@ -38,17 +39,13 @@
                                 time = parseInt(span.text());
                         if (time < 1) {
                             clearInterval(xt);
-                            location.href = json.redirect;
+                            _redirect(json);
                         } else {
                             span.text(--time);
                         }
                     }, 1000);
                 }
-                //登录失效
-                if (json.status === 'logon_failure') {
-                    json.redirect = json.redirect ? json.redirect : '/login.html';
-                    $.showWarn(json.message.info, json.message.title, callback);
-                } else if (json.status === 'success') {
+                if (json.status === 'success') {
                     $.showSuccess(json.message.info, json.message.title, callback);
                 } else if (json.status === 'error') {
                     if (typeof json.message.info === 'object') {
@@ -59,9 +56,6 @@
                         json.message.info = '<p>' + info.join('</p><p>') + '</p>';
                     }
                     $.showError(json.message.info, json.message.title, callback);
-                }
-                if (json.redirect !== undefined && (json.timeout === undefined || json.timeout < 0)) {
-                    location.href = json.redirect;
                 }
             },
             beforeSend: function (XHR) {
@@ -75,6 +69,20 @@
         });
         return $.ajax(_opt);
     };
+    function _redirect(data) {
+        if (data.redirect !== undefined) {
+            if (data.redirect < 0) {
+                if (history.length < Math.abs(data.redirect)) {
+                    location.href = '/';
+                }
+                history.back(data.redirect);
+            } else {
+                location.href = data.redirect;
+            }
+            return true;
+        }
+        return false;
+    }
 })(jQuery);
 (function () {
     var mask = !1,
@@ -99,7 +107,7 @@
         showLoad: function () {
             this.showMask();
             if (!load) {
-                load = $('<img class="public-load" src="/static/img/load.gif"/>');
+                load = $('<img class="public-load" src="/crbac/static/img/load.gif"/>');
                 $('body').append(load);
             } else {
                 load.show();
@@ -123,10 +131,10 @@
                 popup.empty().show();
             }
             //显示内容
-            var cont = $('<div class="pop-content rel zoom"><div>');
+            var cont = $('<div class="pop-body rel zoom"></div>');
             //标题
             title = title === undefined ? '提醒一下' : title;
-            close = close === undefined || close ? $('<i>X</i>') : '';
+            close = close === undefined || close ? $('<i></i>') : '';
             title = $('<p class="pop-tit">' + title + '</p>');
             popup.append(title), close && title.append(close) && close.click(function () {
                 hide('close');
@@ -149,7 +157,7 @@
                     }
                 }
             }
-            popup.append(cont.append('<div>' + contents + '</div>'));
+            popup.append(cont.append('<div class="pop-content">' + contents + '</div>'));
             return this;
         },
         hiddenPopup: function () {

@@ -14,20 +14,17 @@ if (!function_exists('prompt')) {
         if (is_string($message)) {
             $message = ['info' => $message, 'title' => $message];
         }
-        $data = [
-            'status' => $status,
-            'message' => $message
-        ];
-        if ($redirect == -1) {
-            $redirect = URL::previous();
-        }
+        $data = compact('status', 'message');
         if ($redirect) {
-            $data['redirect'] = $redirect;
-            if ($timeout > 0) {
-                $data['timeout'] = $timeout;
-            } elseif (!Request::ajax()) {
-                return redirect($redirect);
+            if (!Request::ajax()) {
+                if ($redirect == -1) {
+                    $redirect = URL::previous();
+                }
+                if ($timeout <= 0) {
+                    return redirect($redirect);
+                }
             }
+            $data += compact('redirect', 'timeout');
         }
         if (Request::ajax()) {
             return response()->json($data);

@@ -34,7 +34,7 @@ class AdminController extends Controller {
                     Auth::logout();
                     return prompt('账户异常', 'error');
                 }
-                return prompt('登录成功', 'success', '/', 0);
+                return prompt('登录成功', 'success', -1);
             }
             return prompt('账号或密码错误', 'error');
         }

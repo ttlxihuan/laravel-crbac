@@ -170,7 +170,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      */
     protected function responseStatic(string $controllerParam, string $actionParam) {
         $file = __DIR__ . "/../static/$controllerParam.$actionParam";
-        $types = ['css' => 'text/css', 'js' => 'text/javascript'];
+        $types = ['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png', 'gif' => 'image/gif'];
         if (file_exists($file) && isset($types[$actionParam])) {
             $contentType = $types[$actionParam];
             return [
