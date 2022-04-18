@@ -144,7 +144,7 @@ $menuGroups = MenuGroup::all();
         getMenuLevel($(this));
     });
     $(':button.remove-menu-group').click(function () {
-        if ($(this).parents('div.field-group clear').find('div.menu-group-lists').size() > 1) {//最少保留一组
+        if ($(this).parents('div.field-group.clear').find('div.menu-group-lists').size() > 1) {//最少保留一组
             $(this).parent().remove();
         } else {
             alert('最少保存一项，允许不选择！');

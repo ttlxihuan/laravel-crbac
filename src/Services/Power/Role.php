@@ -44,6 +44,7 @@ class Role extends Service {
                 }, $insertIds);
                 RoleItem::insert($inserts);
             }
+            DB::commit();
         } catch (\Exception $err) {
             DB::rollBack();
             throw $err;

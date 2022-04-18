@@ -64,6 +64,7 @@ class ExistService extends Service {
     public function toUrl($model, string $field) {
         if (is_object($model)) {
             $parameters = ['id' => $model->getKey()];
+            $model = get_class($model);
         } else {
             $parameters = [];
         }

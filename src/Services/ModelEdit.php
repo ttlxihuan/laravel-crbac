@@ -74,6 +74,7 @@ class ModelEdit extends Service {
         try {
             DB::beginTransaction();
             if ($before && $before($data, $this, $model) === false) {
+                DB::rollBack();
                 return false;
             }
             //上传处理
@@ -81,6 +82,7 @@ class ModelEdit extends Service {
                 if ($item instanceof UploadedFile) {
                     $item = $this->upload($item);
                     if ($item === false) {//上传失败
+                        DB::rollBack();
                         return false;
                     }
                 }
@@ -91,6 +93,7 @@ class ModelEdit extends Service {
                 $model = $model::create($data);
             }
             if ($after && $after($model, $this) === false) {
+                DB::rollBack();
                 return false;
             }
             DB::commit();

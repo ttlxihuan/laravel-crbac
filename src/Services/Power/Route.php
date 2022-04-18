@@ -41,6 +41,7 @@ class Route extends Service {
                 }
             }
             RouteModel::insert($inserts);
+            DB::commit();
         } catch (\Exception $err) {
             DB::rollBack();
             throw $err;
