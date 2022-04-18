@@ -6,37 +6,44 @@
 
 namespace Laravel\Crbac\Services\Power;
 
-
+use Illuminate\Support\Facades\DB;
 use Laravel\Crbac\Models\Power\MenuLevel;
 use Laravel\Crbac\Models\Power\MenuGroup as MenuGroupModel;
 
 class MenuGroup extends Service {
-    /*
-     * 作用：编辑菜单关系处理
-     * 参数：$item Laravel\Crbac\Models\Power\MenuGroup 要处理的菜单组
-     * 返回值：void
+
+    /**
+     * 编辑菜单关系处理
+     * @param MenuGroupModel $item
      */
     public function editMenuLevel(MenuGroupModel $item) {
-        $levels = (array) request('level');
-        $levels = array_values($levels);
+        $levels = array_values((array) request('level'));
         $delete = MenuLevel::where('power_menu_group_id', '=', $item->getKey()); //删除数据
         $useIds = [];
-        $parent_ids = $this->singleLevelMenu($item, array_map('array_pop', array_shift($levels)), 0); //处理第一级
-        foreach ($parent_ids as $menu_id => $level_id) {
-            $useIds = array_merge($useIds, $this->levelMenu($item, $levels, $menu_id, $level_id)); //下级处理
+        try {
+            DB::beginTransaction();
+            $parent_ids = $this->singleLevelMenu($item, array_map('array_pop', array_shift($levels)), 0); //处理第一级
+            foreach ($parent_ids as $menu_id => $level_id) {
+                $useIds = array_merge($useIds, $this->levelMenu($item, $levels, $menu_id, $level_id)); //下级处理
+            }
+            $useIds = array_merge($useIds, $parent_ids);
+            if ($useIds) {//去掉已经使用的ID
+                $delete->whereNotIn('id', $useIds);
+            }
+            $delete->delete(); //删除不要的数据
+            DB::commit();
+        } catch (\Exception $err) {
+            DB::rollBack();
+            throw $err;
         }
-        $useIds = array_merge($useIds, $parent_ids);
-        if ($useIds) {//去掉已经使用的ID
-            $delete->whereNotIn('id', $useIds);
-        }
-        $delete->delete(); //删除不要的数据
     }
-    /*
-     * 作用：处理单层下菜单
-     * 参数：$item Laravel\Crbac\Models\Power\MenuGroup 要处理的菜单组
-     *      $menus array 菜单ID集
-     *      $parent_id 上级菜单ID
-     * 返回值：array
+
+    /**
+     * 处理单层下菜单
+     * @param MenuGroupModel $item
+     * @param array $menus
+     * @param int $parent_id
+     * @return array
      */
     protected function singleLevelMenu(MenuGroupModel $item, array $menus, $parent_id) {
         if (!count($menus)) {
@@ -74,13 +81,14 @@ class MenuGroup extends Service {
                 ->get(['power_menu_id', 'id']); //添加成功数据
         return array_pluck($result, 'id', 'power_menu_id');
     }
-    /*
-     * 作用：递归层级处理
-     * 参数：$item Laravel\Crbac\Models\Power\MenuGroup 要处理的菜单组
-     *      $_levels array 层级ID集
-     *      $menu_id int 菜单ID
-     *      $parent_id 上级菜单ID
-     * 返回值：array
+
+    /**
+     * 递归层级处理
+     * @param MenuGroupModel $item
+     * @param array $_levels
+     * @param int $menu_id
+     * @param int $parent_id
+     * @return array
      */
     protected function levelMenu(MenuGroupModel $item, $_levels, $menu_id, $parent_id) {
         $levels = array_shift($_levels);
@@ -91,4 +99,5 @@ class MenuGroup extends Service {
         }
         return array_merge($parent_ids, $child_ids);
     }
+
 }

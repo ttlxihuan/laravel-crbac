@@ -149,7 +149,7 @@ class RoleController extends Controller {
         }
         $service = new RoleService();
         $service->editItems($role);
-        return $service->prompt('角色权限项编辑成功');
+        return $service->prompt('角色权限项编辑成功', null, -1);
     }
 
 }

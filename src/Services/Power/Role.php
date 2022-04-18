@@ -6,6 +6,7 @@
 
 namespace Laravel\Crbac\Services\Power;
 
+use Illuminate\Support\Facades\DB;
 use Laravel\Crbac\Models\Power\Item;
 use Laravel\Crbac\Models\Power\RoleItem;
 use Laravel\Crbac\Models\Power\Role as RoleModel;
@@ -26,20 +27,26 @@ class Role extends Service {
             $removeIds = array_intersect($removeIds, $allowIds);
             $insertIds = array_intersect($insertIds, $allowIds);
         }
-        if ($removeIds) {
-            RoleItem::where('power_role_id', '=', $role->getKey())
-                    ->whereIn('power_item_id', $removeIds)
-                    ->delete();
-        }
-        if ($insertIds) {//插入处理
-            $insertIds = Item::whereIn('id', $insertIds)
-                    ->get(['id'])
-                    ->pluck('id')
-                    ->toArray();
-            $inserts = array_map(function($itemId)use($role) {
-                return ['power_role_id' => $role->getKey(), 'power_item_id' => $itemId];
-            }, $insertIds);
-            RoleItem::insert($inserts);
+        try {
+            DB::beginTransaction();
+            if ($removeIds) {
+                RoleItem::where('power_role_id', '=', $role->getKey())
+                        ->whereIn('power_item_id', $removeIds)
+                        ->delete();
+            }
+            if ($insertIds) {//插入处理
+                $insertIds = Item::whereIn('id', $insertIds)
+                        ->get(['id'])
+                        ->pluck('id')
+                        ->toArray();
+                $inserts = array_map(function($itemId)use($role) {
+                    return ['power_role_id' => $role->getKey(), 'power_item_id' => $itemId];
+                }, $insertIds);
+                RoleItem::insert($inserts);
+            }
+        } catch (\Exception $err) {
+            DB::rollBack();
+            throw $err;
         }
     }
 

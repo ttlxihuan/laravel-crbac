@@ -106,7 +106,7 @@ class ItemController extends Controller {
     public function updateRoutes() {
         $service = new RouteService();
         $service->update();
-        return $service->prompt(null, null, -1);
+        return $service->prompt(null, '仅获取有授权中间件和指定控制器的路由', -1);
     }
 
 }

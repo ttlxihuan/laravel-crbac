@@ -8,8 +8,9 @@ namespace Laravel\Crbac\Services;
 
 use Closure,
     Exception,
-    Illuminate\Support\Facades\Validator,
+    Illuminate\Support\Facades\DB,
     Illuminate\Support\Facades\Request,
+    Illuminate\Support\Facades\Validator,
     Symfony\Component\HttpFoundation\File\UploadedFile;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
@@ -23,7 +24,9 @@ class ModelEdit extends Service {
      * @return false|array
      */
     public function validation($model, array $input = [], array $option = []) {
-        $input = array_filter($input, function($val) { return !is_null($val);});
+        $input = array_filter($input, function($val) {
+            return !is_null($val);
+        });
         $modelClass = $this->getModelClass($model);
         $rules = $this->getRules($modelClass);
         if (count($option)) {//只修改指定参数
@@ -68,27 +71,34 @@ class ModelEdit extends Service {
         if ($data === false) {//验证失败
             return false;
         }
-        if ($before && $before($data, $this, $model) === false) {
-            return false;
-        }
-        //上传处理
-        foreach ($data as &$item) {
-            if ($item instanceof UploadedFile) {
-                $item = $this->upload($item);
-                if ($item === false) {//上传失败
-                    return false;
+        try {
+            DB::beginTransaction();
+            if ($before && $before($data, $this, $model) === false) {
+                return false;
+            }
+            //上传处理
+            foreach ($data as &$item) {
+                if ($item instanceof UploadedFile) {
+                    $item = $this->upload($item);
+                    if ($item === false) {//上传失败
+                        return false;
+                    }
                 }
             }
+            if ($model instanceof Eloquent) {
+                $model->update($data);
+            } else {
+                $model = $model::create($data);
+            }
+            if ($after && $after($model, $this) === false) {
+                return false;
+            }
+            DB::commit();
+            return $model;
+        } catch (\Exception $err) {
+            DB::rollBack();
+            throw $err;
         }
-        if ($model instanceof Eloquent) {
-            $model->update($data);
-        } else {
-            $model = $model::create($data);
-        }
-        if ($after && $after($model, $this) === false) {
-            return false;
-        }
-        return $model;
     }
 
     /**
