@@ -27,28 +27,28 @@ class Menu extends Model {
     protected $table = 'power_menu'; //表名
     protected static $validates = ['name']; //允许验证可用字段
 
-    /*
-     * 作用：关联权限项
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\HasOne
+    /**
+     * 关联权限项
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function item() {
         return $this->hasOne(Item::class, 'id', 'power_item_id');
     }
-    /*
-     * 作用：关联菜单组
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
+
+    /**
+     * 关联菜单组
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function groups() {
         return $this->belongsToMany(MenuGroup::class, 'power_menu_level', 'power_menu_id', 'power_menu_group_id')
                         ->select('power_menu_group.*', 'power_menu_level.parent_id', 'power_menu_level.id as level_id');
     }
-    /*
-     * 作用：获取指定层级菜单
-     * 参数：$group_id int 菜单组ID
-     *      $parent_id int 上级ID
-     * 返回值：Illuminate\Database\Eloquent\Collection
+
+    /**
+     * 获取指定层级菜单
+     * @param int $group_id
+     * @param int $parent_id
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function level($group_id, $parent_id = 0) {
         return self::leftJoin('power_menu_level', 'power_menu_level.power_menu_id', '=', 'power_menu.id')
@@ -56,10 +56,11 @@ class Menu extends Model {
                         ->where('power_menu_level.parent_id', '=', $parent_id)
                         ->get(['power_menu.*', 'power_menu_level.id as level_id', 'power_menu_level.parent_id']);
     }
-    /*
-     * 作用：获取指定人员可用菜单
-     * 参数：$admin Illuminate\Contracts\Auth\Authenticatable 当前登录用户Model
-     * 返回值：Illuminate\Database\Eloquent\Collection
+
+    /**
+     * 获取指定人员可用菜单
+     * @param UserContract $admin
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function menus(UserContract $admin) {
         return self::leftJoin('power_menu_level', 'power_menu_level.power_menu_id', '=', 'power_menu.id')
@@ -78,10 +79,11 @@ class Menu extends Model {
                         ->orderBy('power_menu_level.sort', 'desc')
                         ->get(['power_menu.*', 'power_menu_level.id as level_id', 'power_menu_level.parent_id']);
     }
-    /*
-     * 作用：获取指定菜单组中的菜单列表
-     * 参数：$group_id int 菜单组ID
-     * 返回值：Illuminate\Database\Eloquent\Collection
+
+    /**
+     * 获取指定菜单组中的菜单列表
+     * @param int $group_id
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function group($group_id) {
         return self::leftJoin('power_menu_level', 'power_menu_level.power_menu_id', '=', 'power_menu.id')
@@ -90,4 +92,5 @@ class Menu extends Model {
                         ->orderBy('power_menu_level.sort', 'desc')
                         ->get(['power_menu.*', 'power_menu_level.id as level_id', 'power_menu_level.parent_id']);
     }
+
 }

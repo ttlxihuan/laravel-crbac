@@ -32,46 +32,48 @@ class Item extends Model {
     protected $table = 'power_item'; //表名
     protected static $validates = ['name']; //允许验证可用字段
 
-    /*
-     * 作用：关联菜单
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\HasMany
+    /**
+     * 关联菜单
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function menus() {
         return $this->hasMany(Menu::class, $this->primaryKey);
     }
-    /*
-     * 作用：关联所在组处理
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\HasOne
+
+    /**
+     * 关联所在组处理
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function group() {
         return $this->hasOne(ItemGroup::class, 'id', 'power_item_group_id');
     }
-    /*
-     * 作用：关联所在角色
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
+
+    /**
+     * 关联所在角色
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles() {
         return $this->belongsToMany(Role::class, 'power_role_item', 'power_item_id', 'power_role_id');
     }
-    /*
-     * 作用：通过权限码获取权限项数据
-     * 参数：$code string 权限码
-     * 返回值：self
+
+    /**
+     * 通过权限码获取权限项数据
+     * @param string $code
+     * @return self
      */
-    public static function findCode($code) {
+    public static function findCode(string $code) {
         return self::where('code', $code)->first();
     }
-    /*
-     * 作用：判断用户是否有权限访问
-     * 参数：$admin Illuminate\Contracts\Auth\Authenticatable 当前登录用户Model
-     *      $code string 权限码
-     *      $default bool 如果权限不存在或禁用返回默认值
-     * 返回值：bool
+
+    /**
+     * 判断用户是否有权限访问
+     * @staticvar array $allows
+     * @param UserContract $admin
+     * @param string $code
+     * @param bool $default
+     * @return bool
      */
-    public static function allow(UserContract $admin, $code, $default = false) {
+    public static function allow(UserContract $admin, string $code, bool $default = false) {
         static $allows = [];
         if (isset($allows[$admin->getKey()][$code])) {
             return $allows[$admin->getKey()][$code];
@@ -90,11 +92,12 @@ class Item extends Model {
         }
         return $allows[$admin->getKey()][$code] = $allow;
     }
-    /*
-     * 作用：获取指定用户的所有允许权限项
-     * 参数：$admin Illuminate\Contracts\Auth\Authenticatable 当前登录用户Model
-     *       $with null|string|array 关联查询
-     * 返回值：Illuminate\Database\Eloquent\Collection
+
+    /**
+     * 获取指定用户的所有允许权限项
+     * @param UserContract $admin
+     * @param null|string|array $with
+     * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function items(UserContract $admin, $with = null) {
         $query = static::whereIn('power_item_id', function($query) use($admin) {
@@ -105,13 +108,13 @@ class Item extends Model {
         }
         return $query->get();
     }
-    /*
-     * 作用：处理权限查询
-     * 参数：$builder Illuminate\Database\Eloquent\Builder
-     *       $admin Illuminate\Contracts\Auth\Authenticatable 当前登录用户Model
-     * 返回值：Illuminate\Database\Eloquent\Builder
+
+    /**
+     * 处理权限查询
+     * @param Illuminate\Database\Eloquent\Builder $builder
+     * @param UserContract $admin
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    //
     public static function addItemWhere($builder, UserContract $admin) {
         return $builder->from('power_role_item')
                         ->whereIn('power_role_id', function($query) use($admin) {//关联权限
@@ -127,4 +130,5 @@ class Item extends Model {
                         ->select('power_item_id')
                         ->distinct();
     }
+
 }

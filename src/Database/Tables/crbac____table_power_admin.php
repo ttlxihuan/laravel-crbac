@@ -12,10 +12,9 @@ class TablePowerAdmin extends Migration {
     //表名
     protected $table = 'power_admin';
 
-    /*
-     * 作用：添加字段列
-     * 参数：$table Illuminate\Database\Schema\Blueprint
-     * 返回值：void
+    /**
+     * 添加字段列
+     * @param Blueprint $table
      */
     public function setColumns(Blueprint $table) {
         $table->increments('id')->comment('主键');
@@ -28,4 +27,5 @@ class TablePowerAdmin extends Migration {
         $table->enum('status', ['disable', 'enable'])->notnull()->default('enable')->comment('启用或禁用，enable为启用');
         $table->unique('username');
     }
+
 }

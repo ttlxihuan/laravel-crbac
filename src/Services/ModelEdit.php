@@ -24,9 +24,6 @@ class ModelEdit extends Service {
      * @return false|array
      */
     public function validation($model, array $input = [], array $option = []) {
-        $input = array_filter($input, function($val) {
-            return !is_null($val);
-        });
         $modelClass = $this->getModelClass($model);
         $rules = $this->getRules($modelClass);
         if (count($option)) {//只修改指定参数

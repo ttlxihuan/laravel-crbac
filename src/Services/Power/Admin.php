@@ -6,6 +6,7 @@
 
 namespace Laravel\Crbac\Services\Power;
 
+use Laravel\Crbac\Models\Model;
 use Laravel\Crbac\Models\Power\RoleAdmin;
 use Laravel\Crbac\Services\Service as BaseService;
 use Laravel\Crbac\Models\Power\Admin as AdminModel;
@@ -13,11 +14,12 @@ use Laravel\Crbac\Models\Power\Admin as AdminModel;
 class Admin extends Service {
 
     use RoleRelateEditTrait;
-    /*
-     * 作用：修改数据
-     * 参数：$item null|Model 要修改的数据
-     *      $option array 要修改的数据项,默认全部
-     * 返回值：Model|false
+
+    /**
+     * 修改数据
+     * @param string|Model $item
+     * @param array $option
+     * @return Model|false
      */
     public function edit($item, array $option = []) {
         $password = request('password');
@@ -27,13 +29,14 @@ class Admin extends Service {
         }
         return parent::edit($item, $option);
     }
-    /*
-     * 作用：修改数据后处理
-     * 参数：$result null|Model 修改的数据的结果
-     *       $service Laravel\Crbac\Services\Service 编辑处理service
-     * 返回值：void
+
+    /**
+     * 修改数据后处理
+     * @param Model $result
+     * @param BaseService $service
      */
-    protected function editAfter($result, BaseService $service) {
+    protected function editAfter(Model $result, BaseService $service) {
         $this->roleRelateEdit($result, RoleAdmin::class, 'power_admin_id', false);
     }
+
 }

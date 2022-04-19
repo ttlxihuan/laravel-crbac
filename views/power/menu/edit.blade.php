@@ -91,7 +91,7 @@ $menuGroups = MenuGroup::all();
         <input type="button" id="add-menu-group" value="追加菜单组"/>
     </div>
     <div class="field-value redD">
-        注意：相同菜单结构组会合并为一个。
+        注意：相同菜单结构组会合并为一个，构变化会删除结构不相同的下级菜单。
     </div>
 </div>
 <div class="field-group clear">

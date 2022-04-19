@@ -1,13 +1,7 @@
 <?php
 
 /**
- * @文件名 ExistService
- * @字符集 UTF-8
- * @创建人 奚欢
- * @版权所有 版权属创建人所有，任何人要复制、翻译、改编或演出等均需要得到版权所有人的许可
- * @创建时间 2016-6-2 22:30:44
- * @版本 1.0
- * @说明 是否存在处理
+ * 模型数据是否存在处理
  */
 
 namespace Laravel\Crbac\Services;
@@ -30,7 +24,7 @@ class ExistService extends Service {
             if ($id) {
                 $builder->where($model->getKeyName(), '!=', $id);
             }
-            return (bool) $builder->count();
+            return $builder->count() > 0;
         }
     }
 

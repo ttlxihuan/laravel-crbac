@@ -37,7 +37,9 @@ class MenuGroupController extends Controller {
     public function levelOption(MenuGroup $item) {
         $parent_id = (int) request('parent_id');
         return prompt([
-            'options' => $item->menus()->where('parent_id', '=', $parent_id)->get(['power_menu_level.id', 'power_menu.name'])
+            'options' => $item->menus()
+                    ->where('parent_id', '=', $parent_id)
+                    ->get(['power_menu_level.id', 'power_menu.name'])
         ]);
     }
 

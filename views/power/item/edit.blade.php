@@ -40,7 +40,7 @@
 <script type="text/javascript">
     $(function(){
         getRouteUses('{{explode(",", $route->methods)[0]}}');
-    })
+    });
 </script>
 @endif
 @stop

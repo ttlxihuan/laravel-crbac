@@ -10,10 +10,9 @@ class TablePowerRoleItem extends Migration {
     //是否添加时间字段
     protected $timestamps = false;
 
-    /*
-     * 作用：添加字段列
-     * 参数：$table Illuminate\Database\Schema\Blueprint
-     * 返回值：void
+    /**
+     * 添加字段列
+     * @param Blueprint $table
      */
     public function setColumns(Blueprint $table) {
         $table->increments('id')->comment('主键');
@@ -21,4 +20,5 @@ class TablePowerRoleItem extends Migration {
         $table->unsignedInteger('power_item_id')->notnull()->comment('权限项ID');
         $table->unique(['power_role_id', 'power_item_id'], 'role_item');
     }
+
 }

@@ -6,15 +6,17 @@
 
 namespace Laravel\Crbac\Services\Power;
 
+use Laravel\Crbac\Models\Model;
 use Laravel\Crbac\Services\ModelEdit;
 use Laravel\Crbac\Services\Service as BaseService;
 
 abstract class Service extends BaseService {
-    /*
-     * 作用：修改数据
-     * 参数：$item null|Model 要修改的数据
-     *      $option array 要修改的数据项,默认全部
-     * 返回值：Model|false
+
+    /**
+     * 修改数据
+     * @param string|Model $item
+     * @param array $option
+     * @return Model|false
      */
     public function edit($item, array $option = []) {
         $service = new ModelEdit($this);
@@ -27,23 +29,24 @@ abstract class Service extends BaseService {
                     return $this->editAfter($result, $service);
                 });
     }
-    /*
-     * 作用：修改数据前处理
-     * 参数：$data array 要修改的数据
-     *       $service Laravel\Crbac\Services\Service 编辑处理service
-     *       $item Model|string 要编辑的Model或Model类名
-     * 返回值：bool
+
+    /**
+     * 修改数据前处理
+     * @param array $data
+     * @param BaseService $service
+     * @param Model|string $item
      */
-    protected function editBefore(&$data, BaseService $service, $item) {
+    protected function editBefore(array &$data, BaseService $service, $item) {
         
     }
-    /*
-     * 作用：修改数据后处理
-     * 参数：$result null|Model 修改的数据的结果
-     *       $service Laravel\Crbac\Services\Service 编辑处理service
-     * 返回值：void
+
+    /**
+     * 修改数据后处理
+     * @param Model $result
+     * @param BaseService $service
      */
-    protected function editAfter($result, BaseService $service) {
+    protected function editAfter(Model $result, BaseService $service) {
         
     }
+
 }

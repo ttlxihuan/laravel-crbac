@@ -7,6 +7,7 @@ use Illuminate\Http\Response;
 use Illuminate\Foundation\AliasLoader;
 use Laravel\Crbac\Console\CrbacTableCommand;
 use Laravel\Crbac\Console\CrbacTableSeederCommand;
+use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider {
 
@@ -26,21 +27,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $this->app['events']->listen('auth.logout', function () {
             Crbac::setAdmin();
         });
-        // 如果没有绑定登录则自动追加
-        $this->app->booted(function () {
-            // 添加特定路由配置
-            $this->app['router']->group([
-                'namespace' => 'Laravel\Crbac\Controllers\Power',
-                'prefix' => 'crbac/',
-                    ], function ($router) {
-                        if (!$router->has('logout')) {
-                            $router->get('logout', ['uses' => 'AdminController@logout', 'as' => 'logout', 'middleware' => $this->getAuthMiddleware()]);
-                        }
-                        if (!$router->has('login')) {
-                            $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
-                        }
-                    });
-        });
         AliasLoader::getInstance(['Crbac' => Facade::class]);
         $this->registerCommands();
     }
@@ -53,20 +39,16 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         if (!$this->hasPowerAuthGuard()) {
             return;
         }
-        // 添加特定路由配置
-        $router = $this->app['router'];
-        //通用公用路由
-        $router->any('{type}/{ctr}.{act}/{one?}/{two?}/{three?}/{four?}/{five?}', [
-                    'namespace' => 'Laravel\Crbac\Controllers\Power',
-                    'prefix' => 'crbac/',
-                    'as' => 'mvc-crbac',
-                    'uses' => function () {
-                        return $this->response();
-                    }])
-                ->where('type', 'power|static|usable')
-                ->where('ctr', '(.*)');
+        $this->addRoute();
+        $this->addRouteMiddleware();
+    }
+
+    /**
+     * 添加rbac中间件
+     */
+    protected function addRouteMiddleware() {
         //路由匹配处理，主要针对其它路由进行权限处理
-        $router->matched(function () {
+        $this->app['router']->matched(function () {
             // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
             view()->addLocation(realpath(__DIR__ . '/../views'));
             $route = request()->route();
@@ -74,8 +56,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
             if (empty($action['middleware'])) {
                 $action['middleware'] = [];
             }
-            if (isset($action['as']) && $action['as'] == 'mvc-crbac' && $route->parameter('type') == 'power') {
-                $action['middleware'] = $this->getAuthMiddleware();
+            if (isset($action['as']) && $action['as'] == 'mvc-crbac') {
+                if ($route->parameter('type') == 'power') {
+                    $action['middleware'] = $this->getAuthMiddleware();
+                }
+                $this->requestConvertRestore();
             }
             // 有授权则追加权限中间件
             foreach ($action['middleware'] as $middleware) {
@@ -85,6 +70,56 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                     break;
                 }
             }
+        });
+    }
+
+    /**
+     * 消除 \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull 中间件将空请求数据修改为null
+     * 此函数主要是兼容目前结构和框架，结构中不允许有null但这个中间件会强制修改为null，函数通过逆向修改为空
+     * 为null主要会影响到验证必填，请求默认值重写等
+     */
+    protected function requestConvertRestore() {
+        if (class_exists(ConvertEmptyStringsToNull::class)) {
+            $restore = new class() extends ConvertEmptyStringsToNull {
+
+                protected function transform($key, $value) {
+                    return is_null($value) ? '' : $value;
+                }
+            };
+            $restore->handle($this->app['request'], function() {
+                
+            });
+        }
+    }
+
+    /**
+     * 添加rbac路由
+     */
+    protected function addRoute() {
+        //通用公用路由
+        $this->app['router']->any('{type}/{ctr}.{act}/{one?}/{two?}/{three?}/{four?}/{five?}', [
+                    'namespace' => 'Laravel\Crbac\Controllers\Power',
+                    'prefix' => 'crbac/',
+                    'as' => 'mvc-crbac',
+                    'uses' => function () {
+                        return $this->response();
+                    }])
+                ->where('type', 'power|static|usable')
+                ->where('ctr', '(.*)');
+        // 如果没有绑定登录则自动追加
+        $this->app->booted(function () {
+            // 添加特定路由配置
+            $this->app['router']->group([
+                'namespace' => 'Laravel\Crbac\Controllers\Power',
+                'prefix' => 'crbac/',
+                    ], function ($router) {
+                if (!$router->has('logout')) {
+                    $router->get('logout', ['uses' => 'AdminController@logout', 'as' => 'logout', 'middleware' => $this->getAuthMiddleware()]);
+                }
+                if (!$router->has('login')) {
+                    $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
+                }
+            });
         });
     }
 
@@ -149,7 +184,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 case 'usable':
                     $service = new Services\ExistService();
                     $val = request()->input($actionParam);
-                    return $val && $service->check($controllerParam, $actionParam, $val, request()->input('id')) ? 'false' : 'true';
+                    return $val && $service->check($controllerParam, $actionParam, $val, $route->parameter('one')) ? 'false' : 'true';
                 default:
                     $action = null;
                     break;

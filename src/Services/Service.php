@@ -11,19 +11,19 @@ abstract class Service {
     private $service; //上级Service对象
     private $messages = []; //异常信息
 
-    /*
-     * 作用：初始化
-     * 参数：$service self|null 上级Service对象
-     * 返回值：void
+    /**
+     * 初始化
+     * @param \Laravel\Crbac\Services\Service $service
      */
     public function __construct(Service $service = null) {
         $this->service = $service;
     }
-    /*
-     * 作用：写入错误
-     * 参数：$key array|string 错误键名或错误集
-     *       $value string 错误值
-     * 返回值：false
+
+    /**
+     * 写入错误
+     * @param array|string $key
+     * @param string $value
+     * @return false
      */
     public function setError($key, $value) {
         if ($this->service) {
@@ -32,22 +32,24 @@ abstract class Service {
         array_set($this->messages, $key, $value);
         return false;
     }
-    /*
-     * 作用：获取错误
-     * 参数：$key null|string 错误键名或错误集
-     *       $default null|mixed 不存在时返回默认值
-     * 返回值：mixed
+
+    /**
+     * 获取错误
+     * @param null|string $key
+     * @param null|mixed $default
+     * @return mixed
      */
     public function getError($key = null, $default = null) {
         return array_get($this->messages, $key, $default);
     }
-    /*
-     * 作用：提示框处理
-     * 参数：$title null|string 标题语
-     *       $info null|string 标示详情
-     *       $redirect null|-1|url 跳转地址
-     *       $timeout int 跳转等待时间
-     * 返回值：view|array
+
+    /**
+     * 提示框处理
+     * @param null|string $title
+     * @param null|string $info
+     * @param null|-1|url $redirect
+     * @param int $timeout
+     * @return mixed
      */
     public function prompt($title = null, $info = null, $redirect = null, $timeout = 3) {
         if (count($this->messages)) {
@@ -68,12 +70,12 @@ abstract class Service {
         $message = compact('info', 'title');
         return prompt($message, $status, $redirect, $timeout);
     }
-    /*
-     * 作用：获取异常数据
-     * 参数：$messages array 异常数据
-     * 返回值：array
+
+    /**
+     * 获取异常数据
+     * @param array $messages
+     * @return array
      */
-    //异常转为字符串
     private function messages($messages) {
         $map = [];
         foreach ($messages as $message) {
@@ -85,4 +87,5 @@ abstract class Service {
         }
         return $map;
     }
+
 }

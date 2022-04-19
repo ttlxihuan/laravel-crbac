@@ -14,6 +14,7 @@ class Admin extends Model implements Authenticatable {
 
     use \Illuminate\Auth\Authenticatable,
         \Laravel\Crbac\Models\StatusTrait;
+
     public static $_validator_rules = [//验证规则
         'realname' => 'required|between:2,30', // varchar(32) NOT NULL COMMENT '真实姓名',
         'username' => 'required|between:3,30|unique:power_admin', // varchar(32) NOT NULL COMMENT '登录用户名',
@@ -33,10 +34,9 @@ class Admin extends Model implements Authenticatable {
     protected static $validates = ['username']; //允许验证可用字段
     protected $table = 'power_admin'; //表名
 
-    /*
-     * 作用：获取管理员的首页地址
-     * 参数：无
-     * 返回值：string|url
+    /**
+     * 获取管理员的首页地址
+     * @return string|url
      */
     public function index() {
         $menus = Menu::menus($this)
@@ -50,33 +50,27 @@ class Admin extends Model implements Authenticatable {
         return route('logout');
     }
 
-    /*
-     * 作用：关联菜单组
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\HasOne
+    /**
+     * 关联菜单组
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function menuGroup() {
         return $this->hasOne(MenuGroup::class, 'id', 'power_menu_group_id');
     }
 
-    /*
-     * 作用：关联角色
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
+    /**
+     * 关联角色
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function roles() {
         return $this->belongsToMany(Role::class, 'power_role_admin', 'power_admin_id', 'power_role_id');
     }
 
-    /*
-     * 作用：设置保存密码
-     * 参数：无
-     * 返回值：void
+    /**
+     * 设置保存密码
      */
-    public function savePassword() {
-        if (isset($this->attributes['password']) && (empty($this->original['password']) || ($this->attributes['password'] !== $this->original['password']))) {
-            $this->attributes['password'] = Hash::make($this->attributes['password']);
-        }
+    public function setPasswordAttribute($password) {
+        $this->attributes['password'] = Hash::make($password);
     }
 
 }

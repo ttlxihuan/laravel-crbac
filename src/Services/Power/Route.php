@@ -24,7 +24,7 @@ class Route extends Service {
             $now = time();
             foreach (Router::getRoutes()->getIterator() as $route) {
                 $action = $route->getAction();
-                if (!$this->hasAuth($inserts)) {
+                if (!$this->hasAuth($action)) {
                     continue;
                 }
                 $uses = array_get($action, 'uses');

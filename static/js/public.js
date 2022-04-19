@@ -72,7 +72,7 @@
     function _redirect(data) {
         if (data.redirect !== undefined) {
             if (data.redirect < 0) {
-                if (history.length < Math.abs(data.redirect)) {
+                if (history.length <= Math.abs(data.redirect)) {
                     location.href = '/';
                 }
                 history.back(data.redirect);

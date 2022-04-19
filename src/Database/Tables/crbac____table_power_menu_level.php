@@ -10,10 +10,9 @@ class TablePowerMenuLevel extends Migration {
     //是否添加时间字段
     protected $timestamps = false;
 
-    /*
-     * 作用：添加字段列
-     * 参数：$table Illuminate\Database\Schema\Blueprint
-     * 返回值：void
+    /**
+     * 添加字段列
+     * @param Blueprint $table
      */
     public function setColumns(Blueprint $table) {
         $table->increments('id')->comment('主键');
@@ -23,4 +22,5 @@ class TablePowerMenuLevel extends Migration {
         $table->smallInteger('sort', false, true)->notnull()->default(0)->comment('排序值，大到小');
         $table->unique(['power_menu_id', 'power_menu_group_id', 'parent_id'], 'menu_level');
     }
+
 }

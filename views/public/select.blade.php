@@ -22,9 +22,9 @@ $not_menu = true;
 <script type="text/javascript">
     $(function () {
         $('a.select-item').click(function () {
-            $('#single{{$select_name}}-id', window.opener.document).val($(this).data('id'));
+            $('#single{{$select_name}}-id', window.opener.document).val($(this).data('id')).valid();
             $('#single{{$select_name}}-name', window.opener.document).val($(this).data('name'));
-            window.close();
+//            window.close();
         });
     });
 </script>
@@ -53,7 +53,7 @@ $not_menu = true;
             });
             if ($.inArray(val, vids) === -1) {
                 vids.push(val);
-                $('#many{{$select_name}}-id', window.opener.document).val(vids.join(','));
+                $('#many{{$select_name}}-id', window.opener.document).val(vids.join(',')).valid();
                 $('#many{{$select_name}}-name', window.opener.document).append('<span class="add-item">' + $(this).data('name') + '<i class="item-remove" onclick="remove{{str_replace("-", "_", $select_name)}}_item(this,' + val + ')">X</i></span>');
             }
         });

@@ -6,19 +6,21 @@
 
 namespace Laravel\Crbac\Services\Power;
 
-
+use Laravel\Crbac\Models\Model;
+use Laravel\Crbac\Models\Power\MenuGroup;
 use Laravel\Crbac\Models\Power\MenuLevel;
 use Laravel\Crbac\Models\Power\Menu as MenuModel;
 use Laravel\Crbac\Models\Power\Item as ItemModel;
 use Laravel\Crbac\Services\Service as BaseService;
 
 class Menu extends Service {
-    /*
-     * 作用：修改数据前处理
-     * 参数：$data array 要修改的数据
-     *       $service Laravel\Crbac\Services\Service 编辑处理service
-     *       $item Model|string 要编辑的Model或Model类名
-     * 返回值：bool
+
+    /**
+     * 修改数据前处理，菜单权限项处理
+     * @param array $data
+     * @param BaseService $service
+     * @param MenuModel $item
+     * @return mixed
      */
     protected function editBefore(&$data, BaseService $service, $item) {
         $code = request('code');
@@ -30,113 +32,106 @@ class Menu extends Service {
             $power = ItemModel::findCode($code);
         }
         //添加权限项
-        $result = (new Item($this))->edit($power ? : ItemModel::class);
+        $result = (new Item($this))->edit($power ?: ItemModel::class);
         if ($result) {
             $data['power_item_id'] = $result->getKey();
         }
         return $result;
     }
-    /*
-     * 作用：修改数据后处理
-     * 参数：$result null|Model 修改的数据的结果
-     *       $service Laravel\Crbac\Services\Service 编辑处理service
-     * 返回值：void
+
+    /**
+     * 修改数据后处理，菜单组合处理
+     * @param Model $result
+     * @param BaseService $service
+     * @return void
      */
-    protected function editAfter($result, BaseService $service) {
-        //整理菜单组数据
-        $groups = (array) request('group');
-        $delete = MenuLevel::where($result->getKeyName(), '=', $result->getKey());
-        if (!count($groups)) {//删除所有关联数据
-            $delete->delete();
-            return;
-        }
-        $noeLevelIds = [];
-        $parentMenu = MenuLevel::select('*'); //上级菜单
-        $selfMenu = MenuLevel::where('power_menu_id', '=', $result->getKey()); //自己菜单
-        $whereCallback = [];
-        foreach ($groups as $item) {
-            $item = array_filter(array_values($item), function($v) {//过滤处理
-                return $v > 0;
-            });
-            if (!count($item)) {
-                continue;
-            }
-            if (count($item) == 1) {
-                $noeLevelIds[$item[0]] = $item[0]; //自己为第一级菜单
-            }
-            $parentMenu->orWhere(function($query)use($item, $result) {
-                $query->where('power_menu_group_id', $item[0]);
-                if (count($item) > 1) {//
-                    $query->where('id', $item[count($item) - 1]); //有上级
-                } else {//没有上级，自己就是上级
-                    $query->where('parent_id', 0)
-                            ->where('power_menu_id', '=', $result->getKey()); //无上级
+    protected function editAfter(Model $result, BaseService $service) {
+        /*
+         * 菜单层级编辑细节
+         * 1、整理验证数据
+         * 2、按数据源提取匹配层级菜单
+         * 3、匹配可修改的层级，当前菜单上层链路全部修改
+         * 4、未匹配的直接创建，创建整个层级数据
+         * 5、无法匹配的直接删除，当前菜单及下层链路全部删除
+         */
+        $groups = [];
+        $menuGroupIds = [];
+        $levelIds = [];
+        // 整理数据
+        foreach ((array) request('group') as $items) {
+            $level = [];
+            foreach ((array) $items as $item) {
+                if (!filter_var($item, FILTER_VALIDATE_INT) || $item <= 0) {
+                    break;
                 }
-            });
-            $whereCallback[] = function($query)use($item) {
-                $query->where('power_menu_group_id', $item[0])
-                        ->where('parent_id', count($item) > 1 ? $item[count($item) - 1] : 0);
-            };
-        }
-        $parentLists = []; //需要的上级
-        $selfLists = [];
-        if ($whereCallback) {
-            $parentLists = $parentMenu->get(); //需要的上级
-            $selfLists = $selfMenu->where(function($query)use($whereCallback) {
-                        array_map(function($callback)use($query) {
-                            $query->orWhere($callback);
-                        }, $whereCallback);
-                    })->get(['id', 'power_menu_group_id', 'parent_id']); //已经存在的
-        }
-        $inserts = []; //要写入的数据
-        if ($selfLists) {
-            $delete->whereNotIn('id', array_pluck($selfLists, 'id')); //删除无需关联数据
-        }
-        //删除关联前，需要删除所在当前层级下所有关联数据
-        foreach ($delete->get() as $level) {
-            $this->deleteLevel($level->power_menu_group_id, [$level->getKey()]);
-        }
-        $delete->delete();
-        $self_parents = array_pluck($selfLists, 'parent_id');
-        foreach ($parentLists as $level) {
-            if ($level->parent_id == 0 && isset($noeLevelIds[$level->power_menu_group_id]) && $level->power_menu_id == $result->getKey()) {//自己为第一级，并且存在的
-                unset($noeLevelIds[$level->power_menu_group_id]);
-                continue;
+                $level[] = $item;
             }
-            if (in_array($level->getKey(), $self_parents)) {//存在这个
-                continue;
+            if (count($level)) {
+                $menuGroupIds[] = $level[0];
+                $levelIds = array_merge($levelIds, $level);
+                $groups[] = $level;
             }
-            //新添加
-            $inserts[] = [
-                'power_menu_id' => $result->getKey(),
-                'power_menu_group_id' => $level->power_menu_group_id,
-                'parent_id' => $level->getKey(),
-            ];
         }
-        if ($noeLevelIds) {//未添加的第一级菜单
-            $self_groups = array_pluck($selfLists, 'power_menu_group_id', 'parent_id'); //取出已经存在的关联
-            foreach ($noeLevelIds as $id) {
-                if ((isset($self_groups[$id]) && $self_groups[$id] == 0)) {//存在不创建
-                    continue;
+        $exist_ids = [];
+        $builder = MenuLevel::where('power_menu_id', $id = $result->getKey());
+        if (count($groups)) {
+            // 验证菜单组是否存在
+            if (count(array_diff($menuGroupIds, array_column(MenuGroup::whereIn('id', array_unique($menuGroupIds))->get(['id'])->toArray(), 'id')))) {
+                return $this->setError('validator', '菜单组配置的菜单组数不存在');
+            }
+            // 验证菜单是否存在
+            $levels = [];
+            foreach (MenuLevel::whereIn('id', array_unique($levelIds))->get(['id', 'parent_id', 'power_menu_group_id'])->toArray() as $item) {
+                $levels[$item['id']] = $item;
+            }
+            if (count(array_diff($levelIds, array_keys($levels)))) {
+                return $this->setError('validator', '菜单组配置的菜单层级数据不存在');
+            }
+            foreach (array_unique($groups, SORT_REGULAR) as $items) {
+                $groupId = array_shift($items);
+                $parent_id = 0;
+                foreach ($items as $item) {
+                    if ($levels[$item]['power_menu_group_id'] != $groupId || $levels[$item]['parent_id'] != $parent_id) {
+                        return $this->setError('validator', '菜单组配置的菜单层级数据错误');
+                    }
+                    $parent_id = $item;
                 }
-                //新添加
-                $inserts[] = [
-                    'power_menu_id' => $result->getKey(),
-                    'power_menu_group_id' => $id,
-                    'parent_id' => '0',
-                ];
+                $level_id = MenuLevel::where('power_menu_group_id', $groupId)
+                        ->where('power_menu_id', $id)
+                        ->where('parent_id', $parent_id)
+                        ->value('id');
+                if (!$level_id) {
+                    // 没有就创建
+                    $level_id = MenuLevel::insertGetId([
+                                'power_menu_id' => $id,
+                                'power_menu_group_id' => $groupId,
+                                'parent_id' => $parent_id,
+                                'sort' => 0,
+                    ]);
+                }
+                // 记录需要的层级ID集
+                $exist_ids[] = $level_id;
             }
+            $builder->whereNotIn('id', $exist_ids);
         }
-        MenuLevel::insert($inserts);
+        $groups = [];
+        foreach ($builder->get(['power_menu_group_id', 'id']) as $level) {
+            $groups[$level['power_menu_group_id']][] = $level['id'];
+        }
+        foreach ($groups as $group_id => $parent_ids) {
+            $this->deleteLevel($group_id, $parent_ids);
+            MenuLevel::where('id', $parent_ids)->delete();
+        }
     }
-    /*
-     * 作用：删除指定层级下所有关联数据
-     * 参数：$group_id int 菜单组ID
-     *      $parent_id array 上级ID集
-     * 返回值：void
+
+    /**
+     * 删除指定层级下所有关联数据
+     * @param int $group_id
+     * @param array $parent_ids
      */
-    protected function deleteLevel($group_id, array $parent_id) {
-        $level = MenuLevel::whereIn('parent_id', $parent_id)
+    protected function deleteLevel($group_id, array $parent_ids) {
+        // 当前菜单及下级所有菜单层级都删除
+        $level = MenuLevel::whereIn('parent_id', $parent_ids)
                 ->where('power_menu_group_id', '=', $group_id);
         $lists = $level->get(['id']);
         if ($lists->count()) {//递归删除
@@ -144,4 +139,5 @@ class Menu extends Service {
         }
         $level->delete();
     }
+
 }

@@ -8,7 +8,6 @@ namespace Laravel\Crbac\Services;
 
 use Closure,
     Request;
-use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class ModelSelect {
@@ -180,7 +179,7 @@ class ModelSelect {
      * 修改数据
      * @param Closure $callback
      * @param int $perPage
-     * @return Illuminate\Pagination\AbstractPaginator
+     * @return \Illuminate\Pagination\AbstractPaginator
      */
     public function lists(Closure $callback = null, $perPage = 20) {
         if ($callback) {

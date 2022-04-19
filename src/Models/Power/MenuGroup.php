@@ -22,21 +22,21 @@ class MenuGroup extends Model {
     protected $table = 'power_menu_group'; //表名
     protected static $validates = ['name']; //允许验证可用字段
 
-    /*
-     * 作用：关联菜单
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
+    /**
+     * 关联菜单
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function menus() {
-        return $this->belongsToMany(Menu::class, 'power_menu_level', $this->primaryKey, 'power_menu_id');
+        return $this->belongsToMany(Menu::class, 'power_menu_level', 'power_menu_group_id', 'power_menu_id');
     }
-    /*
-     * 作用：关联管理员
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\HasMany
+
+    /**
+     * 关联管理员
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function admins() {
         $class = auth_model();
         return $this->hasMany($class, 'menu_group_id');
     }
+
 }

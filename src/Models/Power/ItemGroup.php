@@ -22,12 +22,12 @@ class ItemGroup extends Model {
     protected $table = 'power_item_group'; //表名
     protected static $validates = ['name']; //允许验证可用字段
 
-    /*
-     * 作用：关联权限项
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\HasMany
+    /**
+     * 关联权限项
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function items() {
         return $this->hasMany(Item::class, 'power_item_group_id');
     }
+
 }

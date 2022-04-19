@@ -8,10 +8,9 @@ class TablePowerMenu extends Migration {
     //表名
     protected $table = 'power_menu';
 
-    /*
-     * 作用：添加字段列
-     * 参数：$table Illuminate\Database\Schema\Blueprint
-     * 返回值：void
+    /**
+     * 添加字段列
+     * @param Blueprint $table
      */
     public function setColumns(Blueprint $table) {
         $table->increments('id')->comment('主键');
@@ -20,4 +19,5 @@ class TablePowerMenu extends Migration {
         $table->unsignedInteger('power_item_id')->notnull()->default(0)->comment('权限项ID');
         $table->string('comment', 500)->notnull()->default('')->comment('备注说明');
     }
+
 }

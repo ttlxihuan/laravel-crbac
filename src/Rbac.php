@@ -21,43 +21,43 @@ class Rbac {
     private $menus; //菜单数据
     private $crumbs; //面包屑数据
 
-    /*
-     * 作用：初始化
-     * 参数：$app Illuminate\Container\Container
-     * 返回值：void
+    /**
+     * 初始化
+     * @param Container $app
      */
     public function __construct(Container $app) {
         $this->app = $app;
     }
-    /*
-     * 作用：设置登录人员
-     * 参数：$admin Illuminate\Contracts\Auth\Authenticatable
-     * 返回值：void
+
+    /**
+     * 设置授权人员
+     * @param UserContract $admin
      */
     public function setAdmin(UserContract $admin = null) {
         $this->admin = $admin;
     }
-    /*
-     * 作用：获取登录人员
-     * 参数：无
-     * 返回值：Illuminate\Contracts\Auth\Authenticatable|null
+
+    /**
+     * 获取授权人员
+     * @return \Illuminate\Contracts\Auth\Authenticatable|null
      */
     public function getAdmin() {
         return $this->admin;
     }
-    /*
-     * 作用：判断用户是否有权限访问
-     * 参数：$code string 权限码
-     *       $default bool 如果权限不存在或禁用返回默认值
-     * 返回值：bool
+
+    /**
+     * 判断用户是否有权限访问
+     * @param string $code
+     * @param bool $default
+     * @return bool
      */
-    public function allow($code, $default = false) {
+    public function allow(string $code, bool $default = false) {
         return Item::allow($this->admin, $code, $default);
     }
-    /*
-     * 作用：获取当前用户菜单数据
-     * 参数：无
-     * 返回值：array
+
+    /**
+     * 获取当前用户菜单数据
+     * @return array
      */
     public function menus() {
         if (is_array($this->menus)) {
@@ -67,10 +67,10 @@ class Rbac {
         list($this->menus, $this->crumbs) = $this->group($menus);
         return $this->menus;
     }
-    /*
-     * 作用：获取当前用户面包屑数据
-     * 参数：无
-     * 返回值：array
+
+    /**
+     * 获取当前用户面包屑数据
+     * @return array
      */
     public function crumbs() {
         if (!$this->crumbs) {
@@ -78,10 +78,11 @@ class Rbac {
         }
         return $this->crumbs;
     }
-    /*
-     * 作用：整理菜单并取出当前菜单
-     * 参数：$lists Illuminate\Database\Eloquent\Collection
-     * 返回值：array
+
+    /**
+     * 整理菜单并取出当前菜单
+     * @param Illuminate\Database\Eloquent\Collection $lists
+     * @return array
      */
     private function group($lists) {
         $menus = [];
@@ -102,10 +103,12 @@ class Rbac {
         }
         return [$menus, $this->parseCrumbs($lists, $current_action_menu, $current_controller_menu, $referer_menu)];
     }
-    /*
-     * 作用：判断是否为当前方法
-     * 参数：$menu Laravel\Crbac\Models\Power\Menu
-     * 返回值：bool
+
+    /**
+     * 判断是否为当前方法
+     * @staticvar boolean $uses
+     * @param Menu $menu
+     * @return bool
      */
     private function isCurrentAction(Menu $menu) {
         static $uses = false;
@@ -118,10 +121,12 @@ class Rbac {
         }
         return Request::is(trim($url, '/')) && (empty($menu['item']) || $menu['item']['code'] === $uses);
     }
-    /*
-     * 作用：判断是否为当前控制器
-     * 参数：$menu Laravel\Crbac\Models\Power\Menu
-     * 返回值：bool
+
+    /**
+     * 判断是否为当前控制器
+     * @staticvar boolean $controller
+     * @param Menu $menu
+     * @return bool
      */
     private function isCurrentController(Menu $menu) {
         static $controller = false;
@@ -131,10 +136,12 @@ class Rbac {
         }
         return $menu['item'] && strpos($menu['item']['code'], $controller) === 0;
     }
-    /*
-     * 作用：判断是否为上一页面地址
-     * 参数：$menu Laravel\Crbac\Models\Power\Menu
-     * 返回值：bool
+
+    /**
+     * 判断是否为上一页面地址
+     * @staticvar boolean $referer
+     * @param Menu $menu
+     * @return bool
      */
     private function isPreviousUrl(Menu $menu) {
         static $referer = false;
@@ -144,13 +151,14 @@ class Rbac {
         }
         return $referer && Str::is($menu['url'], $referer);
     }
-    /*
-     * 作用：解析出当前请求面包屑
-     * 参数：$lists Illuminate\Database\Eloquent\Collection
-     *       $action_menu array 方法相同菜单集
-     *       $controller_menu array 控制器相同菜单集
-     *       $referer_menu array 上页面相同菜单集
-     * 返回值：array
+
+    /**
+     * 解析出当前请求面包屑
+     * @param Illuminate\Database\Eloquent\Collection $lists
+     * @param array $action_menu
+     * @param array $controller_menu
+     * @param array $referer_menu
+     * @return array
      */
     private function parseCrumbs($lists, $action_menu, $controller_menu, $referer_menu) {
         $lists = $lists->keyBy('level_id');
@@ -191,7 +199,7 @@ class Rbac {
                 }
             } while (count($referer_menu));
         } else {//真的是找不到了
-            $menu = array_first($lists, function($key, $item) {
+            $menu = array_first($lists, function($item) {
                 return $item->parent_id == 0;
             });
         }
@@ -205,11 +213,12 @@ class Rbac {
         }
         return array_reverse($crumbs);
     }
-    /*
-     * 作用：取出菜单上级结构
-     * 参数：$lists Illuminate\Database\Eloquent\Collection
-     *       $menu Laravel\Crbac\Models\Power\Menu
-     * 返回值：array
+
+    /**
+     * 取出菜单上级结构
+     * @param Illuminate\Database\Eloquent\Collection $lists
+     * @param Menu $menu
+     * @return array
      */
     private function parentsLevel($lists, Menu $menu) {
         $levels = [];
@@ -221,4 +230,5 @@ class Rbac {
         }
         return $levels;
     }
+
 }

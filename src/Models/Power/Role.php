@@ -12,6 +12,7 @@ use Laravel\Crbac\Models\StatusTrait;
 class Role extends Model {
 
     use StatusTrait;
+
     public static $_validator_rules = [//验证规则
         'name' => 'required|between:3,30|unique:power_role', // varchar(35) not null comment '角色名',
         'status' => 'required|in:disable,enable', // enum('disable','enable') NOT NULL DEFAULT 'enable' COMMENT '启用或禁用，enable为启用',
@@ -26,18 +27,16 @@ class Role extends Model {
     protected $table = 'power_role'; //表名
     protected static $validates = ['name']; //允许验证可用字段
 
-    /*
-     * 作用：关联权限项
-     * 参数：无
-     * 返回值：Illuminate\Database\Eloquent\Relations\BelongsToMany
+    /**
+     * 关联权限项
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
      */
     public function items() {
         return $this->belongsToMany(Item::class, 'power_role_item', 'power_role_id', 'power_item_id');
     }
 
     /**
-     * Get a new query builder for the model's table.
-     *
+     * 创建SQL处理器
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function newQuery() {
