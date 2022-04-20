@@ -72,10 +72,13 @@
     function _redirect(data) {
         if (data.redirect !== undefined) {
             if (data.redirect < 0) {
-                if (history.length <= Math.abs(data.redirect)) {
+                if (data.redirect == -1) {
+                    location.href = document.referrer || '/';
+                } else if (history.length <= Math.abs(data.redirect)) {
                     location.href = '/';
+                } else {
+                    history.back(data.redirect);
                 }
-                history.back(data.redirect);
             } else {
                 location.href = data.redirect;
             }

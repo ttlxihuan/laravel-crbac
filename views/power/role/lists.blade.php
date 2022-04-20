@@ -38,7 +38,7 @@
                 @if(isControllerPower('edit'))<a href="{{crbac_route('.edit',[$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif
                 @if(isControllerPower('admins'))<a href="{{crbac_route('.admins',['bind', $item->getKey()])}}" title="查看这个角色下的管理员列表">管理员</i></a>@endif
                 @if(isControllerPower('items'))<a href="{{crbac_route('.items',[$item->getKey()])}}" title="角色下权限项编辑">权限</a>@endif
-                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete',[$item->getKey()])}}" title="删除角色" class="confirm">删除</a>@endif
+                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete',[$item->getKey()])}}" title="删除{{$description}}" class="confirm">删除</a>@endif
             </td>
         </tr>
         @endforeach

@@ -51,11 +51,11 @@ if (!function_exists('isPower')) {
     /**
      * 判断用户是否拥有这个权限
      * @param string $code
-     * @param bool $default
+     * @param bool $noneDefault
      * @return bool
      */
-    function isPower($code, $default = false) {
-        return Illuminate\Support\Facades\Auth::check() ? Crbac::allow($code, $default) : false;
+    function isPower($code, $noneDefault = false) {
+        return auth()->check() ? Crbac::allow($code, $noneDefault) : false;
     }
 
 }
@@ -65,17 +65,17 @@ if (!function_exists('isControllerPower')) {
      * 判断用户是否拥有这个权限
      * @param string|null $action
      * @param string|null $controller
-     * @param bool $default
+     * @param bool $noneDefault
      * @return bool
      */
-    function isControllerPower($action = null, $controller = null, $default = false) {
+    function isControllerPower($action = null, $controller = null, $noneDefault = false) {
         if (is_null($controller)) {
             $controller = explode('@', currentRouteUses())[0];
         }
         if (empty($action)) {
-            $action = explode('@', currentRouteUses())['uses'] ?? '';
+            $action = explode('@', currentRouteUses())[1] ?? '';
         }
-        return $controller && $action ? isPower($controller . '@' . $action, $default) : $default;
+        return $controller && $action ? isPower($controller . '@' . $action, $noneDefault) : $noneDefault;
     }
 
 }

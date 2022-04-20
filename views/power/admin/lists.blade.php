@@ -26,7 +26,7 @@
             <th>菜单组</th>
             <th width="60">状态</th>
             <th width="170" class="{{$toOrder('created',false)}}" onclick="location.href ='{{$toOrder('created')}}'">创建时间</th>
-            <th width="80">操作</th>
+            <th width="180">操作</th>
         </tr>
     </thead>
     <tbody>
@@ -38,7 +38,7 @@
             <td>{{$item->statusName()}}</td>
             <td>{{$item->created_at}}</td>
             <td>
-                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑权限项">编辑</a>@endif
+                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif
             </td>
         </tr>
         @endforeach

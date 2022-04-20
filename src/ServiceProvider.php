@@ -44,6 +44,37 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
     }
 
     /**
+     * 添加rbac路由
+     */
+    protected function addRoute() {
+        //通用公用路由
+        $this->app['router']->any('{type}/{ctr}.{act}/{one?}/{two?}/{three?}/{four?}/{five?}', [
+                    'namespace' => 'Laravel\Crbac\Controllers\Power',
+                    'prefix' => 'crbac/',
+                    'as' => 'mvc-crbac',
+                    'uses' => function () {
+                        return abort(404);
+                    }])
+                ->where('type', 'power|static|usable')
+                ->where('ctr', '(.*)');
+        // 如果没有绑定登录则自动追加
+        $this->app->booted(function () {
+            // 添加特定路由配置
+            $this->app['router']->group([
+                'namespace' => 'Laravel\Crbac\Controllers\Power',
+                'prefix' => 'crbac/',
+                    ], function ($router) {
+                if (!$router->has('logout')) {
+                    $router->get('logout', ['uses' => 'AdminController@logout', 'as' => 'logout', 'middleware' => $this->getAuthMiddleware()]);
+                }
+                if (!$router->has('login')) {
+                    $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
+                }
+            });
+        });
+    }
+
+    /**
      * 添加rbac中间件
      */
     protected function addRouteMiddleware() {
@@ -53,17 +84,13 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
             view()->addLocation(realpath(__DIR__ . '/../views'));
             $route = request()->route();
             $action = $route->getAction();
-            if (empty($action['middleware'])) {
-                $action['middleware'] = [];
-            }
             if (isset($action['as']) && $action['as'] == 'mvc-crbac') {
-                if ($route->parameter('type') == 'power') {
-                    $action['middleware'] = $this->getAuthMiddleware();
-                }
+                $this->makeCrbacAction();
+                $action = $route->getAction();
                 $this->requestConvertRestore();
             }
             // 有授权则追加权限中间件
-            foreach ($action['middleware'] as $middleware) {
+            foreach ($action['middleware'] ?? [] as $middleware) {
                 if ($middleware == 'auth' || strpos($middleware, 'auth:')) {
                     array_push($action['middleware'], Middleware\PowerAuthenticate::class);
                     $route->setAction($action);
@@ -90,37 +117,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 
             });
         }
-    }
-
-    /**
-     * 添加rbac路由
-     */
-    protected function addRoute() {
-        //通用公用路由
-        $this->app['router']->any('{type}/{ctr}.{act}/{one?}/{two?}/{three?}/{four?}/{five?}', [
-                    'namespace' => 'Laravel\Crbac\Controllers\Power',
-                    'prefix' => 'crbac/',
-                    'as' => 'mvc-crbac',
-                    'uses' => function () {
-                        return $this->response();
-                    }])
-                ->where('type', 'power|static|usable')
-                ->where('ctr', '(.*)');
-        // 如果没有绑定登录则自动追加
-        $this->app->booted(function () {
-            // 添加特定路由配置
-            $this->app['router']->group([
-                'namespace' => 'Laravel\Crbac\Controllers\Power',
-                'prefix' => 'crbac/',
-                    ], function ($router) {
-                if (!$router->has('logout')) {
-                    $router->get('logout', ['uses' => 'AdminController@logout', 'as' => 'logout', 'middleware' => $this->getAuthMiddleware()]);
-                }
-                if (!$router->has('login')) {
-                    $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
-                }
-            });
-        });
     }
 
     /**
@@ -163,38 +159,42 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
     }
 
     /**
-     * 权限处理相关响应
-     * @return mixed
+     * 生成Crbac专用路由处理器
      */
-    protected function response() {
+    protected function makeCrbacAction() {
         $route = request()->route();
-        $type = $route->parameter('type');
         $controllerParam = $route->parameter('ctr');
         $actionParam = $route->parameter('act');
         //必需合法
         if (preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*([/\-\.][a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+$#', $controllerParam . '/' . $actionParam)) {
             //控制器与方法解析匹配
-            switch ($type) {
-                case 'static':
-                    $action = $this->responseStatic($controllerParam, $actionParam);
-                    break;
-                case 'power':
-                    $action = $this->responsePower($controllerParam, $actionParam);
-                    break;
-                case 'usable':
-                    $service = new Services\ExistService();
-                    $val = request()->input($actionParam);
-                    return $val && $service->check($controllerParam, $actionParam, $val, $route->parameter('one')) ? 'false' : 'true';
-                default:
-                    $action = null;
-                    break;
-            }
-            if (is_array($action)) {
-                $route->setAction(array_merge($route->getAction(), $action));
-                return $route->run();
+            $method = 'makeCrbac' . studly_case($type = $route->parameter('type')) . 'Action';
+            if (method_exists($this, $method)) {
+                $action = $this->$method($controllerParam, $actionParam);
+                if (is_array($action)) {
+                    if ($type != 'static') {
+                        $action['middleware'] = $this->getAuthMiddleware();
+                    }
+                    $route->setAction(array_merge($route->getAction(), $action));
+                }
             }
         }
-        return abort(404);
+    }
+
+    /**
+     * 生成
+     * @param string $controllerParam
+     * @param string $actionParam
+     * @return array
+     */
+    protected function makeCrbacUsableAction(string $controllerParam, string $actionParam) {
+        return [
+            'uses' => function ()use ($controllerParam, $actionParam) {
+                $service = new Services\ExistService();
+                $val = request()->input($actionParam);
+                return $val && $service->check($controllerParam, $actionParam, $val, request()->route('one')) ? 'false' : 'true';
+            }
+        ];
     }
 
     /**
@@ -203,7 +203,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      * @param string $actionParam
      * @return mixed
      */
-    protected function responseStatic(string $controllerParam, string $actionParam) {
+    protected function makeCrbacStaticAction(string $controllerParam, string $actionParam) {
         $file = __DIR__ . "/../static/$controllerParam.$actionParam";
         $types = ['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png', 'gif' => 'image/gif'];
         if (file_exists($file) && isset($types[$actionParam])) {
@@ -238,7 +238,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      * @param string $actionParam
      * @return mixed
      */
-    protected function responsePower(string $controllerParam, string $actionParam) {
+    protected function makeCrbacPowerAction(string $controllerParam, string $actionParam) {
         $space = explode('/', $controllerParam);
         $controller = 'Laravel\\Crbac\\Controllers\\Power\\' . implode('\\', array_map('studly_case', array_filter($space))) . 'Controller';
         $action = studly_case($actionParam);

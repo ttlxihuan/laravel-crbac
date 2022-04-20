@@ -48,11 +48,11 @@ class Rbac {
     /**
      * 判断用户是否有权限访问
      * @param string $code
-     * @param bool $default
+     * @param bool $noneDefault
      * @return bool
      */
-    public function allow(string $code, bool $default = false) {
-        return Item::allow($this->admin, $code, $default);
+    public function allow(string $code, bool $noneDefault = false) {
+        return Item::allow($this->admin, $code, $noneDefault);
     }
 
     /**

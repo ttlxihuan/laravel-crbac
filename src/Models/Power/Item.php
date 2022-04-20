@@ -70,19 +70,19 @@ class Item extends Model {
      * @staticvar array $allows
      * @param UserContract $admin
      * @param string $code
-     * @param bool $default
+     * @param bool $noneDefault
      * @return bool
      */
-    public static function allow(UserContract $admin, string $code, bool $default = false) {
+    public static function allow(UserContract $admin, string $code, bool $noneDefault = false) {
         static $allows = [];
         if (isset($allows[$admin->getKey()][$code])) {
             return $allows[$admin->getKey()][$code];
         }
         $item = static::where('code', '=', $code)->first();
         if (empty($item) || $item->status !== 'enable') {//不存在或禁用返回默认值
-            $allow = $default;
+            $allow = $noneDefault;
         } else {
-            $allow = RoleItem::where($item->getKeyName(), '=', $item->getKey())
+            $allow = RoleItem::where('power_item_id', '=', $item->getKey())
                             ->whereIn('power_role_id', function($query)use($admin) {
                                 $query->from('power_role_admin')
                                 ->where('power_admin_id', '=', $admin->getKey())

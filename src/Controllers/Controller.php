@@ -36,8 +36,8 @@ abstract class Controller extends BaseController {
         }
         //菜单处理
         View::composer(['public.menu', 'public.crumbs'], function($view) {
-            $menus = Crbac::menus();
-            $crumbs = Crbac::crumbs();
+            $menus = Crbac::menus() ?: [];
+            $crumbs = Crbac::crumbs() ?: [];
             $crumbs_ids = array_map(function($model) {
                 return $model->getKey();
             }, $crumbs);

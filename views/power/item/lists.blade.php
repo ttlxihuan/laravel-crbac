@@ -45,8 +45,8 @@
             <td>{{$item->statusName()}}</td>
             <td>{{$item->created_at}}</td>
             <td>
-                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit',[$item->getKey()])}}" title="编辑权限项">编辑</a>@endif
-                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete',[$item->getKey()])}}" title="删除权限项" class="confirm">删除</a>@endif
+                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit',[$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif
+                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete',[$item->getKey()])}}" title="删除{{$description}}" class="confirm">删除</a>@endif
             </td>
         </tr>
         @endforeach

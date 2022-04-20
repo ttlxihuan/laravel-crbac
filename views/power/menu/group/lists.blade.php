@@ -29,10 +29,10 @@
             <td>{{$item->created_at}}</td>
             <td>
                 @if(isAction('lists'))
-                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑菜单组">编辑</a>@endif
+                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif
                 @if(isControllerPower('menus'))<a href="{{crbac_route('.menus', [$item->getKey()])}}" title="编辑菜单组下菜单层级关系">菜单</a>@endif
                 @if(isControllerPower('copy'))<a href="{{crbac_route('.copy', [$item->getKey()])}}" title="复制菜单组下关系">复制</a>@endif
-                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete', [$item->getKey()])}}" title="删除菜单组" class="confirm">删除</a>@endif
+                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete', [$item->getKey()])}}" title="删除{{$description}}" class="confirm">删除</a>@endif
                 @else
                 @if(isControllerPower('pasted'))<a href="{{crbac_route('.pasted', [$copy->getKey(), $item->getKey()])}}" title="粘贴菜单组关系去编辑">粘贴</a>@endif
                 @endif

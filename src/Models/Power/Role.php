@@ -43,7 +43,7 @@ class Role extends Model {
         $builder = parent::newQuery();
         //是否允许操作所有权限
         if (auth()->check() && !isPower('all_power_items')) {
-            $builder->whereIn($this->table . '.id', function($query) {
+            $builder->whereIn($this->getTable() . '.id', function($query) {
                 $query->from('power_role_admin')
                         ->where('power_admin_id', '=', auth()->id())
                         ->select('power_role_id');
