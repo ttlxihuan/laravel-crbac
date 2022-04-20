@@ -37,7 +37,7 @@ class Item extends Model {
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function menus() {
-        return $this->hasMany(Menu::class, $this->primaryKey);
+        return $this->hasMany(Menu::class, 'power_item_id');
     }
 
     /**
