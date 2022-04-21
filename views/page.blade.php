@@ -1,23 +1,33 @@
 <?php
 $size = 10;
 ?>
-<div class="paginator">
-    <span>共<b>{{$paginator->total()}}</b>记录/行数<b>{{$paginator->perPage()}}</b>/分<b>{{$paginator->lastPage()}}</b>页</span>
+<ul class="pagination justify-content-end">
+    <li class="page-item mx-1">
+        <div class="input-group mb-3">
+            <span class="input-group-text">共{{$paginator->total()}}记录</span>
+            <span class="input-group-text">每页{{$paginator->perPage()}}行</span>
+            <span class="input-group-text">共{{$paginator->lastPage()}}页</span>
+        </div>
+    </li>
     @if($paginator->currentPage()>1)
-    <a href="{{$paginator->url(1)}}">{{lang('pagination.first')}}</a>
-    <a href="{{$paginator->previousPageUrl()}}">{{lang('pagination.previous')}}</a>
+    <li class="page-item"><a class="page-link" href="{{$paginator->url(1)}}">{{lang('pagination.first')}}</a></li>
+    <li class="page-item"><a class="page-link" href="{{$paginator->previousPageUrl()}}">{{lang('pagination.previous')}}</a></li>
     @endif
     @for($pageNum=max($paginator->currentPage()-$size/2,1),$length=0;$length<$size && $pageNum<=$paginator->lastPage();$length++,$pageNum++)
     @if($paginator->currentPage()==$pageNum)
-    <a href="javascript:void(0);" class="current">{{$pageNum}}</a>
+    <li class="page-item disabled"><a class="page-link" href="javascript:void(0);">{{$pageNum}}</a></li>
     @else
-    <a href="{{$paginator->url($pageNum)}}">{{$pageNum}}</a>
+    <li class="page-item"><a class="page-link" href="{{$paginator->url($pageNum)}}">{{$pageNum}}</a></li>
     @endif
     @endfor
     @if($paginator->lastPage() > $paginator->currentPage())
-    <a href="{{$paginator->nextPageUrl()}}">{{lang('pagination.next')}}</a>
-    <a href="{{$paginator->url($paginator->lastPage())}}">{{lang('pagination.last')}}</a>
+    <li class="page-item"><a class="page-link" href="{{$paginator->nextPageUrl()}}">{{lang('pagination.next')}}</a></li>
+    <li class="page-item"><a class="page-link" href="{{$paginator->url($paginator->lastPage())}}">{{lang('pagination.last')}}</a></li>
     @endif
-    <input type="text" value="{{$paginator->currentPage()}}" size="3" onchange="this.value = Math.max(Math.min(parseInt(this.value.replace(/\D+/g, '')),'{{$paginator->lastPage()}}'), 1)"/>
-    <input type="button" value="转到" onclick="var text = this.previousSibling; while (text.nodeType != 1){text = text.previousSibling; }; text.onchange(); text.value != '{{$paginator->currentPage()}}' && (location.href ='{{$paginator->url(1)}}'.replace(/page=\d+/, 'page=' + text.value));"/>
-</div>
+    <li class="page-item mx-1">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" placeholder="展示页号" value="{{$paginator->currentPage()}}" size="3" onchange="this.value = Math.max(Math.min(parseInt(this.value.replace(/\D+/g, '')),'{{$paginator->lastPage()}}'), 1)"/>
+            <button class="btn btn-outline-secondary" type="button" onclick="var text = this.previousSibling; while (text.nodeType != 1){text = text.previousSibling; }; text.onchange(); text.value != '{{$paginator->currentPage()}}' && (location.href ='{{$paginator->url(1)}}'.replace(/page=\d+/, 'page=' + text.value));">转到</button>
+        </div>
+    </li>
+</ul>

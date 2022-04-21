@@ -2,19 +2,30 @@
 @section('search')
 @if(isAction('copy'))
 <?php $not_add = true; ?>
-<h4 style="text-align: center;">复制菜单组：<span style="font-size: 14px;">{{$copy->name}}</span></h4>
+<div class="alert alert-info py-1">
+    复制菜单组：<span class="fs-4">{{$copy->name}}</span>
+</div>
 @endif
 <form>
-    <ul class="search-lists clear">
-        <li>{{$description}}名 :<input type="text" name="name" value="{{request('name')}}" placeholder="{{$description}}名"/></li>
-        <li><input type="submit" class=" btn-info" value="查询"/></li>
-    </ul>
+    <div class="container mx-0 px-0">
+        <div class="row justify-content-start navbar-expand">
+            <div class="col mb-2">
+                <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">{{$description}}名</span>
+                    <input type="text" class="form-control" name="name" value="{{request('name')}}" placeholder="{{$description}}名"/>
+                </div>
+            </div>
+            <div class="col mb-2">
+                <button type="submit" class="btn btn-primary">查询</button>
+            </div>
+        </div>
+    </div>
 </form>
 @stop
 @section('lists')
-<table class="table-lists">
+<table class="table table-sm table-striped table-hover table-bordered">
     <thead>
-        <tr>
+        <tr class="table-secondary">
             <th width="200">菜单组名</th>
             <th>备注说明</th>
             <th width="170" class="{{$toOrder('created',false)}}" onclick="location.href ='{{$toOrder('created')}}'">创建时间</th>

@@ -138,7 +138,7 @@ class RoleController extends Controller {
     public function items(Role $role) {
         if (!Request::isMethod('post')) {
             if (isPower('all_power_items')) {//是否允许修改所有权限
-                $lists = Item::with('menus')->get()->groupBy('power_item_group_id');
+                $lists = Item::with('menus')->orderBy('code', 'asc')->get()->groupBy('power_item_group_id');
             } else {
                 $lists = Item::items(auth()->user(), 'menus')->groupBy('power_item_group_id');
             }

@@ -102,7 +102,8 @@ class Item extends Model {
     public static function items(UserContract $admin, $with = null) {
         $query = static::whereIn('power_item_id', function($query) use($admin) {
                     static::addItemWhere($query, $admin);
-                })->where('status', '=', 'enable');
+                })->where('status', '=', 'enable')
+                ->orderBy('code', 'asc');
         if ($with) {
             $query->with($with);
         }

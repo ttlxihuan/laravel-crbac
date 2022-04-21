@@ -1,15 +1,24 @@
 @extends('public.select')
 @section('body')
 <form>
-    <ul class="search-lists clear">
-        <li>菜单组名 :<input type="text" name="name" value="{{request('name')}}" placeholder="菜单组名"/></li>
-        <li><input type="submit" value="查询"/></li>
-    </ul>
+    <div class="container mx-0 px-0">
+        <div class="row justify-content-start navbar-expand">
+            <div class="col mb-2">
+                <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">菜单组名</span>
+                    <input type="text" class="form-control" name="name" value="{{request('name')}}" placeholder="菜单组名"/>
+                </div>
+            </div>
+            <div class="col mb-2">
+                <button type="submit" class="btn btn-primary">查询</button>
+            </div>
+        </div>
+    </div>
 </form>
 <h5 class="widget-title">选择菜单组</h5>
-<table class="table-lists">
+<table class="table table-sm table-striped table-hover table-bordered">
     <thead>
-        <tr>
+        <tr class="table-secondary">
             <th><input id="all-select-item" type="checkbox"/> ID</th>
             <th>菜单组名</th>
             <th width='100'>操作</th>

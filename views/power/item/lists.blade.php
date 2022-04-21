@@ -1,33 +1,53 @@
 @extends('public.lists')
 @section('search')
 <form>
-    <ul class="search-lists clear">
-        <li>{{$description}}名 :<input type="text" name="name" value="{{request('name')}}" placeholder="{{$description}}名" /></li>
-        <li>权限项码 :<input type="text" name="code" value="{{request('code')}}" placeholder="权限项码" /></li>
-        <li>权限组 :
-            <select  name="group_id" >
-                <option value="" >请选择</option>
-                @foreach(Laravel\Crbac\Models\Power\ItemGroup::all() as $group)
-                <option value="{{$group->getKey()}}"<?php if (request('group_id') == $group->getKey()) { ?> selected="selected"<?php } ?>>{{$group->name}}</option>
-                @endforeach
-            </select>
-        </li>
-        <li>状态 :
-            <select  name="status" >
-                <option value="" >请选择</option>
-                @foreach(Laravel\Crbac\Models\Power\Item::$_STATUS as $key=>$val)
-                <option value="{{$key}}"<?php if (request('status') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
-                @endforeach
-            </select>
-        </li>
-        <li><input type="submit" class=" btn-info" value="查询"/></li>
-    </ul>
+    <div class="container mx-0 px-0">
+        <div class="row justify-content-start navbar-expand">
+            <div class="col mb-2">
+                <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">{{$description}}名</span>
+                    <input type="text" class="form-control" name="name" value="{{request('name')}}" placeholder="{{$description}}名"/>
+                </div>
+            </div>
+            <div class="col mb-2">
+                <div class="input-group">
+                    <span class="input-group-text" id="basic-addon1">权限项码</span>
+                    <input type="text" class="form-control" name="code" value="{{request('code')}}" placeholder="权限项码"/>
+                </div>
+            </div>
+            <div class="col mb-2">
+                <div class="input-group">
+                    <label class="input-group-text">权限组</label>
+                    <select class="form-select" name="group_id">
+                        <option value="" >请选择</option>
+                        @foreach(Laravel\Crbac\Models\Power\ItemGroup::all() as $group)
+                        <option value="{{$group->getKey()}}"<?php if (request('group_id') == $group->getKey()) { ?> selected="selected"<?php } ?>>{{$group->name}}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="col mb-2">
+                <div class="input-group">
+                    <label class="input-group-text">状态</label>
+                    <select class="form-select" name="status">
+                        <option value="" >请选择</option>
+                        @foreach(Laravel\Crbac\Models\Power\Item::$_STATUS as $key=>$val)
+                        <option value="{{$key}}"<?php if (request('status') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="col mb-2">
+                <button type="submit" class="btn btn-primary">查询</button>
+            </div>
+        </div>
+    </div>
 </form>
 @stop
 @section('lists')
-<table class="table-lists">
+<table class="table table-sm table-striped table-hover table-bordered">
     <thead>
-        <tr>
+        <tr class="table-secondary">
             <th width="18%">权限项/组</th>
             <th width="25%">权限码</th>
             <th>备注说明</th>

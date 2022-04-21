@@ -36,9 +36,4 @@
         <input type="password" name="password_confirmation" placeholder="确认新登录密码" value="" required="true" minlength="6" maxlength="20"/>
     </div>
 </div>
-<div class="form-button">
-    <input type="button" class=" btn-success ajax-submit-data" value="保存"/>
-</div>
-<script type="text/javascript">
-</script>
 @stop

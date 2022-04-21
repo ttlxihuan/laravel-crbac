@@ -8,7 +8,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script type="text/javascript" src="/crbac/static/js/jquery.min.js"></script>
         <script type="text/javascript" src="/crbac/static/js/jquery.validate.js"></script>
-        <link rel="stylesheet" href="/crbac/static/css/base.css" />
+        <link rel="stylesheet" href="/crbac/static/css/bootstrap.min.css" />
         @section('css') @show
     </head>
     <body>

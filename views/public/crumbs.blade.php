@@ -1,19 +1,19 @@
-<?php
-//面包屑
-?>
-<div class="crumbs clear">
-    @section('crumbs')
-    @if(isset($crumbs) && count($crumbs))
-    <a href="{{$crumbs[0]['url']}}">{{$crumbs[0]['name']}}</a>
-    @foreach(array_slice($crumbs,1) as $key=>$menu)
-    <a href="{{$menu['url']}}"<?php if ($key == count($crumbs) - 2) { ?> class="current"<?php } ?>>{{$menu['name']}}</a>
-    @endforeach
-    @endif
-    @if(isset($title))
-    <a href="javascript:void(0)">{{$title}}</a>
-    @endif
-    @show
-    <div class="fr">
-    @section('nimble')@show
-    </div>
+<!--面包屑-->
+<div class="container-fluid clearfix mt-1">
+    <ol class="breadcrumb float-start my-0">
+        @section('crumbs')
+        @foreach($crumbs??[] as $key=>$menu)
+        <li class="breadcrumb-item"><a href="{{$menu['url']}}">{{$menu['name']}}</a></li>
+        @endforeach
+        @if(isset($title))
+        <li class="breadcrumb-item"><a href="javascript:void(0)">{{$title}}</a></li>
+        @endif
+        @show
+    </ol>
+    <ul class="navbar-nav navbar-expand float-end">
+        <li class="nav-item">
+            @section('nimble')@show
+        </li>
+    </ul>
 </div>
+<hr class="my-2"/>

@@ -70,8 +70,7 @@ class MenuGroupController extends Controller {
             $menu_lists = Menu::group($item->getKey());
             $lists = $menu_lists->groupBy('parent_id');
             $level_lists = $menu_lists->pluck('id', 'level_id');
-            return view('power.menu.group.level', compact('lists', 'title', 'parent_id', 'level', 'level_lists'))
-                            ->with('menuGroup', $item);
+            return view('power.menu.group.level', compact('lists', 'title', 'parent_id', 'level', 'level_lists', 'item'));
         }
         $service = new MenuGroupService();
         $service->editMenuLevel($item);

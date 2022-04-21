@@ -11,7 +11,7 @@ $not_menu = true;
 @extends('layout')
 @section('main')
 @yield('body')
-<?php echo $lists->render(); ?>
+{!!$lists->render()!!}
 @if($relation == 'many')
 <div style="width: 98%;margin: 0px auto;">
     <input type="button" id="reverse-select-item" value="反选"/>
@@ -54,7 +54,7 @@ $not_menu = true;
             if ($.inArray(val, vids) === -1) {
                 vids.push(val);
                 $('#many{{$select_name}}-id', window.opener.document).val(vids.join(',')).valid();
-                $('#many{{$select_name}}-name', window.opener.document).append('<span class="add-item">' + $(this).data('name') + '<i class="item-remove" onclick="remove{{str_replace("-", "_", $select_name)}}_item(this,' + val + ')">X</i></span>');
+                $('#many{{$select_name}}-name', window.opener.document).append('<span class="badge bg-primary m-1">' + $(this).data('name') + '<i class="item-remove" onclick="remove{{str_replace("-", "_", $select_name)}}_item(this,' + val + ')">X</i></span>');
             }
         });
         //全选处理

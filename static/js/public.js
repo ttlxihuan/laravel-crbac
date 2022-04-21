@@ -240,7 +240,7 @@
         min: $.validator.format("请输入一个值大于或等于 {0}.")
     });
     $('form').validate();
-    $('input.ajax-submit-data').click(function () {
+    $(':button.ajax-submit-data').click(function () {
         $('form').ajaxPost();
     });
 })();

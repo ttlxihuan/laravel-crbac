@@ -2,11 +2,13 @@
 @section('nimble')<a href="javascript:history.back();">返回</a>@stop
 @section('main')
 @include('public.crumbs')
-<h5 class="widget-title">{{$title}}</h5>
 <form method="post" enctype="multipart/form-data">
     @yield('body')
     @if(function_exists('csrf_field')){{csrf_field()}}@endif
     <input type="hidden" name="_referrer" value="{{URL::previous()}}">
+    <div class="text-center my-3">
+        <button type="button" class="btn btn-primary ajax-submit-data">{{empty($item)?'创建':'保存'}}</button>
+    </div>
 </form>
 <script type="text/javascript">
     function open_window(url) {
