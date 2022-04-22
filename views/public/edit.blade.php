@@ -2,7 +2,7 @@
 @section('nimble')<a href="javascript:history.back();">返回</a>@stop
 @section('main')
 @include('public.crumbs')
-<form method="post" enctype="multipart/form-data">
+<form method="post" enctype="multipart/form-data" class="needs-validation">
     @yield('body')
     @if(function_exists('csrf_field')){{csrf_field()}}@endif
     <input type="hidden" name="_referrer" value="{{URL::previous()}}">

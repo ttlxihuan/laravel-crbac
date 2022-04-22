@@ -207,9 +207,11 @@ $.extend($.validator, {
 		messages: {},
 		groups: {},
 		rules: {},
-		errorClass: "error",
-		validClass: "valid",
+		errorClass: "is-invalid",
+		validClass: "is-valid",
 		errorElement: "label",
+		errorElementInvalidClass: "invalid-tooltip",
+		errorElementValidClass: "valid-tooltip",
 		focusInvalid: true,
 		errorContainer: $( [] ),
 		errorLabelContainer: $( [] ),
@@ -470,7 +472,7 @@ $.extend($.validator, {
 		},
 
 		errors: function() {
-			return $( this.settings.errorElement + "." + this.settings.errorClass, this.errorContext );
+			return $( this.settings.errorElement + "." + this.settings.errorElementInvalidClass, this.errorContext );
 		},
 
 		reset: function() {
@@ -634,7 +636,7 @@ $.extend($.validator, {
 			var label = this.errorsFor( element );
 			if ( label.length ) {
 				// refresh error/success class
-				label.removeClass( this.settings.validClass ).addClass( this.settings.errorClass );
+				label.removeClass( this.settings.errorElementValidClass ).addClass( this.settings.errorElementInvalidClass );
 
 				// check if we have a generated label, replace the message then
 				label.attr("generated") && label.html(message);
@@ -642,7 +644,7 @@ $.extend($.validator, {
 				// create label
 				label = $("<" + this.settings.errorElement + "/>")
 					.attr({"for":  this.idOrName(element), generated: true})
-					.addClass(this.settings.errorClass)
+					.addClass(this.settings.errorElementInvalidClass)
 					.html(message || "");
 				if ( this.settings.wrapper ) {
 					// make sure the element is visible, even in IE

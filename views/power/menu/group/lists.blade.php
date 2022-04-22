@@ -1,7 +1,7 @@
 @extends('public.lists')
 @section('search')
 @if(isAction('copy'))
-<?php $not_add = true; ?>
+@section('nimble')<a href="javascript:history.back();">返回</a>@stop
 <div class="alert alert-info py-1">
     复制菜单组：<span class="fs-4">{{$copy->name}}</span>
 </div>

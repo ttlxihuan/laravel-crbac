@@ -1,5 +1,6 @@
 @extends('public.select')
 @section('body')
+<div class="alert alert-primary">选择角色</div>
 <form>
     <div class="container mx-0 px-0">
         <div class="row justify-content-start navbar-expand">
@@ -15,7 +16,6 @@
         </div>
     </div>
 </form>
-<h5 class="widget-title">选择角色</h5>
 <table class="table table-sm table-striped table-hover table-bordered">
     <thead>
         <tr class="table-secondary">

@@ -109,7 +109,7 @@ class MenuGroupController extends Controller {
     public function copy(MenuGroup $item) {
         return $this->_lists(function($builder)use($item) {
                     $builder->where($item->getKeyName(), '!=', $item->getKey());
-                })->with(['copy' => $item, 'title' => '复制菜单']);
+                })->with(['copy' => $item, 'title' => '复制菜单', 'not_add' => true]);
     }
 
     /**

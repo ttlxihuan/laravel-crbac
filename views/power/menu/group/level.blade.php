@@ -1,16 +1,23 @@
 @extends('public.edit')
 @section('body')
-<h4 style="text-align: center;">菜单组：<span style="font-size: 14px;">{{$menuGroup->name}}</span></h4>
-<div class="level-lists">
-    @include('power.menu.group.menus')
-    <div class="button">
-        <input type="button" class=" btn-primary" onclick="addMenu('{{$level}}', this, '0')" data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}" value="添加{{$level}}级菜单"/>
-    </div>
+<div class="alert alert-info py-1">
+    菜单组：<span class="fs-4">{{$item->name}}</span>
 </div>
-<div class="form-button">
-    <input type="button" class=" btn-success ajax-submit-data" value="保存"/>
+<div class="alert alert-danger">选中菜单后，按键操作：上向移动（Down 或 PgDn）、下向移动（Up 或 PgDn）、删除当前菜单（Delete）、撤销上次操作（Ctrl + Z）</div>
+<div class="container-fluid">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light align-items-stretch">
+        <ul class="nav flex-column">
+            @include('power.menu.group.menus')
+            <li class="nav-item dropdown dropend bg-warning my-1">
+                <a class="nav-link dropdown-toggle" href="javascript:void(0);" onclick="addMenu('{{$level}}', this, '0');"  data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}">添加{{$level}}级菜单</a>
+            </li>
+        </ul>
+    </nav>
 </div>
 <script type="text/javascript">
+    $('body').on('keydown', function(){
+        
+    });
     var setMenu;
     //添加菜单
     function addMenu(level, elem, parent_id) {
@@ -26,7 +33,7 @@
             });
             //判断是否存在
             if (exist) {
-                return myWindow.alert('菜单已经存在！');
+                return myWindow.$.popup.alert('菜单已经存在！');
             }
             ids.push(id);
             var html = $('#add-menu-html').html();

@@ -9,15 +9,17 @@ $menuGroups = MenuGroup::all();
 @extends('public.edit')
 @section('body')
 <div class="row my-3">
-    <label class="col-sm-2 col-form-label text-end"><b class="text-danger">*</b> 名称</label>
-    <div class="col-sm-4">
+    <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> 名称</label>
+    <div class="col-sm-4 position-relative">
         <input type="text" class="form-control" name="name" placeholder="唯一的菜单名称" value="{{$item?$item->name:''}}" required="true" minlength="3" maxlength="30" remote="{{validate_url($item?$item:$modelClass,'name')}}"/>
     </div>
 </div>
 <div class="row my-3">
-    <label class="col-sm-2 col-form-label text-end"><b class="text-danger">*</b> URL地址</label>
+    <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> URL地址</label>
     <div class="col-sm-4">
-        <input type="text" class="form-control" name="url" id="router-url" placeholder="唯一URL地址，如果权限项有请求地址，可以快捷生成权限码" value="{{$item?$item->url:(isset($route)?$route->url:'')}}" remote="{{validate_url($item?$item:$modelClass,'url')}}"/>
+        <div class="position-relative">
+            <input type="text" class="form-control" name="url" id="router-url" placeholder="唯一URL地址，如果权限项有请求地址，可以快捷生成权限码" value="{{$item?$item->url:(isset($route)?$route->url:'')}}" remote="{{validate_url($item?$item:$modelClass,'url')}}"/>
+        </div>
         <p class="text-danger">注意：该地址为菜单所需链接地址，所有菜单均定义为GET请求，POST请求只能添加到权限项。</p>
     </div>
 </div>
@@ -28,9 +30,9 @@ $menuGroups = MenuGroup::all();
         </div>
         <div class="card-body">
             <div class="row my-3">
-                <label class="col-sm-2 col-form-label text-end"> 权限码</label>
+                <label class="col-sm-2 col-form-label text-end bg-light"> 权限码</label>
                 <div class="col-sm-4">
-                    <div class="input-group">
+                    <div class="input-group position-relative">
                         <input type="text" class="form-control" placeholder="所在权限码" id="power-code" name="code" value="{{$item && $item->item?$item->item->code:''}}" readonly="readonly"/>
                         <button class="btn btn-outline-secondary" type="button" id="power-item">生成权限码</button>
                     </div>
@@ -42,7 +44,7 @@ $menuGroups = MenuGroup::all();
     </div>
 </div>
 <div class="row my-3" id="menu-group-lists">
-    <label class="col-sm-2 col-form-label text-end"> 所在菜单组</label>
+    <label class="col-sm-2 col-form-label text-end bg-light"> 所在菜单组</label>
     <div class="col-sm-8">
         @if($item && $item->groups)
         @foreach($item->groups as $key=>$_group)
@@ -94,9 +96,9 @@ $menuGroups = MenuGroup::all();
     </div>
 </div>
 <div class="row my-3">
-    <label class="col-sm-2 col-form-label text-end"><b class="text-danger">*</b> 备注说明</label>
-    <div class="col-sm-4">
-        <textarea class="form-control" name="comment" placeholder="备注说明用途，作用，以便后续快速理解" required="true">{{$item?$item->comment:''}}</textarea>
+    <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> 备注说明</label>
+    <div class="col-sm-4 position-relative">
+        <textarea class="form-control" name="comment" placeholder="备注详细说明用途" required="true">{{$item?$item->comment:''}}</textarea>
     </div>
 </div>
 <script type="text/javascript">
@@ -143,7 +145,7 @@ $menuGroups = MenuGroup::all();
         if ($('#menu-group-lists div.input-group').size() > 1) {//最少保留一组
             $(this).parent().remove();
         } else {
-            alert('最少保存一项，允许不选择！');
+            $.popup.alert('最少保存一项，允许不选择！');
         }
     });
     $('#add-menu-group').click(function () {

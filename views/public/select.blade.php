@@ -24,7 +24,7 @@ $not_menu = true;
         $('a.select-item').click(function () {
             $('#single{{$select_name}}-id', window.opener.document).val($(this).data('id')).valid();
             $('#single{{$select_name}}-name', window.opener.document).val($(this).data('name'));
-//            window.close();
+            window.close();
         });
     });
 </script>
@@ -43,18 +43,10 @@ $not_menu = true;
 <script type="text/javascript">
     $(function () {
         $('a.select-item').click(function () {
-            var ids = $('#many{{$select_name}}-id', window.opener.document),
-                    vids = [],
-                    val = $(this).data('id').toString();
-            $.each(ids.val().split(/\D+/g), function (k, v) {
-                if (v > 0) {
-                    vids.push(v);
+            if (window.opener.add_many_select_item) {
+                if (!window.opener.add_many_select_item($('#many{{$select_name}}-name', window.opener.document), $(this).data('name'), $(this).data('id').toString())) {
+                    $.popup.alert('已经存在：' + $(this).data('name'), 'warn', 3);
                 }
-            });
-            if ($.inArray(val, vids) === -1) {
-                vids.push(val);
-                $('#many{{$select_name}}-id', window.opener.document).val(vids.join(',')).valid();
-                $('#many{{$select_name}}-name', window.opener.document).append('<span class="badge bg-primary m-1">' + $(this).data('name') + '<i class="item-remove" onclick="remove{{str_replace("-", "_", $select_name)}}_item(this,' + val + ')">X</i></span>');
             }
         });
         //全选处理
@@ -78,7 +70,7 @@ $not_menu = true;
         $('#batch-select-item').click(function () {
             var checkeds = $('input.select-item:checked');
             if (!checkeds.length) {
-                alert('没有选中项！');
+                $.popup.alert('没有选中项！');
             } else {
                 checkeds.each(function () {
                     $(this).parents('tr').find('td:last a').click();

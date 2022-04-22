@@ -14,11 +14,11 @@
             fn.success = opt.success;
         }
         //扩展增强处理
-        var _opt = $.extend(opt, {
+        var loading, _opt = $.extend(opt, {
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 //错误方法增强处理
                 if (!fn.error || fn.error(XMLHttpRequest, textStatus, errorThrown) !== false) {
-                    alert('对不起！服务器太忙了，请稍后再试！');
+                    $.popup.alert('对不起！服务器太忙了，请稍后再试！', 'error', 3);
                 }
             },
             success: function (json, textStatus) {
@@ -45,9 +45,7 @@
                         }
                     }, 1000);
                 }
-                if (json.status === 'success') {
-                    $.showSuccess(json.message.info, json.message.title, callback);
-                } else if (json.status === 'error') {
+                if (typeof json.status === 'string') {
                     if (typeof json.message.info === 'object') {
                         var info = [];
                         $.each(json.message.info, function (k, v) {
@@ -55,16 +53,16 @@
                         });
                         json.message.info = '<p>' + info.join('</p><p>') + '</p>';
                     }
-                    $.showError(json.message.info, json.message.title, callback);
+                    $.popup.alert(json.message.info, json.status).on('close', callback);
                 }
             },
             beforeSend: function (XHR) {
                 //提交前回调方法
-                $.showLoad();
+                loading = $.popup.loading();
             },
             complete: function (XHR, TS) {
                 //请求完成后回调函数 (请求成功或失败之后均调用)。
-                $.hiddenLoad();
+                loading.close();
             }
         });
         return $.ajax(_opt);
@@ -88,112 +86,173 @@
     }
 })(jQuery);
 (function () {
-    var mask = !1,
-            popup = !1,
-            load = !1;
-    $.extend({
-        showMask: function () {
-            if (!mask) {
-                mask = $('<div class="public-mask"></div>');
-                $('body').append(mask);
-            } else {
-                mask.show();
-            }
-            return this;
-        },
-        hiddenMask: function () {
-            if (mask && (!popup || popup.is(':hidden')) && (!load || load.is(':hidden'))) {
-                mask.hide();
-            }
-            return this;
-        },
-        showLoad: function () {
-            this.showMask();
-            if (!load) {
-                load = $('<img class="public-load" src="/crbac/static/img/load.gif"/>');
-                $('body').append(load);
-            } else {
-                load.show();
-            }
-        },
-        hiddenLoad: function () {
-            if (load) {
-                load.hide();
-                this.hiddenMask();
-            }
-
-        },
-        showPopup: function (contents, title, button, callback, icon, close) {
-            //显示层
-            this.showMask();
-            if (!popup) {
-                popup = $('<div class="popbox"></div>');
-                $('body').append(popup);
-            } else {
-                //有就清空内容
-                popup.empty().show();
-            }
-            //显示内容
-            var cont = $('<div class="pop-body rel zoom"></div>');
-            //标题
-            title = title === undefined ? '提醒一下' : title;
-            close = close === undefined || close ? $('<i></i>') : '';
-            title = $('<p class="pop-tit">' + title + '</p>');
-            popup.append(title), close && title.append(close) && close.click(function () {
-                hide('close');
-            });
-            //图标
-            if (icon !== undefined && icon) {
-                cont.append('<i class="' + icon + ' fl"></i>');
-            }
-            //按钮事件处理
-            if (button !== undefined && button) {
-                var but = $('<a href="javascript:void(0);" class="surebtn">' + button + '</a>').click(function () {
-                    hide('button');
-                });
-                cont.append(but);
-            }
-            if (but || close) {
-                var hide = function (a) {
-                    if (typeof (callback) !== 'function' || callback(popup, a) !== false) {
-                        $.hiddenPopup();
-                    }
-                }
-            }
-            popup.append(cont.append('<div class="pop-content">' + contents + '</div>'));
-            return this;
-        },
-        hiddenPopup: function () {
-            if (popup) {
-                popup.empty().hide();
-                this.hiddenMask();
-            }
-            return this;
-        },
-        showSuccess: function (contents, title, callback, button) {
-            button = button === undefined ? '确定' : button;
-            this.showPopup(contents, title, button, callback, 'pop-success', false);
-        },
-        showError: function (contents, title, callback, button) {
-            button = button === undefined ? '确定' : button;
-            this.showPopup(contents, title, button, callback, 'pop-error', false);
-        },
-        showWarn: function (contents, title, callback, button) {
-            button = button === undefined ? '确定' : button;
-            this.showPopup(contents, title, button, callback, 'pop-plaint', false);
-        }
-    }).fn.extend({
-        ajaxPost: function (url, dataType, success, timeout) {
-            return ajax(getUrl(url, this), this, dataType, 'post', success, timeout);
-        },
-        ajaxGet: function (url, dataType, success, timeout) {
-            return ajax(getUrl(url, this), this, dataType, 'get', success, timeout);
-        },
-        ajaxJson: function (url, type, success, timeout) {
-            return ajax(getUrl(url, this), this, 'json', type ? type : 'post', success, timeout);
+    var popups = {}, index = 0, alertTypes = {
+        success: 'success',
+        primary: 'primary',
+        secondary: 'secondary',
+        error: 'danger',
+        warn: 'warning',
+        info: 'info',
+        light: 'light',
+        dark: 'dark'
+    };
+    $('body').on('click', 'div.modal', function (event) {
+        if (event.target === this) {
+            var modals = $('body>div.modal').addClass('modal-static overflow-hidden');
+            setTimeout(function () {
+                modals.removeClass('modal-static overflow-hidden');
+            }, 200);
         }
     });
-    var ajax = function (url, data, dataType, type, success, timeout) {
+    function Popup() {
+        if (!(this instanceof Popup)) {
+            return Popup();
+        }
+        var _mask = $('<div class="modal-backdrop fade show"></div>'),
+                _modal = $('<div class="modal fade"></div>'),
+                _dialog = $('<div class="modal-dialog"></div>'),
+                _content = $('<div class="modal-content"></div>');
+        // 统一事件处理
+        _modal.on('click', ':button', function () {
+            var event = $(this).data('event');
+            if (typeof event === 'string' && event.length > 0) {
+                _modal.trigger(event, [this]);
+            }
+        });
+        function close() {
+            _modal.removeClass('show');
+            setTimeout(function () {
+                _modal.removeClass('d-block');
+                $('body').removeClass('modal-open overflow-hidden');
+                _mask.remove();
+                _modal.remove();
+            }, 200);
+            delete popups[this.id];
+        }
+        function show() {
+            $('body').append(_mask, _modal).addClass('modal-open overflow-hidden');
+            _modal.addClass('d-block');
+            setTimeout(function () {
+                _modal.addClass('show');
+            }, 200);
+            popups[this.id] = this;
+        }
+        $.extend(this, {
+            id: 'popup-' + (index++),
+            close: function () {
+                this.trigger('close');
+                return this;
+            },
+            show: function () {
+                this.trigger('show');
+                return this;
+            },
+            append: function (html) {
+                _content.append(html);
+                return this;
+            },
+            on: function (type, callback) {
+                _modal.on(type, callback);
+                return this;
+            },
+            trigger: function (type, params) {
+                _modal.trigger(type, params);
+                return this;
+            }
+        });
+        this.on('close', close);
+        this.on('show', show);
+        _modal.append(_dialog.append(_content));
+    }
+    $.extend(Popup, {
+        // 弹出提示标语框
+        alert: function (text, type, timeout, hiddenClose) {
+            if (typeof type !== 'string' || alertTypes[type] !== undefined) {
+                type = 'info';
+            }
+            var popup = new Popup(), _alert = $('<div class="alert my-0 alert-dismissible alert-' + alertTypes[type] + '" role="alert"></div>').append(text);
+            if (typeof timeout === 'number' && timeout > 0) {
+                var time = setInterval(function () {
+                    timeout -= 1;
+                    if (timeout < 0) {
+                        clearInterval(time);
+                        popup.close();
+                    }
+                }, 1000);
+            }
+            if (!hiddenClose) {
+                _alert.append('<button type="button" class="btn-close" data-event="close"></button>');
+            }
+            popup.append(_alert);
+            return popup.show();
+        },
+        // 弹出加载框
+        loading: function () {
+            return Popup.alert('<img src="/crbac/static/img/load.gif" width="25"/><span class="text-start text-info mx-2">正在加载中...</span>', 'info', 0, 1);
+        },
+        // 弹出标准展示框
+        box: function (title, body, buttons) {
+            var popup = new Popup(), _header = $('<div class="modal-header"></div>'), _body = $('<div class="modal-body"></div>'), _footer = $('<div class="modal-footer"></div>');
+            if (title) {
+                popup.append(_header.append(title, '<button type="button" class="btn-close" data-event="close"></button>'));
+            }
+            if (body) {
+                popup.append(_body.append(body));
+            }
+            if (typeof buttons === 'object') {
+                $.each(buttons, function (name, item) {
+                    var auto = null;
+                    switch (name) {
+                        case 'close':
+                            auto = {type: 'secondary', event: 'close', title: '关闭'};
+                            break;
+                        case 'cancel':
+                            auto = {type: 'secondary', event: 'close', title: '取消'};
+                            break;
+                        case 'confirm':
+                            auto = {type: 'secondary', event: 'confirm', title: '确定'};
+                            break;
+                    }
+                    if (auto) {
+                        var _type = typeof (item);
+                        if (_type === 'string' && item.length > 0) {
+                            item = $.extend(auto, {title: item});
+                        } else if (_type === 'object') {
+                            item = $.extend(auto, item);
+                        } else {
+                            item = auto;
+                        }
+                    }
+                    if (typeof item === 'object') {
+                        _footer.append('<button type="button" class="btn btn-' + item.type + '" data-event="' + item.event + '">' + item.title + '</button>');
+                        if (item.event && typeof item.callback === 'function') {
+                            popup.on(item.event, item.callback);
+                        }
+                    }
+                });
+                popup.append(_footer);
+            }
+            return popup.show();
+        },
+        // 关闭所有弹出的框
+        closeAll: function () {
+            for (var id in popups) {
+                popups[id].close();
+            }
+        }
+    });
+    $.extend({popup: Popup}).fn.extend({
+        ajaxPost: function (url, dataType, success, timeout) {
+            return _ajax(_getUrl(url, this), this, dataType, 'post', success, timeout);
+        },
+        ajaxGet: function (url, dataType, success, timeout) {
+            return _ajax(_getUrl(url, this), this, dataType, 'get', success, timeout);
+        },
+        ajaxJson: function (url, type, success, timeout) {
+            return _ajax(_getUrl(url, this), this, 'json', type ? type : 'post', success, timeout);
+        }
+    });
+    function _ajax(url, data, dataType, type, success, timeout) {
         if ($.isFunction(url)) {
             success = url, url = null;
         }
@@ -214,10 +273,10 @@
             timeout: timeout,
             success: success
         });
-    },
-            getUrl = function (url, elm) {
-                return url ? url : elm.data('url');
-            };
+    }
+    function _getUrl(url, elm) {
+        return url ? url : elm.data('url');
+    }
 })();
 (function () {
     $.extend($.validator.messages, {

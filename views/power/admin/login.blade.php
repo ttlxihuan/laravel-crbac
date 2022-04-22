@@ -5,13 +5,13 @@
         <h5 class="card-header text-center">管理后台登录</h5>
         <div class="card-body">
             <div class="row my-3">
-                <label class="col-sm-3 col-form-label text-end"><b class="text-danger">*</b> 账号</label>
+                <label class="col-sm-3 col-form-label text-end bg-light"><b class="text-danger">*</b> 账号</label>
                 <div class="col-sm-8">
                     <input type="text" class="form-control" name="username" placeholder="账号名" value="" required="true" minlength="3" maxlength="30"/>
                 </div>
             </div>
             <div class="row my-3">
-                <label class="col-sm-3 col-form-label text-end"><b class="text-danger">*</b> 密码</label>
+                <label class="col-sm-3 col-form-label text-end bg-light"><b class="text-danger">*</b> 密码</label>
                 <div class="col-sm-8">
                     <input class="form-control" type="password" name="password" placeholder="密码" value="" required="true" minlength="3" maxlength="30"/>
                 </div>
