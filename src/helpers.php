@@ -307,6 +307,21 @@ if (!function_exists('array_forget')) {
 
 }
 
+if (!function_exists('array_pluck')) {
+
+    /**
+     * 提取数组中指定键组成新数组
+     * @param iterable $array
+     * @param string|array $value
+     * @param string|array|null $key
+     * @return array
+     */
+    function array_pluck($array, $value, $key = null) {
+        return Arr::pluck($array, $value, $key = null);
+    }
+
+}
+
 if (!function_exists('studly_case')) {
 
     /**

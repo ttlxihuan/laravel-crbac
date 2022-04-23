@@ -33,7 +33,7 @@
 </nav>
 <script type="text/javascript">
     $(function () {
-        $('.dropdown-toggle').click(function () {
+        $('.dropdown-toggle').click(function (event) {
             var $this = $(this), curr = $this.nextAll('.dropdown-menu').toggleClass('show');
             $('.dropdown-menu').not(curr).not($this.parents('.dropdown-menu')).removeClass('show');
             return false;
