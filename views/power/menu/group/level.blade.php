@@ -3,21 +3,84 @@
 <div class="alert alert-info py-1">
     菜单组：<span class="fs-4">{{$item->name}}</span>
 </div>
-<div class="alert alert-danger">选中菜单后，按键操作：上向移动（Down 或 PgDn）、下向移动（Up 或 PgDn）、删除当前菜单（Delete）、撤销上次操作（Ctrl + Z）</div>
+<div class="alert alert-danger">选中菜单后，按键操作：上向移动（Up）、下向移动（Down）、删除当前菜单（Delete）、撤销上次操作（Ctrl + Z）</div>
 <div class="container-fluid">
     <nav class="navbar navbar-expand-lg navbar-light bg-light align-items-stretch">
         <ul class="nav flex-column">
             @include('power.menu.group.menus')
-            <li class="nav-item dropdown dropend bg-warning my-1">
-                <a class="nav-link dropdown-toggle" href="javascript:void(0);" onclick="addMenu('{{$level}}', this, '0');"  data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}">添加{{$level}}级菜单</a>
+            <li class="nav-item dropdown bg-warning my-1">
+                <a class="nav-link" href="javascript:void(0);" onclick="return addMenu('{{$level}}', this, '0');"  data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}">添加{{$level}}级菜单</a>
             </li>
         </ul>
     </nav>
 </div>
 <script type="text/javascript">
-    $('body').on('keydown', function(){
-        
+    $(function () {
+        var history = [], handle = {
+            moveLeft: function (menu) {
+                var menu.parent()
+                
+            },
+            moveUp: function (menu) {
+                
+            },
+            moveRight: function (menu) {
+                
+            },
+            moveDown: function (menu) {
+                
+            },
+            _delete: function (menu) {
+                
+            },
+            _revoke: function () {
+                
+            },
+        }
+        $('body').on('keydown', function (event) {
+            var method = null;
+            if (!event.ctrlKey) {
+                switch (event.keyCode) {
+                    case 37: // 向左
+                        method = 'moveLeft';
+                        break;
+                    case 38: // 向上
+                        method = 'moveUp';
+                        break;
+                    case 39: // 向右
+                        method = 'moveRight';
+                        break;
+                    case 40: // 向下
+                        method = 'moveDown';
+                        break;
+                    case 46: // 删除
+                        method = '_delete';
+                        break;
+                    default:
+                        return;
+                }
+                var menu = $('a.dropdown-toggle.border-info:first').parent();
+                if(menu.size() > 0){
+                    handle[method](menu);
+                }
+            } else {
+                switch (event.keyCode) {
+                    case 90: // 撤销 Ctrl + Z
+                        method = '_revoke';
+                        break;
+                    default:
+                        return;
+                }
+                handle[method]();
+            }
+        }).on('click', 'a.nav-link[data-ids]', function () {
+            return false;
+        });
     });
+    function active_menu(elem) {
+        $(elem).toggleClass('border-info');
+        $('a.dropdown-toggle.border').not(elem).removeClass('border-info');
+    }
     var setMenu;
     //添加菜单
     function addMenu(level, elem, parent_id) {
