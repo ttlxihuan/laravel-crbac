@@ -223,9 +223,11 @@ class Rbac {
     private function parentsLevel($lists, Menu $menu) {
         $levels = [];
         while ($menu->parent_id > 0) {//有上级
-            $levels[] = $menu->parent_id; //取出上级
             if ($lists->has($menu->parent_id)) {
+                $levels[] = $menu->parent_id; //取出上级
                 $menu = $lists[$menu->parent_id];
+            } else {
+                break;
             }
         }
         return $levels;

@@ -33,15 +33,15 @@
 </nav>
 <script type="text/javascript">
     $(function () {
-        $('.dropdown-toggle').click(function (event) {
+        $('a.dropdown-toggle').on('click', function () {
             var $this = $(this), curr = $this.nextAll('.dropdown-menu').toggleClass('show');
             $('.dropdown-menu').not(curr).not($this.parents('.dropdown-menu')).removeClass('show');
             return false;
         });
-        $('.navbar-toggler').click(function () {
+        $('button.navbar-toggler').on('click', function () {
             $(this).nextAll('.collapse').toggleClass('show');
         });
-        $(document).click(function () {
+        $(document).on('click', function () {
             $('.dropdown-menu').removeClass('show');
         });
     });

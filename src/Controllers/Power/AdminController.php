@@ -6,6 +6,7 @@
 
 namespace Laravel\Crbac\Controllers\Power;
 
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Crbac\Models\Power\Admin;
 use Laravel\Crbac\Services\ModelEdit;
@@ -27,7 +28,7 @@ class AdminController extends Controller {
             return view('power.admin.login');
         }
         $service = new ModelEdit();
-        Admin::$_validator_rules['username']= preg_replace('/unique:power_admin[^\|]*/', '', Admin::$_validator_rules['username']);
+        Admin::$_validator_rules['username'] = preg_replace('/unique:power_admin[^\|]*/', '', Admin::$_validator_rules['username']);
         if ($input = $service->validation(new Admin(), Request::all(), ['username', 'password'])) {
             if (Auth::attempt($input)) {
                 if (Auth::user()->status !== 'enable') {
@@ -66,14 +67,25 @@ class AdminController extends Controller {
      * @methods(GET,POST)
      */
     public function password() {
-        $option = ['email', 'password'];
+        $model = auth()->user();
+        if (!Request::isMethod('post')) {
+            return view('power.admin.password', [
+                'title' => '修改密码',
+                'item' => $model,
+            ]);
+        }
+        if (!Hash::check(request('old_password'), $model->getAuthPassword())) {
+            return prompt('原密码错误！', 'error');
+        }
+        $option = ['password'];
         $modelClass = auth_model();
         $modelClass::$_validator_rules['password'] .= '|confirmed';
-        $result = $this->modelEdit(auth()->user(), 'power.admin.password', $modelClass, $option);
-        if (!Request::isMethod('post')) {
-            $result->with('title', '修改密码');
+        $service = new ModelEdit();
+        $result = $service->requestEdit($model, $option);
+        if ($result) {
+            return $service->prompt('密码修改成功', null, -1);
         }
-        return $result;
+        return $service->prompt('密码修改失败');
     }
 
     /**

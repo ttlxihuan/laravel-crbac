@@ -3,52 +3,68 @@
 <div class="alert alert-info py-1">
     菜单组：<span class="fs-4">{{$item->name}}</span>
 </div>
-<div class="alert alert-danger">选中菜单后，按键操作：上向移动（Up）、下向移动（Down）、删除当前菜单（Delete）、撤销上次操作（Ctrl + Z）</div>
+<div class="alert alert-danger">选中菜单后编辑按键操作：向上移动（&uarr;）、向下移动（&darr;）、删除（Delete）</div>
 <div class="container-fluid">
     <nav class="navbar navbar-expand-lg navbar-light bg-light align-items-stretch">
-        <ul class="nav flex-column">
+        <ul class="nav flex-column dropdown-menu">
             @include('power.menu.group.menus')
             <li class="nav-item dropdown bg-warning my-1">
-                <a class="nav-link" href="javascript:void(0);" onclick="return addMenu('{{$level}}', this, '0');"  data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}">添加{{$level}}级菜单</a>
+                <span class="nav-link" onclick="addMenu('{{$level}}', this, '0');"  data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}">添加{{$level}}级菜单</span>
             </li>
         </ul>
     </nav>
 </div>
 <script type="text/javascript">
     $(function () {
-        var history = [], handle = {
-            moveLeft: function (menu) {
-                var menu.parent()
-                
-            },
+        $('body').on('click', 'span.dropdown-toggle,span.nav-link', function () {
+            var $this = $(this);
+            if($this.is('span.dropdown-toggle')){
+                var $this = $(this), curr = $this.nextAll('.dropdown-menu').toggleClass('show');
+                $('.dropdown-menu').not(curr).not($this.parents('.dropdown-menu')).removeClass('show');
+                $this.toggleClass('border-info');
+                $('span.dropdown-toggle.border').not($this).removeClass('border-info');
+            }
+            return false;
+        });
+        $(document).on('click', function () {
+            $('span.dropdown-toggle.border').removeClass('border-info');
+        });
+        var handle = {
             moveUp: function (menu) {
-                
-            },
-            moveRight: function (menu) {
-                
+                var prev = menu.prev();
+                if(prev.size() > 0){
+                    prev.before(menu);
+                }else{
+                    $.popup.alert('已经是最上无法再向上移动', 'error', 1);
+                }
             },
             moveDown: function (menu) {
-                
+                var _next = menu.next();
+                if(_next.size() > 0 && !_next.find('span:first').is('span[data-ids]')){
+                    _next.after(menu);
+                }else{
+                    $.popup.alert('已经是最下无法再向上移动', 'error', 1);
+                }
             },
             _delete: function (menu) {
-                
-            },
-            _revoke: function () {
-                
-            },
+                var ids = getData(_parent.nextAll('li').find('span[data-ids]')),
+                        id= menu.next('input:hidden').val(),
+                        newIds = [];
+                menu.remove();
+                $.each(ids, function (k, v) {
+                    if (v != id) {
+                        newIds.push(v);
+                    }
+                });
+                button.data('ids', newIds);
+            }
         }
         $('body').on('keydown', function (event) {
             var method = null;
             if (!event.ctrlKey) {
                 switch (event.keyCode) {
-                    case 37: // 向左
-                        method = 'moveLeft';
-                        break;
                     case 38: // 向上
                         method = 'moveUp';
-                        break;
-                    case 39: // 向右
-                        method = 'moveRight';
                         break;
                     case 40: // 向下
                         method = 'moveDown';
@@ -59,28 +75,15 @@
                     default:
                         return;
                 }
-                var menu = $('a.dropdown-toggle.border-info:first').parent();
+                var menu = $('span.dropdown-toggle.border-info:first').parent();
                 if(menu.size() > 0){
                     handle[method](menu);
+                } else {
+                    $.popup.alert('没有选中菜单！', 'error', 1);
                 }
-            } else {
-                switch (event.keyCode) {
-                    case 90: // 撤销 Ctrl + Z
-                        method = '_revoke';
-                        break;
-                    default:
-                        return;
-                }
-                handle[method]();
             }
-        }).on('click', 'a.nav-link[data-ids]', function () {
-            return false;
         });
     });
-    function active_menu(elem) {
-        $(elem).toggleClass('border-info');
-        $('a.dropdown-toggle.border').not(elem).removeClass('border-info');
-    }
     var setMenu;
     //添加菜单
     function addMenu(level, elem, parent_id) {
@@ -107,36 +110,7 @@
             html = html.replace(/\$parent_id/g, parent_id > 0 ? parent_id : id);
             $(elem).parent().before(html);
         };
-    }
-    //移除菜单
-    function removeMenu(elem, id) {
-        var div = $(elem).parents('div.level-lists-item:first'),
-                button = div.next().find(':button'),
-                ids = getData(button),
-                newIds = [];
-        div.remove();
-        $.each(ids, function (k, v) {
-            if (v != id) {
-                newIds.push(v);
-            }
-        });
-        button.data('ids', newIds);
-    }
-    //菜单上移
-    function menuUp(elem) {
-        var par = $(elem).parents('div.level-lists-item:first'),
-                prev = par.prev('div.level-lists-item');
-        if (prev.size()) {
-            prev.before(par);
-        }
-    }
-    //菜单下移
-    function menuDown(elem) {
-        var par = $(elem).parents('div.level-lists-item:first'),
-                next = par.next('div.level-lists-item');
-        if (next.size()) {
-            next.after(par);
-        }
+        return false;
     }
     function getData(elem) {
         var _$ = $(elem),
@@ -153,21 +127,14 @@
     }
 </script>
 <script type="text/html" id="add-menu-html">
-    <div class="level-lists-item">
-        <div class="level-lists-menu">
-            <div class="level-lists-govern">
-                <a href="javascript:void(0);" title="菜单上移" onclick="menuUp(this)">&and;</a>
-                <a href="javascript:void(0);" title="菜单下移" onclick="menuDown(this)">&or;</a>
-                <a href="javascript:void(0);" onclick="removeMenu(this, '$menu_id')" title="删除这个菜单">&Chi;</a>
-            </div>
-            <label class="label">$name</label>
-            <input type="hidden" name="level[$level][$parent_id][]" value="$menu_id">
-        </div>
-        <div class="level-lists-child">
-            <div class="button">
-                <input type="button" class=" btn-primary" onclick="addMenu('$levelName', this, '$menu_id')" value="添加$levelName级菜单"/>
-            </div>
-        </div>
-    </div>
+    <li class="nav-item dropdown dropend my-1">
+        <span class="nav-link dropdown-toggle border border-3 rounded" title="$name">$name</span>
+        <input type="hidden" name="level[$level][$parent_id][]" value="$menu_id"/>
+        <ul class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
+            <li class="nav-item dropdown bg-warning my-1">
+                <span class="nav-link" onclick="return addMenu('$levelName', this, '$menu_id');" data-ids="">添加$levelName级菜单</span>
+            </li>
+        </ul>
+    </li>
 </script>
 @stop

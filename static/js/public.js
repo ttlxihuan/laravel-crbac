@@ -29,22 +29,6 @@
                 if ((json.timeout === undefined || json.timeout <= 0) && _redirect(json)) {
                     return;
                 }
-                var callback = $.isFunction(fn.callback) ? fn.callback : function () {
-                    _redirect(json);
-                };
-                if (json.redirect !== undefined && json.timeout > 0) {
-                    json.message.info += '<i id="pop-timeout-redirect" class="fr">' + parseInt(json.timeout) + '</i>';
-                    var xt = setInterval(function () {
-                        var span = $('#pop-timeout-redirect'),
-                                time = parseInt(span.text());
-                        if (time < 1) {
-                            clearInterval(xt);
-                            _redirect(json);
-                        } else {
-                            span.text(--time);
-                        }
-                    }, 1000);
-                }
                 if (typeof json.status === 'string') {
                     if (typeof json.message.info === 'object') {
                         var info = [];
@@ -53,7 +37,12 @@
                         });
                         json.message.info = '<p>' + info.join('</p><p>') + '</p>';
                     }
-                    $.popup.alert(json.message.info, json.status).on('close', callback);
+                    $.popup.alert(json.message.info, json.status, json.timeout || 3).on('close', function(){
+                        $.isFunction(fn.callback) && fn.callback();
+                        if (json.redirect !== undefined) {
+                            _redirect(json);
+                        }
+                    });
                 }
             },
             beforeSend: function (XHR) {
@@ -126,7 +115,7 @@
                 $('body').removeClass('modal-open overflow-hidden');
                 _mask.remove();
                 _modal.remove();
-            }, 200);
+            }, 150);
             delete popups[this.id];
         }
         function show() {
@@ -134,7 +123,7 @@
             _modal.addClass('d-block');
             setTimeout(function () {
                 _modal.addClass('show');
-            }, 200);
+            }, 150);
             popups[this.id] = this;
         }
         $.extend(this, {
@@ -167,18 +156,21 @@
     $.extend(Popup, {
         // 弹出提示标语框
         alert: function (text, type, timeout, hiddenClose) {
-            if (typeof type !== 'string' || alertTypes[type] !== undefined) {
+            if (typeof type !== 'string' || alertTypes[type] === undefined) {
                 type = 'info';
             }
             var popup = new Popup(), _alert = $('<div class="alert my-0 alert-dismissible alert-' + alertTypes[type] + '" role="alert"></div>').append(text);
-            if (typeof timeout === 'number' && timeout > 0) {
+            if (timeout > 0) {
+                var timeElem = $('<b class="mx-2">' + parseInt(timeout) + '</b>');
                 var time = setInterval(function () {
                     timeout -= 1;
-                    if (timeout < 0) {
+                    if (timeout <= 0) {
                         clearInterval(time);
                         popup.close();
                     }
+                    timeElem.text(timeout);
                 }, 1000);
+                _alert.append(timeElem);
             }
             if (!hiddenClose) {
                 _alert.append('<button type="button" class="btn-close" data-event="close"></button>');

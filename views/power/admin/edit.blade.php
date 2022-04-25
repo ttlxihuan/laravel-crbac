@@ -4,13 +4,19 @@
 <div class="row my-3">
     <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> 真实姓名</label>
     <div class="col-sm-4 position-relative">
-        <input type="text" class="form-control" placeholder="" name="realname" placeholder="真实姓名" value="{{$item?$item->realname:''}}" required="true" minlength="2" maxlength="30"/>
+        <input type="text" class="form-control" name="realname" placeholder="真实姓名" value="{{$item?$item->realname:''}}" required="true" minlength="2" maxlength="30"/>
     </div>
 </div>
 <div class="row my-3">
     <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> 用户名</label>
     <div class="col-sm-4 position-relative">
         <input type="text" class="form-control" name="username" placeholder="用户名" value="{{$item?$item->username:''}}" required="true" minlength="3" maxlength="30" remote="{{validate_url($item?$item:$modelClass, 'username')}}"/>
+    </div>
+</div>
+<div class="row my-3">
+    <label class="col-sm-2 col-form-label text-end bg-light"> Email</label>
+    <div class="col-sm-4 position-relative">
+        <input type="text" class="form-control" name="email" placeholder="Email地址" value="{{$item->email}}" email="true"/>
     </div>
 </div>
 <div class="row my-3">
