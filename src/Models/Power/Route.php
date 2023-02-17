@@ -10,7 +10,15 @@ use Laravel\Crbac\Models\Model;
 
 class Route extends Model {
 
-    protected $table = 'power_route'; //表名
+    /**
+     * @var bool 是否记录修改日志
+     */
+    protected $saveUpdateLog = false;
+
+    /**
+     * @var string 表名
+     */
+    protected $table = 'power_route';
 
     /**
      * 关联权限项

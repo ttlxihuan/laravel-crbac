@@ -16,19 +16,13 @@
 <div class="row my-3">
     <label class="col-sm-2 col-form-label text-end bg-light"> Email</label>
     <div class="col-sm-4 position-relative">
-        <input type="text" class="form-control" name="email" placeholder="Email地址" value="{{$item->email}}" email="true"/>
+        <input type="text" class="form-control" name="email" placeholder="Email地址" value="{{$item?$item->email:''}}" email="true"/>
     </div>
 </div>
 <div class="row my-3">
     <label class="col-sm-2 col-form-label text-end bg-light">@if(empty($item))<b class="text-danger">*</b>@endif 密码</label>
     <div class="col-sm-4 position-relative">
         <input type="text" class="form-control" name="password" placeholder="{{$item?'不修改密码无需填写':'登录密码'}}" value=""<?php if (!$item) { ?> required="true"<?php } ?> minlength="6" maxlength="20"/>
-    </div>
-</div>
-<div class="row my-3">
-    <label class="col-sm-2 col-form-label text-end bg-light">email</label>
-    <div class="col-sm-4 position-relative">
-        <input type="text" class="form-control" name="email" placeholder="Email地址" value="{{$item?$item->email:''}}" email="true"/>
     </div>
 </div>
 <div class="row my-3">

@@ -97,7 +97,7 @@ class AdminController extends Controller {
         $where = [
             'realname' => 'like',
             'username' => 'like',
-            'status' => [2 => 'intval'],
+            'status',
         ];
         $order = ['created' => 'created_at'];
         $default = ['order' => 'created', 'by' => 'desc'];

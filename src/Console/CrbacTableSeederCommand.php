@@ -68,7 +68,8 @@ class CrbacTableSeederCommand extends Command {
             array('id' => 30, 'name' => '添加管理员', 'code' => 'Laravel\\Crbac\\Controllers\\Power\\AdminController@add', 'power_item_group_id' => 1, 'status' => 'enable', 'comment' => '允许添加系统管理员，并且可以指定管理员的菜单组，角色，状态等', 'created_at' => $now, 'updated_at' => $now),
             array('id' => 31, 'name' => '编辑管理员', 'code' => 'Laravel\\Crbac\\Controllers\\Power\\AdminController@edit', 'power_item_group_id' => 1, 'status' => 'enable', 'comment' => '允许编辑管理员信息，包括状态，菜单组，角色，密码等', 'created_at' => $now, 'updated_at' => $now),
             array('id' => 32, 'name' => '复制菜单组', 'code' => 'Laravel\Crbac\Controllers\Power\MenuGroupController@copy', 'power_item_group_id' => 1, 'status' => 'enable', 'comment' => '允许复制菜单组，只是进入复制页面，数据最终需要粘贴编辑', 'created_at' => $now, 'updated_at' => $now),
-            array('id' => 33, 'name' => '粘贴菜单组', 'code' => 'Laravel\Crbac\Controllers\Power\MenuGroupController@pasted', 'power_item_group_id' => 1, 'status' => 'enable', 'comment' => '允许把一个菜单组的菜单层级数据粘贴到另一个菜单中进行编辑，不影响原菜单数据', 'created_at' => $now, 'updated_at' => $now)
+            array('id' => 33, 'name' => '粘贴菜单组', 'code' => 'Laravel\Crbac\Controllers\Power\MenuGroupController@pasted', 'power_item_group_id' => 1, 'status' => 'enable', 'comment' => '允许把一个菜单组的菜单层级数据粘贴到另一个菜单中进行编辑，不影响原菜单数据', 'created_at' => $now, 'updated_at' => $now),
+            array('id' => 34, 'name' => '数据变更日志', 'code' => 'Laravel\Crbac\Controllers\Power\LogController@lists', 'power_item_group_id' => 1, 'status' => 'enable', 'comment' => '查看所有记录的数据变更日志记录信息', 'created_at' => $now, 'updated_at' => $now)
         ]);
         $this->info('插入数据表：' . (new Menu())->getTable());
         Menu::insert([
@@ -83,6 +84,7 @@ class CrbacTableSeederCommand extends Command {
             array('id' => 9, 'name' => '权限项组列表', 'url' => '/crbac/power/item-group.lists', 'power_item_id' => 8, 'comment' => '显示现有的权限项分组列表，权限项组属于技术开发专用，用于给添加的新权限项分组，方便后期分类查看权限项', 'created_at' => $now, 'updated_at' => $now),
             array('id' => 10, 'name' => '路由列表', 'url' => '/crbac/power/item.routes', 'power_item_id' => 12, 'comment' => '技术开发专用，用于显示程序中已经添加成功的路由列表，方便添加对应的权限项或菜单', 'created_at' => $now, 'updated_at' => $now),
             array('id' => 11, 'name' => '管理员列表', 'url' => '/crbac/power/admin.lists', 'power_item_id' => 29, 'comment' => '显示管理员列表，管理员不能删除，只能禁用', 'created_at' => $now, 'updated_at' => $now),
+            array('id' => 12, 'name' => '数据变更日志', 'url' => '/crbac/power/log.lists', 'power_item_id' => 34, 'comment' => '查看所有记录的数据变更日志记录信息', 'created_at' => $now, 'updated_at' => $now),
         ]);
         $this->info('插入数据表：' . (new RoleItem())->getTable());
         RoleItem::insert([
@@ -119,6 +121,7 @@ class CrbacTableSeederCommand extends Command {
             array('power_role_id' => 1, 'power_item_id' => 31),
             array('power_role_id' => 1, 'power_item_id' => 32),
             array('power_role_id' => 1, 'power_item_id' => 33),
+            array('power_role_id' => 1, 'power_item_id' => 34),
         ]);
         $this->info('插入数据表：' . (new ItemGroup())->getTable());
         ItemGroup::insert([
@@ -135,12 +138,13 @@ class CrbacTableSeederCommand extends Command {
             array('id' => 3, 'power_menu_id' => 3, 'power_menu_group_id' => 1, 'parent_id' => 1, 'sort' => 2),
             array('id' => 4, 'power_menu_id' => 4, 'power_menu_group_id' => 1, 'parent_id' => 1, 'sort' => 1),
             array('id' => 5, 'power_menu_id' => 5, 'power_menu_group_id' => 1, 'parent_id' => 4, 'sort' => 2),
-            array('id' => 6, 'power_menu_id' => 7, 'power_menu_group_id' => 1, 'parent_id' => 2, 'sort' => 2),
-            array('id' => 7, 'power_menu_id' => 11, 'power_menu_group_id' => 1, 'parent_id' => 2, 'sort' => 1),
+            array('id' => 6, 'power_menu_id' => 7, 'power_menu_group_id' => 1, 'parent_id' => 2, 'sort' => 3),
+            array('id' => 7, 'power_menu_id' => 11, 'power_menu_group_id' => 1, 'parent_id' => 2, 'sort' => 2),
             array('id' => 8, 'power_menu_id' => 8, 'power_menu_group_id' => 1, 'parent_id' => 3, 'sort' => 3),
             array('id' => 9, 'power_menu_id' => 9, 'power_menu_group_id' => 1, 'parent_id' => 3, 'sort' => 2),
             array('id' => 10, 'power_menu_id' => 10, 'power_menu_group_id' => 1, 'parent_id' => 3, 'sort' => 1),
-            array('id' => 11, 'power_menu_id' => 6, 'power_menu_group_id' => 1, 'parent_id' => 4, 'sort' => 1)
+            array('id' => 11, 'power_menu_id' => 6, 'power_menu_group_id' => 1, 'parent_id' => 4, 'sort' => 1),
+            array('id' => 12, 'power_menu_id' => 12, 'power_menu_group_id' => 1, 'parent_id' => 2, 'sort' => 1)
         ]);
         $this->info('插入数据表：' . (new RoleAdmin())->getTable());
         RoleAdmin::insert([

@@ -13,7 +13,7 @@
                 <div class="input-group">
                     <label class="input-group-text">状态</label>
                     <select class="form-select" name="status">
-                        <option value="" >请选择</option>
+                        <option value="">全部</option>
                         @foreach(Laravel\Crbac\Models\Power\Role::$_STATUS as $key=>$val)
                         <option value="{{$key}}"<?php if (request('status') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
                         @endforeach
@@ -31,6 +31,7 @@
 <table class="table table-sm table-striped table-hover table-bordered">
     <thead>
         <tr class="table-secondary">
+            <th>序号</th>
             <th width="200">角色名</th>
             <th>备注说明</th>
             <th width="60">状态</th>
@@ -39,8 +40,9 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($lists as $item)
+        @foreach($lists as $index=>$item)
         <tr>
+            <td>{{$index+1}}</td>
             <td>{{$item->name}}</td>
             <td>{{$item->comment}}</td>
             <td>{{$item->statusName()}}</td>

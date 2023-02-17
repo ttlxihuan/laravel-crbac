@@ -33,7 +33,7 @@ $uses_confirm = true;
                 <div class="input-group">
                     <label class="input-group-text">状态</label>
                     <select class="form-select" name="status">
-                        <option value="" >请选择</option>
+                        <option value="">全部</option>
                         @foreach(Laravel\Crbac\Models\Power\Role::$_STATUS as $key=>$val)
                         <option value="{{$key}}"<?php if (request('status') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
                         @endforeach
@@ -51,16 +51,18 @@ $uses_confirm = true;
 <table class="table table-sm table-striped table-hover table-bordered">
     <thead>
         <tr class="table-secondary">
-            <th width="20%">真实姓名</th>
-            <th width="20%">帐号</th>
-            <th width="20%">状态</th>
-            <th width="20%">创建时间</th>
-            <th width="20%">操作</th>
+            <th>序号</th>
+            <th>真实姓名</th>
+            <th>帐号</th>
+            <th>状态</th>
+            <th width="170">创建时间</th>
+            <th width="180">操作</th>
         </tr>
     </thead>
     <tbody>
-        @foreach($lists as $item)
+        @foreach($lists as $index=>$item)
         <tr>
+            <td>{{$index+1}}</td>
             <td>{{$item->realname}}</td>
             <td>{{$item->username}}</td>
             <td>{{$item->statusName()}}</td>

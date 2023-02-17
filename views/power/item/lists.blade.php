@@ -19,7 +19,7 @@
                 <div class="input-group">
                     <label class="input-group-text">权限组</label>
                     <select class="form-select" name="group_id">
-                        <option value="" >请选择</option>
+                        <option value="">全部</option>
                         @foreach(Laravel\Crbac\Models\Power\ItemGroup::all() as $group)
                         <option value="{{$group->getKey()}}"<?php if (request('group_id') == $group->getKey()) { ?> selected="selected"<?php } ?>>{{$group->name}}</option>
                         @endforeach
@@ -30,7 +30,7 @@
                 <div class="input-group">
                     <label class="input-group-text">状态</label>
                     <select class="form-select" name="status">
-                        <option value="" >请选择</option>
+                        <option value="">全部</option>
                         @foreach(Laravel\Crbac\Models\Power\Item::$_STATUS as $key=>$val)
                         <option value="{{$key}}"<?php if (request('status') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
                         @endforeach
@@ -48,6 +48,7 @@
 <table class="table table-sm table-striped table-hover table-bordered">
     <thead>
         <tr class="table-secondary">
+            <th>序号</th>
             <th width="18%">权限项/组</th>
             <th width="25%">权限码</th>
             <th>备注说明</th>
@@ -57,8 +58,9 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($lists as $item)
+        @foreach($lists as $index=>$item)
         <tr>
+            <td>{{$index+1}}</td>
             <td>{{$item->name}}<br/>【<a href="?group_id={{$item->group->getKey()}}">{{$item->group->name}}</a>】</td>
             <td>{{$item->code}}</td>
             <td>{{$item->comment}}</td>

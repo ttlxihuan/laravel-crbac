@@ -20,6 +20,7 @@
 <table class="table table-sm table-striped table-hover table-bordered">
     <thead>
         <tr class="table-secondary">
+            <th>序号</th>
             <th width="200">菜单组名</th>
             <th>备注说明</th>
             <th width="170" class="{{$toOrder('created',false)}}" onclick="location.href ='{{$toOrder('created')}}'">创建时间</th>
@@ -27,8 +28,9 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($lists as $item)
+        @foreach($lists as $index=>$item)
         <tr>
+            <td>{{$index+1}}</td>
             <td>{{$item->name}}</td>
             <td>{{$item->comment}}</td>
             <td>{{$item->created_at}}</td>

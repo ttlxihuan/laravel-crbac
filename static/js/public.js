@@ -37,7 +37,7 @@
                         });
                         json.message.info = '<p>' + info.join('</p><p>') + '</p>';
                     }
-                    $.popup.alert(json.message.info, json.status, json.timeout || 3).on('close', function(){
+                    $.popup.alert(json.message.info, json.status, json.timeout || 3).on('close', function () {
                         $.isFunction(fn.callback) && fn.callback();
                         if (json.redirect !== undefined) {
                             _redirect(json);
@@ -146,6 +146,20 @@
             },
             trigger: function (type, params) {
                 _modal.trigger(type, params);
+                return this;
+            },
+            size: function (type) {
+                //大小顺序： sm、none、lg、xl
+                if (type === undefined) {
+                    type = 'none';// 默认大小
+                }
+                if (/^(sm|none|lg|xl)$/.test(type)) {
+                    var className = 'modal-dialog';
+                    if (type !== 'none') {
+                        className += ' modal-' + type;
+                    }
+                    _dialog.attr('class', className);
+                }
                 return this;
             }
         });

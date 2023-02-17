@@ -20,6 +20,7 @@
 <table class="table table-sm table-striped table-hover table-bordered">
     <thead>
         <tr class="table-secondary">
+            <th>序号</th>
             <th width="150">菜单名</th>
             <th width="250">链接地址</th>
             <th>备注说明</th>
@@ -28,8 +29,9 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($lists as $item)
+        @foreach($lists as $index=>$item)
         <tr>
+            <td>{{$index+1}}</td>
             <td>{{$item->name}}</td>
             <td>{{$item->url}}</td>
             <td>{{$item->comment}}</td>

@@ -25,7 +25,7 @@
                 <div class="input-group">
                     <label class="input-group-text">状态</label>
                     <select class="form-select" name="status">
-                        <option value="" >请选择</option>
+                        <option value="">全部</option>
                         @foreach(['yes'=>'已经添加权限','no'=>'未添加权限'] as $key=>$val)
                         <option value="{{$key}}"<?php if (request('status') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
                         @endforeach
@@ -36,7 +36,7 @@
                 <div class="input-group">
                     <label class="input-group-text">可用</label>
                     <select class="form-select" name="is_usable">
-                        <option value="" >请选择</option>
+                        <option value="">全部</option>
                         @foreach(['yes'=>'是','no'=>'否'] as $key=>$val)
                         <option value="{{$key}}"<?php if (request('is_usable') == $key) { ?> selected="selected"<?php } ?>>{{$val}}</option>
                         @endforeach
@@ -54,6 +54,7 @@
 <table class="table table-sm table-striped table-hover table-bordered">
     <thead>
         <tr class="table-secondary">
+            <th>序号</th>
             <th>{{$description}}地址</th>
             <th width="35%">控制器@方法</th>
             <th width="80">请求类型</th>
@@ -63,8 +64,9 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($lists as $item)
+        @foreach($lists as $index=>$item)
         <tr>
+            <td>{{$index+1}}</td>
             <td>{{$item->url}}</td>
             <td>{{$item->uses}}</td>
             <td>{{$item->methods}}</td>
