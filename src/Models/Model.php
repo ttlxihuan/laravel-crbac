@@ -103,21 +103,6 @@ abstract class Model extends BaseModel {
             }
             $this->attributes = $attributes;
         }
-        foreach ($this->relations as $name => $value) {
-            if ($value instanceof self) {
-                $data[$name] = $value->getOriginalAndRelations();
-                $value->saveUpdateLog = false;
-            } elseif ($value instanceof BaseModel) {
-                $data[$name] = $value->toArray();
-            } elseif ($value instanceof Collection) {
-                foreach ($value as $key => $item) {
-                    $data[$name][$key] = $item->getOriginalAndRelations();
-                    $item->saveUpdateLog = false;
-                }
-            } elseif ($value !== null) {
-                $data[$name] = (string) $value;
-            }
-        }
         return $data;
     }
 

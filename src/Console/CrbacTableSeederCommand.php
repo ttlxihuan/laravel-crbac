@@ -151,9 +151,35 @@ class CrbacTableSeederCommand extends Command {
             array('power_role_id' => 1, 'power_admin_id' => 1),
         ]);
         $this->info('插入数据表：' . (new Admin())->getTable());
+        // 生成随机密码
+        $password = $this->makePassword();
         Admin::insert([
-            array('id' => 1, 'realname' => '超级管理员', 'username' => 'admin', 'password' => Hash::make('123456'), 'email' => 'admin@admin.com', 'power_menu_group_id' => 1, 'status' => 'enable', 'created_at' => $now, 'updated_at' => $now),
+            array('id' => 1, 'realname' => '超级管理员', 'username' => 'admin', 'password' => Hash::make($password), 'email' => 'admin@admin.com', 'power_menu_group_id' => 1, 'status' => 'enable', 'created_at' => $now, 'updated_at' => $now),
         ]);
+        $this->info('管理员账号： admin');
+        $this->info('管理员密码： ' . $password);
+        // 修改授权配置
+        foreach (config('auth.providers') as $provider) {
+            if (isset($provider['model']) && class_exists($provider['model']) && (new $provider['model']()) instanceof Admin) {
+                $this->info('管理登录地址 ' . route('login'));
+                return;
+            }
+        }
+        $this->warn('未配置rbac管理授权模型，请修改 config.auth.providers 配置，指定授权模型：' . Admin::class);
+    }
+
+    /**
+     * 生成随机密码
+     * @param int $length
+     * @return string
+     */
+    protected function makePassword(int $length = 10) {
+        $source = array_merge(range(0, 9), range('a', 'z'), range('A', 'Z'));
+        $password = '';
+        while ($length-- > 0) {
+            $password .= $source[mt_rand(0, count($source) - 1)];
+        }
+        return $password;
     }
 
 }

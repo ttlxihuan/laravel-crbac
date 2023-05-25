@@ -64,13 +64,13 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 'namespace' => 'Laravel\Crbac\Controllers\Power',
                 'prefix' => 'crbac/',
                     ], function ($router) {
-                if (!$router->has('logout')) {
-                    $router->get('logout', ['uses' => 'AdminController@logout', 'as' => 'logout', 'middleware' => $this->getAuthMiddleware()]);
-                }
-                if (!$router->has('login')) {
-                    $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
-                }
-            });
+                        if (!$router->has('logout')) {
+                            $router->get('logout', ['uses' => 'AdminController@logout', 'as' => 'logout', 'middleware' => $this->getAuthMiddleware()]);
+                        }
+                        if (!$router->has('login')) {
+                            $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
+                        }
+                    });
         });
     }
 
@@ -113,7 +113,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                     return is_null($value) ? '' : $value;
                 }
             };
-            $restore->handle($this->app['request'], function() {
+            $restore->handle($this->app['request'], function () {
                 
             });
         }
@@ -210,19 +210,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
             $contentType = $types[$actionParam];
             return [
                 'uses' => function ()use ($file, $contentType) {
-                    $response = new class($file, 200, ['Content-Type' => $contentType]) extends Response {
-
-                        private $file;
-
-                        public function __construct($file, int $status = 200, array $headers = array()) {
-                            parent::__construct('', $status, $headers);
-                            $this->file = $file;
-                        }
-
-                        public function sendContent() {
-                            readfile($this->file);
-                        }
-                    };
+                    $response = new Response(file_get_contents($file), 200, ['Content-Type' => $contentType]);
                     $response->setSharedMaxAge(31536000);
                     $response->setMaxAge(31536000);
                     $response->setExpires(new \DateTime('+1 year'));

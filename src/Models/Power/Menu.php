@@ -13,7 +13,7 @@ class Menu extends Model {
 
     public static $_validator_rules = [//验证规则
         'name' => 'required|between:3,30|unique:power_menu', // varchar(35) not null comment '菜单名',
-        'url' => 'required|between:1,55|unique:power_menu', // varchar(60) not null comment '链接地址',
+        'url' => 'required|between:1,55', // varchar(60) not null comment '链接地址',
         'power_item_id' => 'exists:power_item,id', // int unsigned not null default 0 comment '关联权限项ID',
         'comment' => 'required|between:1,955', //  varchar(1000) not null default '' comment '备注说明',
     ];

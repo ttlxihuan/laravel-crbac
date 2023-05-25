@@ -1,6 +1,6 @@
 @extends('layout')
 @if(isControllerPower('add') && !isset($not_add))
-@section('nimble')<a href="{{crbac_route('.add')}}">新增{{$description}}</a>@stop
+@section('nimble')<a href="{{$add_url ?? crbac_route('.add')}}">新增{{$description}}</a>@stop
 @endif
 @section('main')
 @include('public.crumbs')

@@ -47,16 +47,14 @@
                 }
             },
             _delete: function (menu) {
-                var ids = getData(_parent.nextAll('li').find('span[data-ids]')),
-                        id= menu.next('input:hidden').val(),
-                        newIds = [];
+                var ids = getData(menu.nextAll('li').find('span[data-ids]')),
+                        id = menu.find('input:hidden:first').val();
                 menu.remove();
                 $.each(ids, function (k, v) {
-                    if (v != id) {
-                        newIds.push(v);
+                    if (v == id) {
+                        delete ids[k];
                     }
                 });
-                button.data('ids', newIds);
             }
         }
         $('body').on('keydown', function (event) {

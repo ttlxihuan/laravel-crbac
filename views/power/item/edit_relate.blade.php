@@ -6,14 +6,12 @@ if ($item && !$item instanceof \Laravel\Crbac\Models\Power\Item) {
 <div class="row my-3">
     <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> 状态</label>
     <div class="col-sm-4 position-relative">
+        @foreach(Laravel\Crbac\Models\Power\Item::$_STATUS as $key=>$val)
         <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="status" value="enable" required="true" id="status-enable"{{(!$item || $item->status == 'enable')?' checked="checked"':''}}/>
-            <label class="form-check-label" for="status-enable">启用</label>
+            <input class="form-check-input" type="radio" name="status" value="{{$key}}" required="true" id="status-{{$key}}"@if($item && $item->status == $key) checked="checked"@endif/>
+            <label class="form-check-label" for="status-{{$key}}">{{$val}}</label>
         </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="status" value="disable" required="true" id="status-disable"{{(!$item || $item->status == 'disable')?' checked="checked"':''}}/>
-            <label class="form-check-label" for="status-disable">禁用</label>
-        </div>
+        @endforeach
     </div>
 </div>
 <div class="row my-3">

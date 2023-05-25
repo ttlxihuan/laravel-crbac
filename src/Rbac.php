@@ -7,6 +7,7 @@
 namespace Laravel\Crbac;
 
 use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Container\Container;
 use Laravel\Crbac\Models\Power\Menu;
@@ -199,7 +200,7 @@ class Rbac {
                 }
             } while (count($referer_menu));
         } else {//真的是找不到了
-            $menu = array_first($lists, function($item) {
+            $menu = Arr::first($lists, function($item) {
                 return $item->parent_id == 0;
             });
         }

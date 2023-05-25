@@ -22,7 +22,7 @@ class MenuGroup extends Service {
         $useIds = [];
         try {
             DB::beginTransaction();
-            $parent_ids = $this->singleLevelMenu($item, array_map('array_pop', array_shift($levels)), 0); //处理第一级
+            $parent_ids = $this->singleLevelMenu($item, array_map('current', array_shift($levels)), 0); //处理第一级
             foreach ($parent_ids as $menu_id => $level_id) {
                 $useIds = array_merge($useIds, $this->levelMenu($item, $levels, $menu_id, $level_id)); //下级处理
             }
@@ -64,7 +64,7 @@ class MenuGroup extends Service {
             return [];
         }
         $exists->whereIn('power_menu_id', $ids);
-        $lists = array_pluck($exists->get(['power_menu_id', 'id']), 'id', 'power_menu_id');
+        $lists = array_column($exists->get(['power_menu_id', 'id'])->toArray(), 'id', 'power_menu_id');
         $inserts = array_diff_key($inserts, $lists);
         MenuLevel::insert($inserts); //每层写一次
         //修改排序值
@@ -79,7 +79,7 @@ class MenuGroup extends Service {
                 ->where('parent_id', '=', $parent_id)
                 ->whereIn('power_menu_id', $ids)
                 ->get(['power_menu_id', 'id']); //添加成功数据
-        return array_pluck($result, 'id', 'power_menu_id');
+        return array_column($result->toArray(), 'id', 'power_menu_id');
     }
 
     /**

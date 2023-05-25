@@ -262,13 +262,12 @@
         if ($.isFunction(url)) {
             success = url, url = null;
         }
-        var _data = {};
         if (data.is('form')) {
             if (!data.validate().form()) {
                 return false;
             }
         }
-        _data = data.serializeArray();
+        var _data = data.serializeArray();
         timeout = timeout === undefined || !$.isNumeric(timeout) ? 10000 : parseInt(timeout);
         dataType = dataType === undefined ? 'json' : dataType;
         return $._ajax({
@@ -307,5 +306,62 @@
     $('form').validate();
     $(':button.ajax-submit-data').click(function () {
         $('form').ajaxPost();
+    });
+    // 自动上传文件
+    $(document).on('change', ':file', function () {
+        var _data = new FormData();
+        if (this.files.length <= 0) {
+            return;
+        }
+        var _name = this.name, _this = $(this);
+        $.each(this.files, function (key, file) {
+            _data.append(_name, file);
+        });
+        var token = $(':hidden[name=_token]').val();
+        if (token) {
+            _data.append('_token', token);
+        }
+        $._ajax({
+            url: _this.data('url'),
+            data: _data,
+            dataType: _this.data('type') || 'json',
+            type: 'post',
+            contentType: false,
+            processData: false,
+            timeout: _this.data('timeout') || 10000,
+            success: function (json) {
+                _this[0].value = '';
+                if (json.status !== 'success') {
+                    return;
+                }
+                // 写展示
+                $.each(json.message, function (key, value) {
+                    var selector = _this.data('show-' + key);
+                    if (typeof selector === 'string') {
+                        $(selector).each(function () {
+                            var _this = $(this);
+                            if (_this.is(':input')) {
+                                _this.val(value);
+                            } else if (_this.is('img')) {
+                                _this.attr('src', value);
+                            } else if (_this.is('a')) {
+                                _this.attr('href', value);
+                            } else {
+                                _this.text(value);
+                            }
+                        });
+                    }
+                });
+                var callback = _this.data('callback');
+                if ($.isFunction(callback)) {
+                    callback(json);
+                }
+                return false;
+            },
+            error: function () {
+                _this[0].value = '';
+                $.popup.alert('上传失败！', 'error', 3);
+            }
+        });
     });
 })();

@@ -18,7 +18,7 @@ $menuGroups = MenuGroup::all();
     <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> URL地址</label>
     <div class="col-sm-4">
         <div class="position-relative">
-            <input type="text" class="form-control" name="url" id="router-url" placeholder="唯一URL地址，如果权限项有请求地址，可以快捷生成权限码" value="{{$item?$item->url:(isset($route)?$route->url:'')}}" remote="{{validate_url($item?$item:$modelClass,'url')}}"/>
+            <input type="text" class="form-control" name="url" id="router-url" placeholder="唯一URL地址，如果权限项有请求地址，可以快捷生成权限码" value="{{$item?$item->url:(isset($route)?$route->url:'')}}"/>
         </div>
         <p class="text-danger">注意：该地址为菜单所需链接地址，所有菜单均定义为GET请求，POST请求只能添加到权限项。</p>
     </div>
@@ -128,18 +128,29 @@ $menuGroups = MenuGroup::all();
                     if (json.message.options.length === 0) {
                         select.find('option').text('--无下级菜单--');
                     }
-                    select.change(function () {
-                        getMenuLevel($(this));
-                    });
                     current.after(select);
+                    updateSelectName();
                     return false;
                 }
             }
         });
     }
+    function updateSelectName() {
+        //整理菜单name值
+        $('#menu-group-lists div.input-group').each(function (index) {
+            $(this).find('select').each(function (key) {
+                this.name = 'group[' + index + '][' + key + ']';
+            });
+        });
+    }
+    $(function () {
+        updateSelectName();
+    });
     //菜单组选择处理
-    $('select.menu-group-select,select.menu-level-select').change(function () {
-        getMenuLevel($(this));
+    $(document).on('change focus', 'select.menu-group-select,select.menu-level-select', function (event) {
+        if (event.type === 'change' || (this.value > 0 && $(this).nextAll('select.menu-level-select').length <= 0)) {
+            getMenuLevel($(this));
+        }
     });
     $(':button.remove-menu-group').click(function () {
         if ($('#menu-group-lists div.input-group').size() > 1) {//最少保留一组
@@ -152,14 +163,6 @@ $menuGroups = MenuGroup::all();
         var select = $(this).parent().prev('div.input-group').find('select.menu-group-select,:button.remove-menu-group').clone(true);
         var div = $('<div class="input-group mb-3"></div>').append(select);
         $(this).parent().before(div);
-    });
-    $(':button.ajax-submit-data').click(function () {
-        //整理菜单name值
-        $('#menu-group-lists div.input-group').each(function (index) {
-            $(this).find('select').each(function (key) {
-                this.name = 'group[' + index + '][' + key + ']';
-            });
-        });
     });
     $('#power-item').click(function () {
         getRouteUses('GET', function () {

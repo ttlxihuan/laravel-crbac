@@ -28,17 +28,17 @@ abstract class Controller extends BaseController {
     public function __construct() {
         //分页定义
         if (method_exists(Paginator::class, 'presenter')) {
-            Paginator::presenter(function($paginator) {
+            Paginator::presenter(function ($paginator) {
                 return view('page', compact('paginator'));
             });
         } else {
             Paginator::$defaultView = 'page';
         }
         //菜单处理
-        View::composer(['public.menu', 'public.crumbs'], function($view) {
+        View::composer(['public.menu', 'public.crumbs'], function ($view) {
             $menus = Crbac::menus() ?: [];
             $crumbs = Crbac::crumbs() ?: [];
-            $crumbs_ids = array_map(function($model) {
+            $crumbs_ids = array_map(function ($model) {
                 return $model->getKey();
             }, $crumbs);
             $view->with(compact('menus', 'crumbs', 'crumbs_ids'));
