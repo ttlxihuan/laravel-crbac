@@ -192,7 +192,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
             'uses' => function ()use ($controllerParam, $actionParam) {
                 $service = new Services\ExistService();
                 $val = request()->input($actionParam);
-                return $val && $service->check($controllerParam, $actionParam, $val, request()->route('one')) ? 'false' : 'true';
+                return $val && $service->check($controllerParam, $actionParam, $val, request()->input('id')) ? 'false' : 'true';
             }
         ];
     }

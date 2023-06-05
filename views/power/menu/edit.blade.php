@@ -28,13 +28,14 @@ $menuGroups = MenuGroup::all();
         <div class="card-header">
             权限项相关
         </div>
-        <div class="card-body">
+        <div class="card-body" id="power-item-form">
             <div class="row my-3">
                 <label class="col-sm-2 col-form-label text-end bg-light"> 权限码</label>
-                <div class="col-sm-4">
+                <div class="col-sm-7">
                     <div class="input-group position-relative">
                         <input type="text" class="form-control" placeholder="所在权限码" id="power-code" name="code" value="{{$item && $item->item?$item->item->code:''}}" readonly="readonly"/>
-                        <button class="btn btn-outline-secondary" type="button" id="power-item">生成权限码</button>
+                        <button class="btn btn-outline-success" type="button" id="power-item">生成权限码</button>
+                        <button class="btn btn-outline-secondary" type="button" id="power-clean">不要权限</button>
                     </div>
                     <p class="text-danger">注意：如果请求需要配置权限管理，需要在此生成权限项。<br/>权限码必须为controller@action的结构保存，否则权限项无效，该权限项禁止手动修改。</p>
                 </div>
@@ -165,11 +166,15 @@ $menuGroups = MenuGroup::all();
         $(this).parent().before(div);
     });
     $('#power-item').click(function () {
+        $('#power-item-form :input').attr('disabled', false);
         getRouteUses('GET', function () {
             $('#power-item-data').show().find(':disabled').each(function () {
                 this.disabled = false;
             });
         });
+    });
+    $('#power-clean').click(function () {
+        $('#power-item-form :input:not(#power-item)').attr('disabled', true);
     });
 <?php if (!$item || !$item->item) { ?>
         $('#power-item-data').hide().find(':input').each(function () {

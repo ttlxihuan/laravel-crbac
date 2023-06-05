@@ -41,6 +41,11 @@ if ($item && !$item instanceof \Laravel\Crbac\Models\Power\Item) {
 //            return;
 //        }
 //        $('#router-url').val(url).data('old',url);
+        $('#power-code').val('');
+        $('#single-power_item_group-id').val('');
+        $('#single-power_item_group-name').val('');
+        $('#many-power_role-id').val('');
+        $('#many-power_role-name').html('');
         $._ajax({
             url: url,
             type: method,
@@ -65,11 +70,6 @@ if ($item && !$item instanceof \Laravel\Crbac\Models\Power\Item) {
                 }
             }, error: function () {
                 $.popup.alert('请求地址未配置授权或地址不存在');
-                $('#power-code').val('');
-                $('#single-power_item_group-id').val('');
-                $('#single-power_item_group-name').val('');
-                $('#many-power_role-id').val('');
-                $('#many-power_role-name').html('');
                 return false;
             }
         });

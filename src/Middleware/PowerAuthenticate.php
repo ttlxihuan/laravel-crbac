@@ -27,7 +27,7 @@ class PowerAuthenticate {
                 if ($item) {
                     $data = array_only($item->toArray(), ['code', 'status', 'power_item_group_id']);
                     $data['power_item_group_name'] = array_get($item->group->toArray(), 'name');
-                    $data['roles'] = array_pluck($item->roles, 'name', 'power_role_id') ?: [];
+                    $data['roles'] = array_column($item->roles->toArray(), 'name', 'id') ?: [];
                     $item = $data;
                 }
                 return prompt(compact('uses', 'item'));

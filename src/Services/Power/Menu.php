@@ -25,12 +25,11 @@ class Menu extends Service {
     protected function editBefore(&$data, BaseService $service, $item) {
         $code = request('code');
         if (!$code) {
+            $data['power_item_id'] = 0;
             return;
         }
-        $power = $item instanceof MenuModel && $item->item ? $item->item : null;
-        if (empty($power)) {//如果没有权限项，尝试从权限码获取权限对象
-            $power = ItemModel::findCode($code);
-        }
+        //尝试从权限码获取权限对象
+        $power = ItemModel::findCode($code);
         //添加权限项
         $result = (new Item($this))->edit($power ?: ItemModel::class);
         if ($result) {
