@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
     <head>
         <title>
-            @section('title') 包管理后台 @show
+            @section('title') 管理后台 @show
         </title>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />

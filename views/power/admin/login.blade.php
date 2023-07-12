@@ -2,7 +2,7 @@
 @section('main')
 <form>
     <div class="card modal-dialog modal-content">
-        <h4 class="card-header text-center py-3">包管理后台登录</h4>
+        <h4 class="card-header text-center py-3">管理后台登录</h4>
         <div class="card-body">
             <div class="row my-3">
                 <label class="col-sm-3 col-form-label text-end"><b class="text-danger">*</b> 账号</label>
