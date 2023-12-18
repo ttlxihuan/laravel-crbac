@@ -8,6 +8,8 @@ namespace Laravel\Crbac\Services;
 
 use Closure,
     Request;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class ModelSelect {
