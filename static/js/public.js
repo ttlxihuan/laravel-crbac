@@ -153,7 +153,7 @@
                 if (type === undefined) {
                     type = 'none';// 默认大小
                 }
-                if (/^(sm|none|lg|xl)$/.test(type)) {
+                if (/^(sm|none|lg|xl|fullscreen)$/.test(type)) {
                     var className = 'modal-dialog';
                     if (type !== 'none') {
                         className += ' modal-' + type;
@@ -216,7 +216,7 @@
                             auto = {type: 'secondary', event: 'close', title: '取消'};
                             break;
                         case 'confirm':
-                            auto = {type: 'secondary', event: 'confirm', title: '确定'};
+                            auto = {type: 'primary', event: 'confirm', title: '确定'};
                             break;
                     }
                     if (auto) {
@@ -249,13 +249,13 @@
     });
     $.extend({popup: Popup}).fn.extend({
         ajaxPost: function (url, dataType, success, timeout) {
-            return _ajax(_getUrl(url, this), this, dataType, 'post', success, timeout);
+            return _ajax(_getUrl(url, this), this, dataType, 'post', success, timeout || this.data('timeout'));
         },
         ajaxGet: function (url, dataType, success, timeout) {
-            return _ajax(_getUrl(url, this), this, dataType, 'get', success, timeout);
+            return _ajax(_getUrl(url, this), this, dataType, 'get', success, timeout || this.data('timeout'));
         },
         ajaxJson: function (url, type, success, timeout) {
-            return _ajax(_getUrl(url, this), this, 'json', type ? type : 'post', success, timeout);
+            return _ajax(_getUrl(url, this), this, 'json', type ? type : 'post', success, timeout || this.data('timeout'));
         }
     });
     function _ajax(url, data, dataType, type, success, timeout) {
@@ -266,9 +266,13 @@
             if (!data.validate().form()) {
                 return false;
             }
+            var fun = data.data('success');
+            if (fun && $.isFunction(window[fun])) {
+                success = window[fun];
+            }
         }
         var _data = data.serializeArray();
-        timeout = timeout === undefined || !$.isNumeric(timeout) ? 10000 : parseInt(timeout);
+        timeout = !$.isNumeric(timeout) ? 10000 : parseInt(timeout);
         dataType = dataType === undefined ? 'json' : dataType;
         return $._ajax({
             url: url,
@@ -305,7 +309,7 @@
     });
     $('form').validate();
     $(':button.ajax-submit-data').click(function () {
-        $('form').ajaxPost();
+        $('form').data($(this).data()).ajaxPost();
     });
     // 自动上传文件
     $(document).on('change', ':file', function () {
@@ -315,7 +319,7 @@
         }
         var _name = this.name, _this = $(this);
         $.each(this.files, function (key, file) {
-            _data.append(_name, file);
+            _data.append(_name.replace(/\[\]/, '[' + key + ']'), file);
         });
         var token = $(':hidden[name=_token]').val();
         if (token) {
@@ -328,28 +332,51 @@
             type: 'post',
             contentType: false,
             processData: false,
-            timeout: _this.data('timeout') || 10000,
+            timeout: _this.data('timeout') || 1000 * 600,
             success: function (json) {
                 _this[0].value = '';
                 if (json.status !== 'success') {
                     return;
                 }
-                // 写展示
-                $.each(json.message, function (key, value) {
-                    var selector = _this.data('show-' + key);
-                    if (typeof selector === 'string') {
-                        $(selector).each(function () {
-                            var _this = $(this);
-                            if (_this.is(':input')) {
-                                _this.val(value);
-                            } else if (_this.is('img')) {
-                                _this.attr('src', value);
-                            } else if (_this.is('a')) {
-                                _this.attr('href', value);
-                            } else {
-                                _this.text(value);
-                            }
+                function setShow(node, val) {
+                    var children = node.find('*');
+                    if (children.size() > 1) {
+                        children.each(function () {
+                            setShow($(this), val);
                         });
+                    } else {
+                        if (node.is(':input')) {
+                            node.val(val);
+                        } else if (node.is('img')) {
+                            node.attr('src', val);
+                        } else if (node.is('a')) {
+                            node.attr('href', val);
+                        } else {
+                            node.text(val);
+                        }
+                    }
+                }
+                // 写展示
+                $.each(_this.data(), function (key, selector) {
+                    if (/^show\w+$/.test(key) && typeof selector === 'string') {
+                        var frames = $(selector);
+                        if (frames.size() <= 0) {
+                            return;
+                        }
+                        var _key = key.replace(/^show/, '').replace(/(\w)([A-Z])/g, '$1-$2').toLowerCase();
+                        if (json.message instanceof Array) {
+                            $.each(json.message, function (index, data) {
+                                if (frames[index] === undefined) {
+                                    frames.last().after($(frames[0]).clone());
+                                    frames = $(selector);
+                                }
+                                setShow($(frames[index]), data[_key]);
+                            });
+                        } else {
+                            frames.each(function () {
+                                setShow($(this), json.message[_key]);
+                            });
+                        }
                     }
                 });
                 var callback = _this.data('callback');
