@@ -13,7 +13,7 @@ $size = 10;
     <li class="page-item"><a class="page-link" href="{{$paginator->url(1)}}">{{lang('pagination.first')}}</a></li>
     <li class="page-item"><a class="page-link" href="{{$paginator->previousPageUrl()}}">{{lang('pagination.previous')}}</a></li>
     @endif
-    @for($pageNum=max($paginator->currentPage()-$size/2,1),$length=0;$length<$size && $pageNum<=$paginator->lastPage();$length++,$pageNum++)
+    @for($pageNum=max(round($paginator->currentPage()-$size/2),1),$length=0;$length<$size && $pageNum<=$paginator->lastPage();$length++,$pageNum++)
     @if($paginator->currentPage()==$pageNum)
     <li class="page-item disabled"><a class="page-link" href="javascript:void(0);">{{$pageNum}}</a></li>
     @else
