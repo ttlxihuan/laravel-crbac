@@ -46,9 +46,14 @@ if ($item && !$item instanceof \Laravel\Crbac\Models\Power\Item) {
         $('#single-power_item_group-name').val('');
         $('#many-power_role-id').val('');
         $('#many-power_role-name').html('');
+        var data = {};
+        if(/^post$/i.test(method)) {
+            data._token = $('input[name="_token"]').val();
+        }
         $._ajax({
             url: url,
             type: method,
+            data: data,
             dataType: 'json',
             headers: {
                 'GET-ROUTER-USERS': 'true'
