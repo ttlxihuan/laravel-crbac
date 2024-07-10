@@ -7,7 +7,7 @@
     @if(function_exists('csrf_field')){{csrf_field()}}@endif
     <input type="hidden" name="_referrer" value="{{URL::previous()}}">
     <div class="text-center my-3">
-        <button type="button" class="btn btn-primary ajax-submit-data">{{empty($item)?'创建':'保存'}}</button>
+        @section('button')<button type="button" class="btn btn-primary ajax-submit-data">{{empty($item)?'创建':'保存'}}</button>@show
     </div>
 </form>
 <script type="text/javascript">
