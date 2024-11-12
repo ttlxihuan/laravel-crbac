@@ -2,6 +2,7 @@
 @if(isControllerPower('add') && !isset($not_add))
 @section('nimble')<a href="{{$add_url ?? crbac_route('.add')}}">新增{{$description}}</a>@stop
 @endif
+@section('main')
 <style>
     .order-by{
         position: relative;
@@ -32,7 +33,6 @@
         color: #009900;
     }
 </style>
-@section('main')
 @include('public.crumbs')
 <div class="container-fluid">
     @section('search')@show

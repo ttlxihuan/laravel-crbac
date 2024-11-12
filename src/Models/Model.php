@@ -124,7 +124,7 @@ abstract class Model extends BaseModel {
                 'model' => static::class,
                 'type' => $type,
                 'primary_id' => (int) $this->getKey(),
-                'user_agent' => request()->userAgent(),
+                'user_agent' => request()->userAgent() ?: '',
                 'url' => request()->fullUrl(),
                 'ip' => request()->ip(),
                 'admin_id' => (int) auth()->id(),
