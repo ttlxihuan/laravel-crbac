@@ -7,6 +7,7 @@
 namespace Laravel\Crbac\Console;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
 
 class CrbacCopyLangCommand extends Command {
 
@@ -19,6 +20,11 @@ class CrbacCopyLangCommand extends Command {
      * 执行控制台命令
      */
     public function handle() {
+        try {
+            Artisan::call('lang:publish');
+        } catch (\Exception $err) {
+            
+        }
         $langPath = realpath($this->laravel->resourcePath('lang/'));
         if (!$langPath) {
             $langPath = realpath($this->laravel->basePath('lang/'));
@@ -54,5 +60,4 @@ class CrbacCopyLangCommand extends Command {
             }
         }
     }
-
 }

@@ -18,8 +18,8 @@ class Route extends Service {
     public function update() {
         set_time_limit(3600);
         try {
-            DB::beginTransaction();
             RouteModel::truncate(); //清空表
+            DB::beginTransaction();
             $inserts = [];
             $now = time();
             foreach (Router::getRoutes()->getIterator() as $route) {

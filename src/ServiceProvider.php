@@ -286,7 +286,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $this->app->singleton('crbac.lang', function () {
             return new Console\CrbacCopyLangCommand();
         });
-        $this->commands('crbac.table', 'crbac.seeder', 'crbac.lang');
+        $this->app->singleton('crbac.power', function () {
+            return new Console\CrbacUpdatePowerCommand();
+        });
+        $this->commands('crbac.table', 'crbac.seeder', 'crbac.lang', 'crbac.power');
     }
-
 }

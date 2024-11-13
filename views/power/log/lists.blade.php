@@ -42,7 +42,7 @@
             <td>{{$index+1}}</td>
             <td>{{$item->model}}</td>
             <td>{{$item->typeName()}}</td>
-            <td>{{$item->admin->realname}}</td>
+            <td>{{$item->admin ? $item->admin->realname : '-'}}</td>
             <td>{{$item->ip}}</td>
             <td>{{$item->url}}</td>
             <td>{{$item->user_agent}}</td>
