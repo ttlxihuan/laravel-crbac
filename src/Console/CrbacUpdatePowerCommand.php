@@ -296,7 +296,7 @@ class CrbacUpdatePowerCommand extends Command {
             MenuLevel::create([
                 'power_menu_id' => $menu['id'],
                 'power_menu_group_id' => $this->menuGroup['id'],
-                'parent_id' => $parent_id,
+                'parent_id' => $parent_id ?: 0,
                 'sort' => MenuLevel::where('parent_id', $parent_id)->where('power_menu_group_id', $this->menuGroup['id'])->max('sort') ?: 0,
             ]);
         }
