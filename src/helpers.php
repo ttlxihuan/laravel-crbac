@@ -317,7 +317,7 @@ if (!function_exists('array_pluck')) {
      * @return array
      */
     function array_pluck($array, $value, $key = null) {
-        return Arr::pluck($array, $value, $key = null);
+        return Arr::pluck($array, $value, $key);
     }
 
 }
