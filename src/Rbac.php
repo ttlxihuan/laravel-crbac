@@ -120,7 +120,7 @@ class Rbac {
         if ($menu['url'] && strpos('?', $menu['url']) !== false) {
             $url = strstr('?', $url, true);
         }
-        return Request::is(trim($url, '/')) && (empty($menu['item']) || $menu['item']['code'] === $uses);
+        return Request::is(trim($url, '/')) && (empty($menu['item']) || strcasecmp($menu['item']['code'], $uses) === 0);
     }
 
     /**
