@@ -256,26 +256,25 @@ class CrbacUpdatePowerCommand extends Command {
      */
     protected function addMenu(ReflectionClass $class, ReflectionMethod $method, string $title, string $desc) {
         $url = $this->getUrl($method);
-        $id = $this->addItem($class, $method, $title);
+        $item_id = $this->addItem($class, $method, $title);
         $this->info('添加菜单：' . $url);
         if (!Menu::where('url', $url)->count()) {
             $parent_id = 0;
             $groupName = $this->getLevels($class);
             if (count($groupName) == 1 && $groupName[0] == $desc) {
                 $title = lang('power.menu', ['name' => $desc]);
-                // 当前是顶级菜单
-                $topMenu = Menu::create([
-                            'name' => $title,
-                            'url' => $url,
-                            'power_item_id' => $id,
-                            'comment' => $title,
-                ]);
-                $parent_id = MenuLevel::create([
-                            'power_menu_id' => $topMenu['id'],
-                            'power_menu_group_id' => $this->menuGroup['id'],
-                            'parent_id' => 0,
-                            'sort' => MenuLevel::where('parent_id', 0)->where('power_menu_group_id', $this->menuGroup['id'])->max('sort') ?: 0,
-                        ])['id'];
+                $menu = Menu::where('name', lang('power.menu', ['name' => $desc]))->first();
+                if ($menu) {
+                    $menu->update([
+                        'name' => $title,
+                        'url' => $url,
+                        'power_item_id' => $item_id,
+                        'comment' => $title,
+                    ]);
+                } else {
+                    // 当前是顶级菜单
+                    $parent_id = $this->createMenu($title, $item_id, $url);
+                }
             } else {
                 // 菜单层级搜索
                 for ($key = count($groupName) - 1; $key >= 0; $key--) {
@@ -285,21 +284,36 @@ class CrbacUpdatePowerCommand extends Command {
                         break;
                     }
                 }
+                // 创建顶层
+                if (count($groupName) == 1 && !$parent_id) {
+                    $parent_id = $this->createMenu(lang('power.menu', ['name' => $groupName[0]]), $item_id, 'javascript:void(0);');
+                }
             }
-            $menu = Menu::create([
-                        'name' => $title,
-                        'url' => $url,
-                        'power_item_id' => $id,
-                        'comment' => $title,
-            ]);
-            // 菜单组添加
-            MenuLevel::create([
-                'power_menu_id' => $menu['id'],
-                'power_menu_group_id' => $this->menuGroup['id'],
-                'parent_id' => $parent_id ?: 0,
-                'sort' => MenuLevel::where('parent_id', $parent_id)->where('power_menu_group_id', $this->menuGroup['id'])->max('sort') ?: 0,
-            ]);
+            $this->createMenu($title, $item_id, $url, $parent_id);
         }
+    }
+
+    /**
+     * 创建菜单
+     * @param string $title
+     * @param int $item_id
+     * @param string $url
+     * @param int $parent_id
+     * @return int
+     */
+    protected function createMenu(string $title, int $item_id, string $url, int $parent_id = 0): int {
+        $menu = Menu::create([
+                    'name' => $title,
+                    'url' => $url,
+                    'power_item_id' => $item_id,
+                    'comment' => $title,
+        ]);
+        return MenuLevel::create([
+                    'power_menu_id' => $menu['id'],
+                    'power_menu_group_id' => $this->menuGroup['id'],
+                    'parent_id' => $parent_id,
+                    'sort' => MenuLevel::where('parent_id', 0)->where('power_menu_group_id', $this->menuGroup['id'])->max('sort') ?: 0,
+                ])['id'];
     }
 
     /**
