@@ -64,8 +64,9 @@ class ModelSelect {
                         $this->builder->whereNotIn($field, $val);
                     } elseif ($operator == 'in') {//in查询处理
                         $this->builder->whereIn($field, $val);
+                    } else {
+                        $this->builder->where($field, $operator, $val);
                     }
-                    $this->builder->where($field, $operator, $val);
                 });
     }
 
