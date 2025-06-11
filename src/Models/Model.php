@@ -7,7 +7,6 @@
 namespace Laravel\Crbac\Models;
 
 use Laravel\Crbac\Models\Power\UpdateLog;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model as BaseModel;
 
 abstract class Model extends BaseModel {
@@ -34,6 +33,9 @@ abstract class Model extends BaseModel {
     public function __construct(array $attributes = []) {
         if ($this->guarded === ['*']) {
             $this->guarded = [$this->primaryKey];
+        }
+        if (app()->runningInConsole()) {
+            $this->saveUpdateLog = false;
         }
         parent::__construct($attributes);
     }
