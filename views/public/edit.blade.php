@@ -2,6 +2,7 @@
 @section('nimble')<a href="javascript:history.back();">返回</a>@stop
 @section('main')
 @include('public.crumbs')
+<style>form .row{margin-left: 0;margin-right: 0;}</style>
 <form method="post" enctype="multipart/form-data" class="needs-validation">
     @yield('body')
     @if(function_exists('csrf_field')){{csrf_field()}}@endif
