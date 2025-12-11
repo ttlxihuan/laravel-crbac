@@ -15,12 +15,14 @@ use Laravel\Crbac\Services\ModelEdit;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Crbac\Services\ModelSelect;
 use Illuminate\Support\Facades\Request;
+use Symfony\Component\HttpFoundation\File\File;
 use Illuminate\Routing\Controller as BaseController;
 
 abstract class Controller extends BaseController {
 
     //备注说明
     protected $description = '';
+    private $uploadFiles = [];
 
     /**
      * 初始处理
@@ -120,4 +122,33 @@ abstract class Controller extends BaseController {
         }
     }
 
+    /**
+     * 获取上传的文件
+     * @param string $name
+     * @return string|null
+     */
+    protected function getUploadFile(string $name) {
+        $filename = request($name);
+        if ($filename) {
+            if ($filename instanceof File) {
+                return $filename;
+            }
+            settype($filename, 'string');
+            if (!preg_match('#[/\\\\]#', $filename) && file_exists($path = storage_path('/upload-tmp/' . $filename))) {
+                $this->uploadFiles[] = $path;
+                return new File($path);
+            }
+        }
+    }
+
+    /**
+     * 删除上传的文件
+     */
+    public function __destruct() {
+        foreach ($this->uploadFiles as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        }
+    }
 }

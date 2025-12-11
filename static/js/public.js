@@ -313,82 +313,215 @@
     });
     // 自动上传文件
     $(document).on('change', ':file', function () {
-        var _data = new FormData();
         if (this.files.length <= 0) {
             return;
         }
-        var _name = this.name, _this = $(this);
-        $.each(this.files, function (key, file) {
-            _data.append(_name.replace(/\[\]/, '[' + key + ']'), file);
-        });
-        var token = $(':hidden[name=_token]').val();
+        var _name = this.name, _this = $(this), finish = 0;
+        var _data = new FormData();
+        var token = $(':hidden[name=_token]').val(), length = _this[0].files.length;
         if (token) {
             _data.append('_token', token);
         }
-        $._ajax({
-            url: _this.data('url'),
-            data: _data,
-            dataType: _this.data('type') || 'json',
-            type: 'post',
-            contentType: false,
-            processData: false,
-            timeout: _this.data('timeout') || 1000 * 600,
-            success: function (json) {
-                _this[0].value = '';
-                if (json.status !== 'success') {
-                    return;
+        var isSplit = !!_this.data('split') || false;
+        if (isSplit) {
+            var close = false, body = $('<div>'), box = $.popup.box('上传文件', body).on('close', function () {
+                close = true;
+                if (_this[0].value) {
+                    _this[0].value = '';
+                    $.popup.alert('取消上传！', 'error', 3);
                 }
-                function setShow(node, val) {
-                    var children = node.find('*');
-                    if (children.size() > 1) {
-                        children.each(function () {
-                            setShow($(this), val);
-                        });
-                    } else {
-                        if (node.is(':input')) {
-                            node.val(val);
-                        } else if (node.is('img')) {
-                            node.attr('src', val);
-                        } else if (node.is('a')) {
-                            node.attr('href', val);
-                        } else {
-                            node.text(val);
-                        }
-                    }
-                }
-                // 写展示
-                $.each(_this.data(), function (key, selector) {
-                    if (/^show\w+$/.test(key) && typeof selector === 'string') {
-                        var frames = $(selector);
-                        if (frames.size() <= 0) {
-                            return;
-                        }
-                        var _key = key.replace(/^show/, '').replace(/(\w)([A-Z])/g, '$1-$2').toLowerCase();
-                        if (json.message instanceof Array) {
-                            $.each(json.message, function (index, data) {
-                                if (frames[index] === undefined) {
-                                    frames.last().after($(frames[0]).clone());
-                                    frames = $(selector);
-                                }
-                                setShow($(frames[index]), data[_key]);
-                            });
-                        } else {
-                            frames.each(function () {
-                                setShow($(this), json.message[_key]);
-                            });
-                        }
-                    }
-                });
-                var callback = _this.data('callback');
-                if ($.isFunction(callback)) {
-                    callback(json);
-                }
-                return false;
-            },
-            error: function () {
-                _this[0].value = '';
-                $.popup.alert('上传失败！', 'error', 3);
+            }).size('lg');
+        }
+        $.each(this.files, function (key, file) {
+            var input = _name.replace(/\[\]/, '[' + key + ']');
+            if (!isSplit) {
+                _data.append(input, file);
+                updateResult();
+                return;
+            }
+            var unit, size = file.size;
+            $.each(['', 'K', 'M', 'G', 'T'], function (_, name) {
+                return unit = name, size >= 1024 ? (size /= 1024) : false;
+            });
+            var div = $('<div class="alert alert-info py-1 modal-header">' + file.name + ' (' + parseFloat(size).toFixed(2) + unit + 'B)<b>' + '0%</b></div>');
+            body.append(div);
+            uploadFile(file, showSuccess, showError, showProgress);
+            function showProgress(rate) {
+                div.find('b').text(parseFloat(rate).toFixed(2) + '%');
+            }
+            function showSuccess(json) {
+                showProgress(100);
+                div.removeClass('alert-info').addClass('alert-success');
+                _data.append(input, json.message.name);
+                updateResult();
+            }
+            function showError() {
+                finish++;
+                div.removeClass('alert-info').addClass('alert-warning').find('b').text('失败');
             }
         });
+        function updateResult() {
+            finish++;
+            if (length <= finish) {
+                _this[0].value = '';
+                var attempt = 0;
+                if (isSplit) {
+                    setTimeout(function () {
+                        box.close();
+                    }, 3000);
+                    attempt = 2;
+                }
+                function upload() {
+                    attempt++;
+                    if (attempt > 3) {
+                        // 上传失败了
+                        $.popup.alert('上传失败！', 'error', 3);
+                        return;
+                    }
+                    $.ajax({
+                        url: _this.data('url'),
+                        data: _data,
+                        dataType: _this.data('type') || 'json',
+                        type: 'post',
+                        contentType: false,
+                        processData: false,
+                        timeout: _this.data('timeout') || 1000 * 600,
+                        success: showResult,
+                        error: upload
+                    });
+                }
+                if (!close) {
+                    upload();
+                }
+            }
+        }
+        function showResult(json) {
+            if (json.status !== 'success') {
+                $.popup.alert(json.message.info, 'error', 3);
+                return;
+            }
+            function setShow(node, val) {
+                var children = node.find('*');
+                if (children.size() > 1) {
+                    children.each(function () {
+                        setShow($(this), val);
+                    });
+                } else {
+                    if (node.is(':input')) {
+                        node.val(val);
+                    } else if (node.is('img')) {
+                        node.attr('src', val);
+                    } else if (node.is('a')) {
+                        node.attr('href', val);
+                    } else {
+                        node.text(val);
+                    }
+                }
+            }
+            // 写展示
+            $.each(_this.data(), function (key, selector) {
+                if (/^show\w+$/.test(key) && typeof selector === 'string') {
+                    var frames = $(selector);
+                    if (frames.size() <= 0) {
+                        return;
+                    }
+                    var _key = key.replace(/^show/, '').replace(/(\w)([A-Z])/g, '$1-$2').toLowerCase();
+                    if (json.message instanceof Array) {
+                        $.each(json.message, function (index, data) {
+                            if (frames[index] === undefined) {
+                                frames.last().after($(frames[0]).clone());
+                                frames = $(selector);
+                            }
+                            setShow($(frames[index]), data[_key]);
+                        });
+                    } else {
+                        frames.each(function () {
+                            setShow($(this), json.message[_key]);
+                        });
+                    }
+                }
+            });
+            var callback = _this.data('callback');
+            if ($.isFunction(callback)) {
+                callback(json);
+            }
+            return false;
+        }
+        // 分片上传文件
+        function uploadFile(file, success, error, progress, size, timeout) {
+            size = size || 1024 * 1024; // 1MB分片
+            timeout = timeout || 1000 * 120; // 超时时长
+            var token = $(':hidden[name=_token]').val(), date = Math.round(new Date().getTime() / 1000);
+            var start = 0, end = size, processNum = 0, split = file.size / size, step = 100 / split, sendNum = Math.ceil(split), no = Math.random(), total = 0;
+            // 分片上传
+            function splitRequest() {
+                if (close) {
+                    error();
+                    return;
+                }
+                while (file.size > start) {
+                    if (processNum > 5) {
+                        return;
+                    }
+                    var _file = new File([file.slice(start, end, file.type)], file.name, {type: file.type});
+                    request(_file, start);
+                    start = end;
+                    end += _file.size;
+                    processNum++;
+                }
+            }
+            // 上传操作
+            function request(file, index) {
+                var from = new FormData(), attempt = 0;
+                if (token) {
+                    from.append('_token', token);
+                }
+                from.append('upload-index', index);
+                from.append('upload-time', date);
+                from.append('upload-no', no);
+                from.append('upload-file', file);
+                function sendAjax() {
+                    attempt++;
+                    if (close || attempt > 3) {
+                        // 上传失败了
+                        sendNum--;
+                        if (sendNum <= 0) {
+                            error();
+                        }
+                        return;
+                    }
+                    $.ajax({
+                        url: '/crbac/power/admin.upload-split',
+                        data: from,
+                        dataType: 'json',
+                        type: 'post',
+                        contentType: false,
+                        processData: false,
+                        global: false,
+                        timeout: timeout,
+                        success: function (result) {
+                            if (result.status === 'success') {
+                                processNum--;
+                                sendNum--;
+                                total += step;
+                                progress(total);
+                                splitRequest();
+                                if (sendNum <= 0) {
+                                    // 上传结束
+                                    success(result);
+                                }
+                            } else {
+                                sendAjax();
+                            }
+                        },
+                        error: function () {
+                            sendAjax();
+                        }
+                    });
+                }
+                sendAjax();
+            }
+            splitRequest();
+        }
     });
 })();

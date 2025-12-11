@@ -6,6 +6,7 @@
 
 namespace Laravel\Crbac\Controllers\Power;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Crbac\Models\Power\Admin;
@@ -106,6 +107,39 @@ class AdminController extends Controller {
         });
         $description = $this->description;
         return view('power.admin.lists', compact('lists', 'description', 'toOrder'));
+    }
+
+    /**
+     * 分片上传文件合并处理
+     * @return string
+     * @methods(POST)
+     */
+    public function uploadSplit() {
+        $file = request()->file('upload-file');
+        if (!($file instanceof UploadedFile) || !$file->isValid()) {
+            return prompt('没有上传文件！', 'error');
+        }
+        $ext = strrchr(basename($file->getClientOriginalName()), '.');
+        if (!$ext) {
+            return prompt('上传文件没有扩展名', 'error');
+        }
+        $index = request('upload-index');
+        if (!is_numeric($index)) {
+            return prompt('缺少有效参数：upload-index', 'error');
+        }
+        $no = request('upload-no'); // 编号
+        if (!is_string($no)) {
+            return prompt('缺少有效参数：upload-no', 'error');
+        }
+        $basepath = storage_path('/upload-tmp');
+        is_dir($basepath) || mkdir($basepath, 0666, true);
+        $filename = md5($file->getClientOriginalName() . $no . auth()->id()) . $ext;
+        $fp = fopen($basepath . '/' . $filename, 'cb');
+        flock($fp, LOCK_EX | LOCK_NB);
+        fseek($fp, $index, SEEK_SET);
+        fwrite($fp, file_get_contents($file->getPathname()));
+        fclose($fp);
+        return prompt(['name' => $filename]);
     }
 
 }
