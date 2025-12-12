@@ -8,7 +8,13 @@ namespace Laravel\Crbac\Console;
 
 use ReflectionClass;
 use ReflectionMethod;
+use Laravel\Crbac\PathRouter;
 use Illuminate\Console\Command;
+use \Laravel\Crbac\Annotation\{
+    PowerMenu,
+    PowerItem,
+    Request\Methods
+};
 use Illuminate\Support\Facades\DB;
 use Laravel\Crbac\Models\Power\Role;
 use Laravel\Crbac\Models\Power\Item;
@@ -119,12 +125,12 @@ class CrbacUpdatePowerCommand extends Command {
             $this->info('已经删除权限项：' . $count);
         }
         foreach ($this->eachAction() as $data) {
-            list($desc, $ref, $method, $methods) = $data;
+            list($desc, $ref, $method, $methods, $url) = $data;
             // 添加到路由列表中，用于手动添加权限项
             // 通用结构
             switch ($method->getName()) {
                 case 'lists':
-                    $this->addMenu($ref, $method, lang('power.lists', ['name' => $desc]), $desc);
+                    $this->addMenu($url, $ref, $method, lang('power.lists', ['name' => $desc]), $desc);
                     break;
                 case 'add':
                     if (!$ref->hasMethod('edit')) { // 没有编辑就不操作添加
@@ -139,24 +145,18 @@ class CrbacUpdatePowerCommand extends Command {
                     continue 2;
                 default:
                     // 提取配置注解
-                    if (preg_match('/@power(Menu|Item)\s*\(\s*(\'[^\']+\'|"[^"]+")\s*\)/i', $method->getDocComment(), $matches)) {
-                        $title = trim($matches[2], '"\'');
-                        switch ($matches[1]) {
-                            case 'Menu':
-                                $this->addMenu($ref, $method, $title, $title);
-                                break;
-                            case 'Item':
-                                $this->addItem($ref, $method, $title);
-                                break;
-                        }
-                    } else {
-                        $methods = array_map(function ($item) {
-                            return strtoupper(trim(ltrim($item, ',')));
-                        }, array_slice($matches, 1));
+                    $annotations = get_annotations($method, PowerMenu::class, PowerItem::class);
+                    if (isset($annotations[PowerMenu::class])) {
+                        $title = $annotations[PowerMenu::class]->get();
+                        $this->addMenu($url, $ref, $method, $title, $title);
+                    } elseif (isset($annotations[PowerMenu::class])) {
+                        $title = $annotations[PowerMenu::class]->get();
+                        $this->addItem($ref, $method, $title);
+                    } else { // 路径式路由
                         $uses = $ref->getName() . '@' . $method->getName();
                         $inserts[] = [
                             'uses' => $uses,
-                            'url' => $this->getUrl($method),
+                            'url' => $url,
                             'methods' => implode(',', $methods),
                             'is_usable' => 'yes',
                             RouteModel::CREATED_AT => $now,
@@ -177,19 +177,19 @@ class CrbacUpdatePowerCommand extends Command {
         // 循环控制器
         foreach ($this->eachController() as $desc => $ref) {
             foreach ($ref->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
-                if ($method->isAbstract() || $method->isStatic() || !preg_match('/@methods\(\s*([a-z]+)(\s*,\s*[a-z]+)*\s*\)/i', $method->getDocComment(), $matches)) {
+                if ($method->isAbstract() || $method->isStatic()) {
                     continue;
                 }
-                $methods = array_map(function ($item) {
-                    return strtoupper(trim(ltrim($item, ',')));
-                }, array_slice($matches, 1));
-                yield [$desc, $ref, $method, $methods];
+                $option = PathRouter::instance()->getOptions($ref->getName(), $method->getName());
+                if ($option && $this->hasAuth($option['middlewares'])) {
+                    yield [$desc, $ref, $method, $option['methods'], $option['url']];
+                }
             }
         }
         // 循环路由
         foreach (Route::getRoutes()->getIterator() as $route) {
             $action = $route->getAction();
-            if (!$this->hasAuth($action)) {
+            if (!$this->hasAuth($action['middleware'] ?? [])) {
                 continue;
             }
             $uses = array_get($action, 'uses');
@@ -199,7 +199,7 @@ class CrbacUpdatePowerCommand extends Command {
                     $ref = new ReflectionClass($controller);
                     if ($this->isVainController($ref)) {
                         $desc = $ref->getProperty('description')->getDefaultValue();
-                        yield [$desc, $ref, $ref->getMethod($method), $route->methods()];
+                        yield [$desc, $ref, $ref->getMethod($method), $route->methods(), $route->uri()];
                     }
                 }
             }
@@ -208,11 +208,11 @@ class CrbacUpdatePowerCommand extends Command {
 
     /**
      * 判断是否存在授权中间件
-     * @param array $action
+     * @param array $middlewares
      * @return boolean
      */
-    protected function hasAuth(array $action) {
-        foreach ($action['middleware'] ?? [] as $middleware) {
+    protected function hasAuth(array $middlewares) {
+        foreach ($middlewares as $middleware) {
             if ($middleware == 'auth' || strpos($middleware, 'auth:')) {
                 return true;
             }
@@ -249,13 +249,13 @@ class CrbacUpdatePowerCommand extends Command {
 
     /**
      * 添加菜单
+     * @param string $url
      * @param ReflectionClass $class
      * @param ReflectionMethod $method
      * @param string $title
      * @param string $desc
      */
-    protected function addMenu(ReflectionClass $class, ReflectionMethod $method, string $title, string $desc) {
-        $url = $this->getUrl($method);
+    protected function addMenu(string $url, ReflectionClass $class, ReflectionMethod $method, string $title, string $desc) {
         $item_id = $this->addItem($class, $method, $title);
         $this->info('添加菜单：' . $url);
         if (!Menu::where('url', $url)->count()) {
@@ -393,20 +393,6 @@ class CrbacUpdatePowerCommand extends Command {
     }
 
     /**
-     * 生成链接地址
-     * @param ReflectionMethod $method
-     * @return string
-     */
-    protected function getUrl(ReflectionMethod $method) {
-        $file = str_replace([$this->path, '\\'], ['', '/'], $method->getFileName());
-        return implode('/', array_map(function ($item) {
-                            return trim(preg_replace_callback('/[A-Z]/', function ($str) {
-                                return '-' . strtolower($str[0]);
-                            }, $item), '-');
-                        }, explode('/', str_ireplace('Controller.php', '', $file) . '/' . $method->getName()))) . $this->option('url-suffix');
-    }
-
-    /**
      * 循环指定目录内所有文件
      * @param string $dir
      * @param string $prefix
@@ -444,7 +430,6 @@ class CrbacUpdatePowerCommand extends Command {
      */
     protected function getOptions() {
         return [
-            ['--url-suffix', '-U', InputOption::VALUE_OPTIONAL, 'url地址后缀，mvc结构专用', '.html'],
             ['--menu-group', '-G', InputOption::VALUE_OPTIONAL, '指定要添加的菜单组', '标准菜单'],
             ['--role', '-R', InputOption::VALUE_OPTIONAL, '指定角色名', '超级管理员'],
             ['--rework', null, InputOption::VALUE_NONE, '删除已经写入根命令空间所有权限及菜单数据并重新写入'],

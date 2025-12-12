@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Request;
 use Symfony\Component\HttpFoundation\File\File;
 use Illuminate\Routing\Controller as BaseController;
 
+/**
+ * @middleware(auth, 'Laravel\Crbac\Middleware\PowerAuthenticate')
+ */
 abstract class Controller extends BaseController {
 
     //备注说明
@@ -28,6 +31,8 @@ abstract class Controller extends BaseController {
      * 初始处理
      */
     public function __construct() {
+        // 添加内置视图目录
+        view()->addLocation(realpath(__DIR__ . '/../../views'));
         //分页定义
         if (method_exists(Paginator::class, 'presenter')) {
             Paginator::presenter(function ($paginator) {

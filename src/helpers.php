@@ -152,44 +152,51 @@ if (!function_exists('crbac_route')) {
         if (is_null($name)) {
             return url()->current();
         }
-        $array = explode('.', $name);
-        $type = array_shift($array);
-        $act = array_pop($array);
-        if ($type === '') {
-            // 相对路径，如果当前路径非mvc-crbac路由则无法正常生成
-            $request = request();
-            $route = $request->route();
-            if ($route->getName() !== 'mvc-crbac') {
-                return route($name, $parameters, $absolute);
-            }
-            $path = $request->getPathInfo();
-            $prefix = $route->getPrefix();
-            if ($prefix) {
-                $path = substr($path, strlen(trim($prefix, '/') . '/') + 1);
-            }
-            $paths = [];
-            foreach (explode('/', $path) as $path) {
-                $paths[] = $path;
-                if (strpos($path, '.') > 0) {
+        $request = request();
+        $route = $request->route();
+        $pathRouter = Laravel\Crbac\PathRouter::instance();
+        if ($pathRouter->has($route->getName()) && preg_match_all('#\{(\w+)\}#', $route->uri(), $matches)) {
+            $params = $pathRouter->parameters();
+            $newParameters = [];
+            foreach ($matches[1] as $item) {
+                if ($item === 'one') {
                     break;
                 }
+                $newParameters[$item] = $params[$item];
             }
-            $type = array_shift($paths);
-            $ctr_act = explode('.', array_pop($paths));
-            if ($act == '') {
-                $act = array_pop($ctr_act);
+            $tArray = explode('.', $name);
+            $newParameters['action'] = array_pop($tArray);
+            $otherKeys = array_diff(array_keys($newParameters), ['action', 'controller']);
+            if ($name[0] === '.') { // 相对地址
+                $cArray = explode('/', $newParameters['controller']);
+                for ($cKey = count($cArray) - 1, $tKey = count($tArray) - 1; $cKey >= 0; $cKey--, $tKey--) {
+                    if (isset($tArray[$tKey])) {
+                        if ($tArray[$tKey] !== '') {
+                            $cArray[$cKey] = $tArray[$tKey];
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                $newParameters['controller'] = implode('/', $cArray);
+                if ($tKey >= 0) { // 还有其它参数
+                    foreach (array_reverse($otherKeys) as $key) {
+                        $newParameters[$key] = $cArray[$tKey--];
+                        if ($tKey < 0) {
+                            break;
+                        }
+                    }
+                }
+            } else { // 绝对地址
+                foreach (array_values($otherKeys) as $tKey => $key) {
+                    $newParameters[$key] = $tArray[$tKey] ?? '';
+                }
+                $newParameters['controller'] = implode('/', array_slice($tArray, $tKey + 1));
             }
-            array_push($paths, array_shift($ctr_act));
-            $size = count($array);
-            if ($size > 0) {
-                $array = array_splice($paths, count($array), count($array), $array);
-            } else {
-                $array = $paths;
-            }
+            $parameters = array_merge($newParameters, $parameters);
+            $name = $route->getName();
         }
-        $ctr = implode('/', $array);
-        array_unshift($parameters, $type, $ctr, $act);
-        return route('mvc-crbac', $parameters, $absolute);
+        return route($name, $parameters, $absolute);
     }
 
 }
@@ -207,6 +214,48 @@ if (!function_exists('auth_model')) {
             return get_class($user);
         }
         return Laravel\Crbac\Models\Power\Admin::class;
+    }
+
+}
+
+
+if (!function_exists('get_annotations')) {
+
+    /**
+     * 获取当前授权Model类名
+     * @return string
+     */
+    function get_annotations(Reflector $reflector, string ...$annotationClass) {
+        $annotations = [];
+        // 处理php8+注解
+        if (method_exists($reflector, 'getAttributes')) {
+            foreach ($annotationClass as $class) {
+                $annotations[$class] = $reflector->getAttributes($class);
+            }
+        }
+        // 解析注释注解
+        $comment = $reflector->getDocComment();
+        $valueRule = '[a-zA-Z0-9_\\x7f-\\xff]+|"([^"\\\\]*|\\\\.)*"|\'([^\'\\\\]*|\\\\.)*\'';
+        if ($comment && preg_match_all('/@([a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)\s*\(\s*((' . $valueRule . ')(\s*,\s*(' . $valueRule . ')\s*)*)?\s*\)/i', $comment, $matches)) {
+            $classes = [];
+            foreach ($annotationClass as $class) {
+                $classes[$class] = strpos($class, '\\') ? ltrim(strrchr($class, '\\'), '\\') : $class;
+            }
+            foreach ($matches[1] as $key => $name) {
+                foreach ($classes as $class => $className) {
+                    if (strcasecmp($className, $name) === 0) {
+                        if (!preg_match_all('/' . $valueRule . '/', $matches[2][$key], $params)) {
+                            $params = [];
+                        }
+                        $annotations[$class][] = new $class(...array_map(function ($val) {
+                                    return trim($val, '\'"');
+                                }, $params[0] ?? []));
+                        break;
+                    }
+                }
+            }
+        }
+        return $annotations;
     }
 
 }

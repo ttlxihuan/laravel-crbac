@@ -120,6 +120,63 @@ isPower($code, $default = false):bool
 #### 登录和退出
 Crbac会在路由加载完成后判断是否存在别名为 login 和 logout 两个路由，如果没有则会自动增加预定好的两个登录和退出路由，保证权限基本正常使用。如果需要截取预定登录和退出路由只需要手动添加两个别名路由即可。
 
+#### 自动更新权限项
+
+编写控制器代码
+```php
+namespace App\Http\Controllers;
+
+use Laravel\Crbac\Controllers\Controller;
+
+class TestController extends Controller {
+    /**
+     * @methods(GET)
+     * @powerMenu('测试菜单')
+     */
+    public function testMenu(){
+
+    }
+    /**
+     * @methods(GET)
+     * @powerItem('测试权限项')
+     */
+    public function testItem(){
+
+    }
+}
+```
+
+执行更新命令即可
+```shell
+php artisan crbac:power
+```
+
+#### 上传文件
+支持分割上传处理，可将很大的文件分割成多个请求上传到服务器。
+
+编写视图代码
+```html
+data-split 分割上传开关
+<input type="file" class="form-control" name="file" data-url="业务上传地址" accept=".csv,.xls,.xlsx" data-split="true" data-timeout="1000000" data-callback=""/>
+```
+
+
+编写控制器代码
+```php
+namespace App\Http\Controllers;
+
+use Laravel\Crbac\Controllers\Controller;
+
+class TestController extends Controller {
+    /**
+     * @methods(POST)
+     */
+    public function test(){
+        $file = $this->getUploadFile('file'); // 分割与非分割上传均可
+        $file->move($dir, $filename);
+    }
+}
+```
 
 attention
 -------------

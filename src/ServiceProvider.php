@@ -3,6 +3,7 @@
 namespace Laravel\Crbac;
 
 use Crbac;
+use Illuminate\Routing\Route;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\AliasLoader;
 use Laravel\Crbac\Console\CrbacTableCommand;
@@ -40,7 +41,6 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
             return;
         }
         $this->addRoute();
-        $this->addRouteMiddleware();
     }
 
     /**
@@ -48,20 +48,12 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      */
     protected function addRoute() {
         //通用公用路由
-        $this->app['router']->any('{type}/{ctr}.{act}/{one?}/{two?}/{three?}/{four?}/{five?}', [
-                    'namespace' => 'Laravel\Crbac\Controllers\Power',
-                    'prefix' => 'crbac/',
-                    'as' => 'mvc-crbac',
-                    'uses' => function () {
-                        return abort(404);
-                    }])
-                ->where('type', 'power|static|usable')
-                ->where('ctr', '(.*)');
+        PathRouter::instance()->addRoute('mvc-crbac', '/crbac/{type}/{controller}.{action}', 'Laravel\\Crbac\\Controllers\\Power', [$this, 'routeAction'])->where('type', 'power|static|usable');
         // 如果没有绑定登录则自动追加
         $this->app->booted(function () {
             // 添加特定路由配置
             $this->app['router']->group([
-                'namespace' => 'Laravel\Crbac\Controllers\Power',
+                'namespace' => 'Laravel\\Crbac\\Controllers\\Power',
                 'prefix' => 'crbac/',
                     ], function ($router) {
                         if (!$router->has('logout')) {
@@ -75,37 +67,12 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
     }
 
     /**
-     * 添加rbac中间件
-     */
-    protected function addRouteMiddleware() {
-        //路由匹配处理，主要针对其它路由进行权限处理
-        $this->app['router']->matched(function () {
-            // 追加专用目录，如果在原来的目录中存在相关视图文件，则此目录无效
-            view()->addLocation(realpath(__DIR__ . '/../views'));
-            $route = request()->route();
-            $action = $route->getAction();
-            if (isset($action['as']) && $action['as'] == 'mvc-crbac') {
-                $this->makeCrbacAction();
-                $action = $route->getAction();
-                $this->requestConvertRestore();
-            }
-            // 有授权则追加权限中间件
-            foreach ($action['middleware'] ?? [] as $middleware) {
-                if ($middleware == 'auth' || strpos($middleware, 'auth:')) {
-                    array_push($action['middleware'], Middleware\PowerAuthenticate::class);
-                    $route->setAction($action);
-                    break;
-                }
-            }
-        });
-    }
-
-    /**
      * 消除 \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull 中间件将空请求数据修改为null
      * 此函数主要是兼容目前结构和框架，结构中不允许有null但这个中间件会强制修改为null，函数通过逆向修改为空
      * 为null主要会影响到验证必填，请求默认值重写等
      */
     protected function requestConvertRestore() {
+        $this->requestConvertRestore();
         if (class_exists(ConvertEmptyStringsToNull::class)) {
             $restore = new class() extends ConvertEmptyStringsToNull {
 
@@ -123,11 +90,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      * 获取中间件
      */
     protected function getAuthMiddleware($auth = 'auth') {
-        $middleware = [$auth];
+        $middlewares = [$auth, Middleware\PowerAuthenticate::class];
         if (version_compare(app()->version(), '5.2.0', '>=')) {
-            array_unshift($middleware, 'web');
+            array_unshift($middlewares, 'web');
         }
-        return $middleware;
+        return $middlewares;
     }
 
     /**
@@ -159,118 +126,54 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
     }
 
     /**
-     * 生成Crbac专用路由处理器
+     * 生成专用路由处理器
+     * @param PathRouter $pathRouter
+     * @param Route $route
+     * @return type
      */
-    protected function makeCrbacAction() {
-        $route = request()->route();
-        $controllerParam = $route->parameter('ctr');
-        $actionParam = $route->parameter('act');
-        //必需合法
-        if (preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*([/\-\.][a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+$#', $controllerParam . '/' . $actionParam)) {
-            //控制器与方法解析匹配
-            $method = 'makeCrbac' . studly_case($type = $route->parameter('type')) . 'Action';
-            if (method_exists($this, $method)) {
-                $action = $this->$method($controllerParam, $actionParam);
-                if (is_array($action)) {
-                    if ($type != 'static') {
-                        $action['middleware'] = $this->getAuthMiddleware();
-                    }
-                    $route->setAction(array_merge($route->getAction(), $action));
-                }
-            }
-        }
-    }
-
-    /**
-     * 生成
-     * @param string $controllerParam
-     * @param string $actionParam
-     * @return array
-     */
-    protected function makeCrbacUsableAction(string $controllerParam, string $actionParam) {
-        return [
-            'uses' => function ()use ($controllerParam, $actionParam) {
-                $service = new Services\ExistService();
-                $val = request()->input($actionParam);
-                return $val && $service->check($controllerParam, $actionParam, $val, request()->input('id')) ? 'false' : 'true';
-            }
-        ];
-    }
-
-    /**
-     * 权限静态文件响应处理
-     * @param string $controllerParam
-     * @param string $actionParam
-     * @return mixed
-     */
-    protected function makeCrbacStaticAction(string $controllerParam, string $actionParam) {
-        $file = __DIR__ . "/../static/$controllerParam.$actionParam";
-        $types = ['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png', 'gif' => 'image/gif'];
-        if (file_exists($file) && isset($types[$actionParam])) {
-            $contentType = $types[$actionParam];
-            return [
-                'uses' => function ()use ($file, $contentType) {
-                    $response = new Response(file_get_contents($file), 200, ['Content-Type' => $contentType]);
-                    $response->setSharedMaxAge(31536000);
-                    $response->setMaxAge(31536000);
-                    $response->setExpires(new \DateTime('+1 year'));
-                    return $response;
-                }
-            ];
-        }
-    }
-
-    /**
-     * 权限处理响应
-     * @param string $controllerParam
-     * @param string $actionParam
-     * @return mixed
-     */
-    protected function makeCrbacPowerAction(string $controllerParam, string $actionParam) {
-        $space = explode('/', $controllerParam);
-        $controller = 'Laravel\\Crbac\\Controllers\\Power\\' . implode('\\', array_map('studly_case', array_filter($space))) . 'Controller';
-        $action = studly_case($actionParam);
-        if (!method_exists($controller, $action)) {
-            return;
-        }
-        $method = new \ReflectionMethod($controller, $action);
-        $comment = $method->getDocComment();
-        if (!$method->isPublic() || !preg_match('/@methods\(\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)(\s*,\s*(GET|HEAD|POST|PUT|PATCH|DELETE|OPTIONS)+)*\s*\)/i', $comment, $matches)) {
-            return;
-        }
-        $methods = array_map(function ($item) {
-            return trim(ltrim($item, ','));
-        }, array_slice($matches, 1));
-        if (!in_array(request()->method(), $methods)) {
-            return;
-        }
-        //路由参数处理
-        $route = request()->route();
-        $parameters = array_except($route->parameters, ['type', 'ctr', 'act']);
-        $parametersKeys = array_keys($parameters);
-        array_push($parameters);
-        foreach ($method->getParameters() as $num => $parameter) {
-            if (empty($parametersKeys[$num])) {
+    public function routeAction(PathRouter $pathRouter, Route $route) {
+        //控制器与方法解析匹配
+        $middlewares = $route->getAction()['middleware'] ?? [];
+        $controllerParam = $route->parameter('controller');
+        $actionParam = $route->parameter('action');
+        switch (strtolower($route->parameter('type'))) {
+            case 'power':
+                $action = [
+                    'middleware' => array_merge($middlewares, $this->getAuthMiddleware())
+                ];
+                $route->setAction(array_merge($route->getAction(), $action));
+                $pathRouter->updateRouteAction($route);
                 break;
-            }
-            $key = $parametersKeys[$num];
-            $class = $parameter->getClass();
-            if ($class) {
-                $object = $this->app->make($class->name);
-                if (is_subclass_of($class->name, \Illuminate\Database\Eloquent\Model::class)) {
-                    $object = $object->find($parameters[$key]);
+            case 'usable':
+                $action = [
+                    'uses' => function ()use ($controllerParam, $actionParam) {
+                        $service = new Services\ExistService();
+                        $val = request()->input($actionParam);
+                        return $val && $service->check($controllerParam, $actionParam, $val, request()->input('id')) ? 'false' : 'true';
+                    },
+                    'middleware' => array_unique(array_merge($middlewares, $this->getAuthMiddleware()))
+                ];
+                break;
+            case 'static':
+                $file = __DIR__ . "/../static/$controllerParam.$actionParam";
+                $types = ['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png', 'gif' => 'image/gif'];
+                if (file_exists($file) && isset($types[$actionParam])) {
+                    $contentType = $types[$actionParam];
+                    $action = [
+                        'uses' => function ()use ($file, $contentType) {
+                            $response = new Response(file_get_contents($file), 200, ['Content-Type' => $contentType]);
+                            $response->setSharedMaxAge(31536000);
+                            $response->setMaxAge(31536000);
+                            $response->setExpires(new \DateTime('+1 year'));
+                            return $response;
+                        }
+                    ];
+                    break;
                 }
-                if (!$object) {
-                    return;
-                }
-                $parameters[$key] = $object;
-            }
+            default:
+                return;
         }
-        $route->parameters = $parameters;
-        return [
-            'uses' => $controller . '@' . $action,
-            'controller' => $controller . '@' . $action
-        ];
+        $route->setAction(array_merge($route->getAction(), $action));
     }
 
     /**
