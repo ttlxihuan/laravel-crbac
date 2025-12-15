@@ -258,7 +258,6 @@ class CrbacUpdatePowerCommand extends Command {
      */
     protected function addMenu(string $url, ReflectionClass $class, ReflectionMethod $method, string $title, string $desc) {
         $item_id = $this->addItem($class, $method, $title);
-        $this->info('添加菜单：' . $url);
         if (!Menu::where('url', $url)->count()) {
             $parent_id = 0;
             $groupName = $this->getLevels($class);
@@ -291,6 +290,9 @@ class CrbacUpdatePowerCommand extends Command {
                 }
             }
             $this->createMenu($title, $item_id, $url, $parent_id);
+            $this->info('添加菜单：' . $url);
+        } else {
+            $this->warn('添加菜单：' . $url . '  【已存在】');
         }
     }
 
@@ -325,7 +327,6 @@ class CrbacUpdatePowerCommand extends Command {
      */
     protected function addItem(ReflectionClass $class, ReflectionMethod $method, string $title) {
         $code = $class->getName() . '@' . $method->getName();
-        $this->info('添加权限项：' . $code);
         // 已经存在就跳过
         $item = Item::where('code', $code)->first();
         if (empty($item)) {
@@ -348,6 +349,9 @@ class CrbacUpdatePowerCommand extends Command {
                 'power_role_id' => $this->role['id'],
                 'power_item_id' => $item['id'],
             ]);
+            $this->info('添加权限项：' . $code);
+        } else {
+            $this->warn('添加权限项：' . $code . '  【已存在】');
         }
         return $item['id'];
     }

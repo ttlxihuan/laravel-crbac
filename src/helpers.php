@@ -137,7 +137,7 @@ if (!function_exists('validate_url')) {
 if (!function_exists('path_route')) {
 
     function path_route(string $name, string $path, string $namespace = 'App\\Http\\Controllers', $callback = null) {
-        Laravel\Crbac\PathRouter::instance()->addRoute($name, $path, $namespace, $callback);
+        return Laravel\Crbac\PathRouter::instance()->addRoute($name, $path, $namespace, $callback);
     }
 
 }
