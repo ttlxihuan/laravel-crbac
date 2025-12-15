@@ -146,11 +146,11 @@ class CrbacUpdatePowerCommand extends Command {
                 default:
                     // 提取配置注解
                     $annotations = get_annotations($method, PowerMenu::class, PowerItem::class);
-                    if (isset($annotations[PowerMenu::class])) {
-                        $title = $annotations[PowerMenu::class]->get();
+                    if (isset($annotations[PowerMenu::class][0])) {
+                        $title = $annotations[PowerMenu::class][0]->get();
                         $this->addMenu($url, $ref, $method, $title, $title);
-                    } elseif (isset($annotations[PowerMenu::class])) {
-                        $title = $annotations[PowerMenu::class]->get();
+                    } elseif (isset($annotations[PowerItem::class][0])) {
+                        $title = $annotations[PowerItem::class][0]->get();
                         $this->addItem($ref, $method, $title);
                     } else { // 路径式路由
                         $uses = $ref->getName() . '@' . $method->getName();
@@ -198,9 +198,10 @@ class CrbacUpdatePowerCommand extends Command {
                 if (method_exists($controller, $method)) {
                     $ref = new ReflectionClass($controller);
                     if ($this->isVainController($ref)) {
-                        $desc = $ref->getProperty('description')->getDefaultValue();
-                        yield [$desc, $ref, $ref->getMethod($method), $route->methods(), $route->uri()];
+                        continue;
                     }
+                    $desc = $ref->getProperty('description')->getDefaultValue();
+                    yield [$desc, $ref, $ref->getMethod($method), $route->methods(), '/' . ltrim($route->uri(), '/')];
                 }
             }
         }

@@ -134,6 +134,14 @@ if (!function_exists('validate_url')) {
 
 }
 
+if (!function_exists('path_route')) {
+
+    function path_route(string $name, string $path, string $namespace = 'App\\Http\\Controllers', $callback = null) {
+        Laravel\Crbac\PathRouter::instance()->addRoute($name, $path, $namespace, $callback);
+    }
+
+}
+
 if (!function_exists('crbac_route')) {
 
     /**
@@ -148,14 +156,18 @@ if (!function_exists('crbac_route')) {
      * @param bool $absolute
      * @return string
      */
-    function crbac_route(string $name = null, array $parameters = [], $absolute = true) {
+    function crbac_route(string $name = null, array $parameters = [], $absolute = false) {
         if (is_null($name)) {
             return url()->current();
         }
         $request = request();
         $route = $request->route();
         $pathRouter = Laravel\Crbac\PathRouter::instance();
-        if ($pathRouter->has($route->getName()) && preg_match_all('#\{(\w+)\}#', $route->uri(), $matches)) {
+        $routeName = $route->getName();
+        if (empty($routeName)) {
+            throw new Exception('The current route name cannot be found.');
+        }
+        if ($pathRouter->has($routeName) && preg_match_all('#\{(\w+)\}#', $route->uri(), $matches)) {
             $params = $pathRouter->parameters();
             $newParameters = [];
             foreach ($matches[1] as $item) {
@@ -188,6 +200,7 @@ if (!function_exists('crbac_route')) {
                     }
                 }
             } else { // 绝对地址
+                $tKey = 0;
                 foreach (array_values($otherKeys) as $tKey => $key) {
                     $newParameters[$key] = $tArray[$tKey] ?? '';
                 }
@@ -235,8 +248,8 @@ if (!function_exists('get_annotations')) {
         }
         // 解析注释注解
         $comment = $reflector->getDocComment();
-        $valueRule = '[a-zA-Z0-9_\\x7f-\\xff]+|"([^"\\\\]*|\\\\.)*"|\'([^\'\\\\]*|\\\\.)*\'';
-        if ($comment && preg_match_all('/@([a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*)\s*\(\s*((' . $valueRule . ')(\s*,\s*(' . $valueRule . ')\s*)*)?\s*\)/i', $comment, $matches)) {
+        $valueRule = Laravel\Crbac\PathRouter::IDENTIFIER . '|[1-9]\d*(\.\d+)?|0\.\d+|"([^"\\\\]*|\\\\.)*"|\'([^\'\\\\]*|\\\\.)*\'';
+        if ($comment && preg_match_all('/@(' . Laravel\Crbac\PathRouter::IDENTIFIER . ')\s*\(\s*((' . $valueRule . ')(\s*,\s*(' . $valueRule . ')\s*)*)?\s*\)/i', $comment, $matches)) {
             $classes = [];
             foreach ($annotationClass as $class) {
                 $classes[$class] = strpos($class, '\\') ? ltrim(strrchr($class, '\\'), '\\') : $class;
@@ -248,7 +261,15 @@ if (!function_exists('get_annotations')) {
                             $params = [];
                         }
                         $annotations[$class][] = new $class(...array_map(function ($val) {
-                                    return trim($val, '\'"');
+                                    $value = trim($val, '\'"');
+                                    if (preg_match('/^(false|true)$/', $value)) {
+                                        settype($value, 'boolean');
+                                    } elseif (is_numeric($value)) {
+                                        settype($value, strpos($value, '.') !== false ? 'float' : 'int');
+                                    } elseif (strcasecmp($value, 'null') === 0) {
+                                        $value = true;
+                                    }
+                                    return $value;
                                 }, $params[0] ?? []));
                         break;
                     }

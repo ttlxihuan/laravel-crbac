@@ -6,6 +6,7 @@ use Crbac;
 use Illuminate\Routing\Route;
 use Illuminate\Http\Response;
 use Illuminate\Foundation\AliasLoader;
+use Illuminate\Routing\Events\RouteMatched;
 use Laravel\Crbac\Console\CrbacTableCommand;
 use Laravel\Crbac\Console\CrbacTableSeederCommand;
 use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
@@ -19,7 +20,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      * 注册服务
      */
     public function register() {
-        $this->app->singleton('crbac', function ($app) {//取菜单，判断是否有权限
+        $this->app->singleton('crbac', function ($app) {// 取菜单，判断是否有权限
             return new Rbac($app);
         });
         $this->app['events']->listen('auth.login', function ($admin) {
@@ -48,7 +49,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
      */
     protected function addRoute() {
         //通用公用路由
-        PathRouter::instance()->addRoute('mvc-crbac', '/crbac/{type}/{controller}.{action}', 'Laravel\\Crbac\\Controllers\\Power', [$this, 'routeAction'])->where('type', 'power|static|usable');
+        path_route('mvc-crbac', '/crbac/{type}/{controller}.{action}', 'Laravel\\Crbac\\Controllers\\Power', [$this, 'routeAction'])->where('type', 'power|static|usable');
         // 如果没有绑定登录则自动追加
         $this->app->booted(function () {
             // 添加特定路由配置
@@ -61,6 +62,14 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                         }
                         if (!$router->has('login')) {
                             $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
+                            $router->matched(function (RouteMatched $matched)use ($router) { // 登录跳转处理
+                                $uses = $matched->route->getAction()['uses'] ?? '';
+                                if (strcasecmp($uses, Controllers\Power\AdminController::class . '@login') != 0) {
+                                    $routes = $router->getRoutes();
+                                    $route = $routes->getByName('login');
+                                    $route->setUri('crbac/login?redirect=' . url()->current());
+                                }
+                            });
                         }
                     });
         });

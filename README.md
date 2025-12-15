@@ -120,26 +120,119 @@ isPower($code, $default = false):bool
 #### 登录和退出
 Crbac会在路由加载完成后判断是否存在别名为 login 和 logout 两个路由，如果没有则会自动增加预定好的两个登录和退出路由，保证权限基本正常使用。如果需要截取预定登录和退出路由只需要手动添加两个别名路由即可。
 
+
+#### 路径式路由
+路径式路由可以节省路由匹配次数。
+```php
+<?php
+
+// 添加路由，在外层也可以增加 Route::group()
+// 使用此路由可生效三个注解功能： @middleware(参数)、@methods(参数)
+path_route('mvc-route', '/{controller}/{action}.html', 'App\\Http\\Controllers');
+```
+
+控制器：php7
+```php
+<?php
+namespace App\Http\Controllers;
+
+use Laravel\Crbac\Controllers\Controller;
+
+/**
+ * 追加该控制器全部中间件
+ * @middleware(auth)
+ */
+class TestController extends Controller {
+    /**
+     * @methods(GET)
+     * @middleware(auth)
+     */
+    public function testMenu(){
+
+    }
+    /**
+     * @methods(GET, POST)
+     */
+    public function testItem(){
+
+    }
+}
+```
+
+控制器：php8（允许使用php7结构）
+```php
+<?php
+namespace App\Http\Controllers;
+
+use Laravel\Crbac\Controllers\Controller;
+use Laravel\Crbac\Annotation\Request\Methods;
+use Laravel\Crbac\Annotation\Request\Middleware;
+
+#[@Middleware('auth')]
+class TestController extends Controller {
+
+    #[Methods(Methods::GET)]
+    #[@Middleware('auth')]
+    public function testMenu(){
+
+    }
+
+    #[Methods(Methods::GET, Methods::POST)]
+    public function testItem(){
+
+    }
+}
+```
+
+
 #### 自动更新权限项
 
 编写控制器代码
+
+控制器：php7
 ```php
+<?php
+// 使用注解：@powerMenu(参数) 和 @powerItem(参数)。
+
 namespace App\Http\Controllers;
 
 use Laravel\Crbac\Controllers\Controller;
 
 class TestController extends Controller {
     /**
-     * @methods(GET)
      * @powerMenu('测试菜单')
      */
     public function testMenu(){
 
     }
     /**
-     * @methods(GET)
      * @powerItem('测试权限项')
      */
+    public function testItem(){
+
+    }
+}
+```
+
+控制器：php8（允许使用php7结构）
+```php
+<?php
+namespace App\Http\Controllers;
+
+use Laravel\Crbac\Annotation\PowerMenu;
+use Laravel\Crbac\Annotation\PowerItem;
+use Laravel\Crbac\Controllers\Controller;
+use Laravel\Crbac\Annotation\Request\Methods;
+use Laravel\Crbac\Annotation\Request\Middleware;
+
+class TestController extends Controller {
+
+    #[PowerMenu('测试菜单')]
+    public function testMenu(){
+
+    }
+
+    #[PowerItem('测试权限项')]
     public function testItem(){
 
     }

@@ -18,6 +18,11 @@ use Illuminate\Support\Facades\Route as RouteFacade;
 class PathRouter {
 
     /**
+     * 标识符正则
+     */
+    const IDENTIFIER = '[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*';
+
+    /**
      * 当前实例
      * @var self
      */
@@ -46,7 +51,7 @@ class PathRouter {
                 $controllerParam = $route->parameter('controller');
                 $actionParam = $route->parameter('action');
                 //必需合法
-                if (!preg_match('#^[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*([/\-\.][a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)+$#', $controllerParam . '/' . $actionParam)) {
+                if (!preg_match('#^' . self::IDENTIFIER . '([/\-\.]' . self::IDENTIFIER . ')+$#', $controllerParam . '/' . $actionParam)) {
                     return;
                 }
                 $this->parameters = $route->parameters();
@@ -134,15 +139,15 @@ class PathRouter {
         $routes = RouteFacade::getRoutes();
         foreach ($this->routes as $name => $_) {
             $route = $routes->getByName($name);
-            if ($route && 0 === $pos = stripos($namespace, trim($route->getAction()['namespace'], '\\') . '\\')) {
+            if ($route && 0 === $pos = stripos($namespace, $baseNamespace = trim($route->getAction()['namespace'], '\\') . '\\')) {
                 $tmp = [];
-                foreach (array_merge(explode('\\', substr($namespace, $pos)), [preg_replace('/Controller$/', '', $class->getName()), $action]) as $item) {
+                foreach (array_merge(explode('\\', substr($namespace, $pos + strlen($baseNamespace))), [preg_replace('/Controller$/', '', $class->getShortName()), $action]) as $item) {
                     $tmp[] = trim(preg_replace_callback('#[A-Z]+#', function ($val) {
                                 return '-' . strtolower($val[0]);
                             }, $item), '-');
                 }
                 $act = array_pop($tmp);
-                $url = route($name, array_merge([implode('/', $tmp), $act], $params));
+                $url = route($name, array_merge([implode('/', $tmp), $act], $params), false);
                 $methods = [];
                 foreach ($annotations[Methods::class] as $method) {
                     $methods = array_merge($methods, $method->get());

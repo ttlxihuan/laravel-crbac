@@ -12,10 +12,18 @@ use Exception;
 #[Attribute(Attribute::TARGET_METHOD)]
 class Methods {
 
+    const GET = 'GET';
+    const HEAD = 'HEAD';
+    const POST = 'POST';
+    const PUT = 'PUT';
+    const PATCH = 'PATCH';
+    const DELETE = 'DELETE';
+    const OPTIONS = 'OPTIONS';
+
     /**
      * 可使用的请求类型
      */
-    const METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+    const METHODS = [self::GET, self::HEAD, self::POST, self::PUT, self::PATCH, self::DELETE, self::OPTIONS];
 
     /**
      * 当前可使用的请求类型
