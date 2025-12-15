@@ -63,8 +63,8 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                         if (!$router->has('login')) {
                             $router->match(['GET', 'POST'], 'login', ['uses' => 'AdminController@login', 'as' => 'login', 'middleware' => $this->getAuthMiddleware('guest')]);
                             $router->matched(function (RouteMatched $matched)use ($router) { // 登录跳转处理
-                                $uses = $matched->route->getAction()['uses'] ?? '';
-                                if (strcasecmp($uses, Controllers\Power\AdminController::class . '@login') != 0) {
+                                $name = $matched->route->getName();
+                                if (!in_array($name, ['logout', 'login'], true)) {
                                     $routes = $router->getRoutes();
                                     $route = $routes->getByName('login');
                                     $route->setUri('crbac/login?redirect=' . url()->current());

@@ -21,7 +21,7 @@
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="javascript:void(0);" >{{Auth::user()->realname}}</a>
                     <ul class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
-                        <li class="dropdown-item"><a class="nav-link" href="{{crbac_route('power.admin.password')}}"><i class="icon-key oi"></i> 修改密码</a></li>
+                        <li class="dropdown-item"><a class="nav-link" href="{{route('mvc-crbac', ['power','admin','password'])}}"><i class="icon-key oi"></i> 修改密码</a></li>
                         <li class="dropdown-item"><hr class="dropdown-divider"/></li>
                         <li class="dropdown-item"><a class="nav-link" href="{{route('logout')}}"><i class="icon-bell oi"></i> 退出</a></li>
                     </ul>
