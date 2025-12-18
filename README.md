@@ -247,10 +247,19 @@ php artisan crbac:power
 #### 上传文件
 支持分割上传处理，可将很大的文件分割成多个请求上传到服务器。
 
-编写视图代码
+编写视图代码，file标签的 data-\* 均有功能
 ```html
 data-split 分割上传开关
-<input type="file" class="form-control" name="file" data-url="业务上传地址" accept=".csv,.xls,.xlsx" data-split="true" data-timeout="1000000" data-callback=""/>
+<input type="file" class="form-control" name="file" data-url="业务上传地址" accept=".png,.jpeg,.jpg" data-split="true" data-timeout="1000000" data-callback="upload_img" data-show-url="show"/>
+<div id="show">
+    <img src=""/>
+    <input type="hidden" name="img">
+</div>
+<script>
+function upload_img(res){
+    console.info(res);
+}
+</script>
 ```
 
 
@@ -266,7 +275,9 @@ class TestController extends Controller {
      */
     public function test(){
         $file = $this->getUploadFile('file'); // 分割与非分割上传均可
+        $dir = public_path('static/images');
         $file->move($dir, $filename);
+        return prompt(['url' => '/static/images/' . $file->getBasename()]);
     }
 }
 ```
