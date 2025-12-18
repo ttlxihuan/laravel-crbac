@@ -375,7 +375,7 @@
                     attempt++;
                     if (attempt > 3) {
                         // 上传失败了
-                        $.popup.alert('上传失败！', 'error', 3);
+                        $.popup.alert('上传处理失败！', 'error', 3);
                         return;
                     }
                     $.ajax({
@@ -407,6 +407,9 @@
                         setShow($(this), val);
                     });
                 } else {
+                    if (children.size() > 0) {
+                        node = children;
+                    }
                     if (node.is(':input')) {
                         node.val(val);
                     } else if (node.is('img')) {

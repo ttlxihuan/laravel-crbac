@@ -139,7 +139,7 @@ abstract class Controller extends BaseController {
                 return $filename;
             }
             settype($filename, 'string');
-            if (!preg_match('#[/\\\\]#', $filename) && file_exists($path = storage_path('/upload-tmp/' . $filename))) {
+            if (!preg_match('#[/\\\\]#', $filename) && file_exists($path = storage_path('upload-tmp/' . $filename))) {
                 $this->uploadFiles[] = $path;
                 return new File($path);
             }
