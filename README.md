@@ -46,9 +46,22 @@ Configuration
 ```php
 Laravel\Crbac\ServiceProvider::class,
 ```
-打开配置文件 `config/auth.php` 添加授权模型:
+打开配置文件 `config/auth.php` 配置授权模型:
 ```php
-'model' => Laravel\Crbac\Models\Power\Admin::class,
+    'guards' => [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'admin',
+            'remember' => 4320  // 记住登录时长（分）
+        ],
+    ],
+    'providers' => [
+        'admin' => [
+            'driver' => 'eloquent',
+            'model' => Laravel\Crbac\Models\Power\Admin::class,
+        ],
+        // 这里可配置其它授权模型
+    ],
 ```
 配置数据，运行安装命令（注意多次运行此命令会覆盖重写自带的表和数据）
 ```shell

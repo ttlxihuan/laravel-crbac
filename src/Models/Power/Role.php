@@ -7,12 +7,15 @@
 namespace Laravel\Crbac\Models\Power;
 
 use Laravel\Crbac\Models\Model;
-use Laravel\Crbac\Models\StatusTrait;
 
 class Role extends Model {
 
-    use StatusTrait;
+    use \Laravel\Crbac\Models\GetMappingTrait;
 
+    public static $_STATUS = [//状态配置
+        'enable' => '启用',
+        'disable' => '禁用'
+    ];
     public static $_validator_rules = [//验证规则
         'name' => 'required|between:3,30|unique:power_role', // varchar(35) not null comment '角色名',
         'status' => 'required|in:disable,enable', // enum('disable','enable') NOT NULL DEFAULT 'enable' COMMENT '启用或禁用，enable为启用',
@@ -43,7 +46,7 @@ class Role extends Model {
         $builder = parent::newQuery();
         //是否允许操作所有权限
         if (auth()->check() && !isPower('all_power_items')) {
-            $builder->whereIn($this->getTable() . '.id', function($query) {
+            $builder->whereIn($this->getTable() . '.id', function ($query) {
                 $query->from('power_role_admin')
                         ->where('power_admin_id', '=', auth()->id())
                         ->select('power_role_id');
@@ -51,5 +54,4 @@ class Role extends Model {
         }
         return $builder;
     }
-
 }

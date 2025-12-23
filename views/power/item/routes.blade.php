@@ -73,7 +73,7 @@
             <td>{{$item->is_usable}}</td>
             <td>
                 @if($item->item)
-                {{$item->item->statusName()}}
+                {{$item->item->getStatus()}}
                 @else
                 无权限
                 @endif

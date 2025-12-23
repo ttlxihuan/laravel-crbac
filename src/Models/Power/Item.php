@@ -7,13 +7,16 @@
 namespace Laravel\Crbac\Models\Power;
 
 use Laravel\Crbac\Models\Model;
-use Laravel\Crbac\Models\StatusTrait;
 use Illuminate\Contracts\Auth\Authenticatable as UserContract;
 
 class Item extends Model {
 
-    use StatusTrait;
+    use \Laravel\Crbac\Models\GetMappingTrait;
 
+    public static $_STATUS = [//状态配置
+        'enable' => '启用',
+        'disable' => '禁用'
+    ];
     public static $_validator_rules = [//验证规则
         'name' => 'required|between:3,30', // varchar(35) not null comment '权限项名称',
         'code' => 'required|between:3,75|unique:power_item|string', // varchar(80) unique not null comment '权限项代码',
@@ -83,7 +86,7 @@ class Item extends Model {
             $allow = $noneDefault;
         } else {
             $allow = RoleItem::where('power_item_id', '=', $item->getKey())
-                            ->whereIn('power_role_id', function($query)use($admin) {
+                            ->whereIn('power_role_id', function ($query)use ($admin) {
                                 $query->from('power_role_admin')
                                 ->where('power_admin_id', '=', $admin->getKey())
                                 ->select('power_role_id');
@@ -100,7 +103,7 @@ class Item extends Model {
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public static function items(UserContract $admin, $with = null) {
-        $query = static::whereIn('power_item_id', function($query) use($admin) {
+        $query = static::whereIn('power_item_id', function ($query) use ($admin) {
                     static::addItemWhere($query, $admin);
                 })->where('status', '=', 'enable')
                 ->orderBy('code', 'asc');
@@ -118,12 +121,12 @@ class Item extends Model {
      */
     public static function addItemWhere($builder, UserContract $admin) {
         return $builder->from('power_role_item')
-                        ->whereIn('power_role_id', function($query) use($admin) {//关联权限
+                        ->whereIn('power_role_id', function ($query) use ($admin) {//关联权限
                             $query->from('power_role_admin')
                             ->where('power_admin_id', '=', $admin->getKey())
                             ->select('power_role_id');
                         })
-                        ->whereIn('power_role_id', function($query) {//禁用的不能提取
+                        ->whereIn('power_role_id', function ($query) {//禁用的不能提取
                             $query->from('power_role')
                             ->where('status', '=', 'enable')
                             ->select('id');
@@ -131,5 +134,4 @@ class Item extends Model {
                         ->select('power_item_id')
                         ->distinct();
     }
-
 }

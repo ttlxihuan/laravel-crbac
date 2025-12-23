@@ -65,7 +65,7 @@ $uses_confirm = true;
             <td>{{$index+1}}</td>
             <td>{{$item->realname}}</td>
             <td>{{$item->username}}</td>
-            <td>{{$item->statusName()}}</td>
+            <td>{{$item->getStatus()}}</td>
             <td>{{$item->created_at}}</td>
             <td>
                 @if($type==='bind')

@@ -7,11 +7,14 @@
 namespace Laravel\Crbac\Controllers\Power;
 
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\{
+    DB,
+    Hash,
+    Auth,
+    Request
+};
 use Laravel\Crbac\Models\Power\Admin;
 use Laravel\Crbac\Services\ModelEdit;
-use Illuminate\Support\Facades\Request;
 use Laravel\Crbac\Controllers\Controller;
 use Laravel\Crbac\Services\Power\Admin as AdminService;
 
@@ -31,12 +34,43 @@ class AdminController extends Controller {
         $service = new ModelEdit();
         Admin::$_validator_rules['username'] = preg_replace('/unique:power_admin[^\|]*/', '', Admin::$_validator_rules['username']);
         if ($input = $service->validation(new Admin(), Request::all(), ['username', 'password'])) {
-            if (Auth::attempt($input)) {
-                if (Auth::user()->status !== 'enable') {
-                    Auth::logout();
-                    return prompt('账户异常', 'error');
+            $res = Auth::validate($input);
+            $admin = Auth::getLastAttempted();
+            if ($admin) {
+                if ($admin->status === 'lock' && $admin->locked_at < time()) {
+                    $admin->status = 'enable';
                 }
-                return prompt('登录成功', 'success', request('redirect', -1));
+                if ($res && $admin->status === 'enable') {
+                    $admin->abnormal = 0;
+                    $admin->locked_at = 0;
+                    $remember = (bool) request('remember', false);
+                    Auth::login($admin, $remember);
+                    if (!$remember) {
+                        $admin->save();
+                    }
+                    return prompt('登录成功', 'success', request('redirect', -1));
+                }
+                $limit = max(min(120, (int) env('ADMIN_LOGIN_ATTEMPT_MAX', 12)), 0);
+                if ($admin->abnormal > $limit || $admin->status === 'disable') { // 超出最大限制就不能再登录了
+                    $admin->status = 'disable';
+                    $admin->save();
+                    return prompt('账号已禁用', 'error');
+                }
+                if ($admin->status === 'enable') {
+                    $limit = max(min(50, (int) env('ADMIN_LOGIN_ATTEMPT_LIMIT', 3)), 0);
+                    if ($limit > 0) {
+                        $admin->newQuery()
+                                ->where('id', $admin->getKey())
+                                ->whereIn('status', ['enable', 'lock'])
+                                ->update([
+                                    'abnormal' => DB::raw('abnormal + 1'),
+                                    'locked_at' => DB::raw("IF(`abnormal` % {$limit} = 0, unix_timestamp() + 300 * POW(2, `abnormal` % {$limit}), `locked_at`)"),
+                                    'status' => DB::raw("IF(`locked_at` > unix_timestamp(), 'lock', `status`)"),
+                        ]);
+                    }
+                } elseif ($admin->status === 'lock') {
+                    return prompt('账号被限制登录', 'error');
+                }
             }
             return prompt('账号或密码错误', 'error');
         }

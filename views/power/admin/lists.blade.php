@@ -42,6 +42,7 @@
             <th width="25%">用户名</th>
             <th>菜单组</th>
             <th width="60">状态</th>
+            <th>锁定时间</th>
             <th width="170" class="{{$toOrder('created',false)}}" onclick="location.href ='{{$toOrder('created')}}'">创建时间</th>
             <th width="180">操作</th>
         </tr>
@@ -53,7 +54,8 @@
             <td>{{$item->realname}}</td>
             <td>{{$item->username}}</td>
             <td>{{$item->menuGroup?$item->menuGroup->name:'-'}}</td>
-            <td>{{$item->statusName()}}</td>
+            <td>{{$item->getStatus()}}</td>
+            <td>{{$item->locked_at ? date('Y-m-d H:i:s', $item->locked_at) : '-'}}</td>
             <td>{{$item->created_at}}</td>
             <td>
                 @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif

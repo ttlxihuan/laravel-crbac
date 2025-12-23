@@ -13,15 +13,20 @@ use Illuminate\Contracts\Auth\Authenticatable;
 class Admin extends Model implements Authenticatable {
 
     use \Illuminate\Auth\Authenticatable,
-        \Laravel\Crbac\Models\StatusTrait;
+        \Laravel\Crbac\Models\GetMappingTrait;
 
+    public static $_STATUS = [//状态配置
+        'enable' => '启用',
+        'disable' => '禁用',
+        'lock' => '锁定',
+    ];
     public static $_validator_rules = [//验证规则
         'realname' => 'required|between:2,30', // varchar(32) NOT NULL COMMENT '真实姓名',
         'username' => 'required|between:3,30|unique:power_admin', // varchar(32) NOT NULL COMMENT '登录用户名',
         'password' => 'required|between:6,20', // varchar(64) NOT NULL COMMENT '登录密码',
         'email' => 'email|between:6,55', // varchar(64) NOT NULL COMMENT '邮箱名',
         'power_menu_group_id' => 'required|exists:power_menu_group,id', // int(11) NOT NULL DEFAULT '0' COMMENT '菜单组ID',
-        'status' => 'required|in:disable,enable', // enum('disable','enable') NOT NULL DEFAULT 'enable' COMMENT '启用或禁用，enable为启用',
+        'status' => 'required|in:disable,lock,enable', // enum('disable','lock','enable') NOT NULL DEFAULT 'enable' COMMENT '状态，enable为启用',
     ];
     public static $_validator_description = [//验证字段说明
         'realname' => '真实姓名', // varchar(32) DEFAULT NULL COMMENT '真实姓名',
@@ -29,7 +34,7 @@ class Admin extends Model implements Authenticatable {
         'password' => '密码', // varchar(64) NOT NULL COMMENT '登录密码',
         'email' => '邮箱名', // varchar(64) NOT NULL COMMENT '邮箱名',
         'power_menu_group_id' => '菜单组', // int(11) NOT NULL DEFAULT '0' COMMENT '菜单组ID',
-        'status' => '用户状态', // enum('disable','enable') NOT NULL DEFAULT 'enable' COMMENT '启用或禁用，enable为启用',
+        'status' => '用户状态', // enum('disable','lock','enable') NOT NULL DEFAULT 'enable' COMMENT '启用或禁用，enable为启用',
     ];
     protected static $validates = ['username']; //允许验证可用字段
     protected $table = 'power_admin'; //表名
@@ -42,7 +47,7 @@ class Admin extends Model implements Authenticatable {
         $menus = Menu::menus($this)
                 ->groupBy('parent_id');
         if ($menus->has('0')) {//有第一页
-            return array_first($menus[0], function() {
+            return array_first($menus[0], function () {
                         return true;
                     })->url;
         }
@@ -72,5 +77,4 @@ class Admin extends Model implements Authenticatable {
     public function setPasswordAttribute($password) {
         $this->attributes['password'] = Hash::make($password);
     }
-
 }

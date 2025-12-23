@@ -64,7 +64,7 @@
             <td>{{$item->name}}<br/>【<a href="?group_id={{$item->group->getKey()}}">{{$item->group->name}}</a>】</td>
             <td>{{$item->code}}</td>
             <td>{{$item->comment}}</td>
-            <td>{{$item->statusName()}}</td>
+            <td>{{$item->getStatus()}}</td>
             <td>{{$item->created_at}}</td>
             <td>
                 @if(isControllerPower('edit'))<a href="{{crbac_route('.edit',[$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif
