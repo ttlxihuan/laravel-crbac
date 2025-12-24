@@ -50,21 +50,23 @@ class AdminController extends Controller {
                     }
                     return prompt('登录成功', 'success', request('redirect', -1));
                 }
-                $limit = max(min(120, (int) env('ADMIN_LOGIN_ATTEMPT_MAX', 12)), 0);
-                if ($admin->abnormal > $limit || $admin->status === 'disable') { // 超出最大限制就不能再登录了
+                $prefix = 'auth.guards.' . Auth::getDefaultDriver();
+                $max = (int) config($prefix . '.attempt_max', 12);
+                if ($admin->abnormal >= max(min(120, $max), 0) || $admin->status === 'disable') { // 超出最大限制就不能再登录了
                     $admin->status = 'disable';
                     $admin->save();
                     return prompt('账号已禁用', 'error');
                 }
                 if ($admin->status === 'enable') {
-                    $limit = max(min(50, (int) env('ADMIN_LOGIN_ATTEMPT_LIMIT', 3)), 0);
-                    if ($limit > 0) {
+                    $interval = max(min(50, (int) config($prefix . '.attempt_interval', 3)), 0);
+                    if ($interval > 0) {
+                        $interval = max(min(86400, (int) config($prefix . '.lock_time', 300)), 60);
                         $admin->newQuery()
                                 ->where('id', $admin->getKey())
                                 ->whereIn('status', ['enable', 'lock'])
                                 ->update([
                                     'abnormal' => DB::raw('abnormal + 1'),
-                                    'locked_at' => DB::raw("IF(`abnormal` % {$limit} = 0, unix_timestamp() + 300 * POW(2, `abnormal` % {$limit}), `locked_at`)"),
+                                    'locked_at' => DB::raw("IF(`abnormal` % {$interval} = 0, unix_timestamp() + 300 * POW(2, `abnormal` / {$interval}), `locked_at`)"),
                                     'status' => DB::raw("IF(`locked_at` > unix_timestamp(), 'lock', `status`)"),
                         ]);
                     }

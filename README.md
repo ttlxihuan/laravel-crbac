@@ -63,7 +63,13 @@ Configuration
         'web' => [
             'driver' => 'session',
             'provider' => 'admin',
-            'remember' => 4320  // 记住登录时长（分）
+            'remember' => 4320,  // 记住登录时长（分）
+            // 范围：0 ~ 50， 0 表示不锁定，默认：3
+            'attempt_interval' => 3, // 登录失败尝试锁定间隔次数，达到将限时不可登录
+            // 范围：0 ~ 120， 0 表示登录失败立即禁用账号，默认：12
+            'attempt_max' => 5 // 最多尝试次数，超出将禁用账号
+            // 范围：60 ~ 86400，默认：300
+            'lock_time' => 300 // 锁定时长基数（秒），实际锁定时长 = lock_time * pow(2, attempt_total / attempt_interval)
         ],
     ],
     'providers' => [
