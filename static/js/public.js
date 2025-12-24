@@ -18,7 +18,7 @@
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 //错误方法增强处理
                 if (!fn.error || fn.error(XMLHttpRequest, textStatus, errorThrown) !== false) {
-                    $.popup.alert('对不起！服务器太忙了，请稍后再试！', 'error', 3);
+                    $.popup.alert(XMLHttpRequest.responseJSON.message || '对不起！服务器太忙了，请稍后再试！', 'error', 3);
                 }
             },
             success: function (json, textStatus) {
