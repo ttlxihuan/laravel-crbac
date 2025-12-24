@@ -1,4 +1,4 @@
-laravel5+、laravel6+、laravel7+、laravel8+、laravel9+ 权限管理系统
+laravel5+、laravel6+、laravel7+、laravel8+、laravel9+、laravel10+、laravel11+、laravel12+ 权限管理系统
 ===============
 
 该模板依赖于laravel，包含基本权限管理所需要功能改模块，安装后简单配置即可使用，并且提供View，比较适合项目初期。
@@ -44,8 +44,19 @@ Configuration
 
 打开配置文件 `config/app.php` 添加应用服务到容器:
 ```php
-Laravel\Crbac\ServiceProvider::class,
+    'name' => '应用名', // 展示的登录和菜单左侧
+    'providers' => [ // laravel-10以内版本使用
+        Laravel\Crbac\ServiceProvider::class,
+    ]
 ```
+
+打开配置文件 `bootstrap/providers.php` 添加应用服务到容器:（laravel-11起使用）
+```php
+    return [ // laravel-11及以上版本使用
+        Laravel\Crbac\ServiceProvider::class,
+    ]
+```
+
 打开配置文件 `config/auth.php` 配置授权模型:
 ```php
     'guards' => [
