@@ -55,7 +55,7 @@
             <td>{{$item->username}}</td>
             <td>{{$item->menuGroup?$item->menuGroup->name:'-'}}</td>
             <td>{{$item->getStatus()}}</td>
-            <td>{{$item->locked_at ? date('Y-m-d H:i:s', $item->locked_at) : '-'}}</td>
+            <td>{{$item->locked_at > time() ? date('Y-m-d H:i:s', $item->locked_at) : '-'}}</td>
             <td>{{$item->created_at}}</td>
             <td>
                 @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif
