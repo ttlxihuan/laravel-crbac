@@ -455,11 +455,12 @@
             size = size || 1024 * 1024; // 1MB分片
             timeout = timeout || 1000 * 120; // 超时时长
             var token = $(':hidden[name=_token]').val(), date = Math.round(new Date().getTime() / 1000);
-            var start = 0, end = size, processNum = 0, split = file.size / size, step = 100 / split, sendNum = Math.ceil(split), no = Math.random(), total = 0;
+            var start = 0, end = size, processNum = 0, split = file.size / size, step = 100 / split, sendNum = Math.ceil(split), no = Math.random(), total = 0, isError = false;
             // 分片上传
             function splitRequest() {
                 if (close) {
-                    error();
+                    if (!isError)
+                        error();
                     return;
                 }
                 while (file.size > start) {
@@ -487,10 +488,8 @@
                     attempt++;
                     if (close || attempt > 3) {
                         // 上传失败了
-                        sendNum--;
-                        if (sendNum <= 0) {
-                            error();
-                        }
+                        isError = close = true;
+                        error();
                         return;
                     }
                     $.ajax({
