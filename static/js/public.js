@@ -378,7 +378,7 @@
                         $.popup.alert('上传处理失败！', 'error', 3);
                         return;
                     }
-                    $.ajax({
+                    $._ajax({
                         url: _this.data('url'),
                         data: _data,
                         dataType: _this.data('type') || 'json',
@@ -397,7 +397,6 @@
         }
         function showResult(json) {
             if (json.status !== 'success') {
-                $.popup.alert(json.message.info, 'error', 3);
                 return;
             }
             function setShow(node, val) {
