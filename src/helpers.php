@@ -243,7 +243,9 @@ if (!function_exists('get_annotations')) {
         // 处理php8+注解
         if (method_exists($reflector, 'getAttributes')) {
             foreach ($annotationClass as $class) {
-                $annotations[$class] = $reflector->getAttributes($class);
+                foreach ($reflector->getAttributes($class) as $ref) {
+                    $annotations[$class][] = $ref->newInstance();
+                }
             }
         }
         // 解析注释注解

@@ -27,7 +27,7 @@ class PowerItem {
 
     /**
      * 获取
-     * @return array
+     * @return string
      */
     public function get() {
         return $this->title;
