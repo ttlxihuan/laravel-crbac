@@ -189,7 +189,8 @@ class PathRouter {
             if ($methods->is(request()->method())) {
                 //路由参数处理
                 $keys = array_keys($route->parameters());
-                $keys = array_slice($keys, array_search('one', $keys));
+                $index = array_search('one', $keys);
+                $keys = $index === false ? [] : array_slice($keys, $index);
                 $setParameters = [];
                 foreach ($method->getParameters() as $num => $parameter) {
                     if (isset($keys[$num], $route->parameters[$keys[$num]])) {

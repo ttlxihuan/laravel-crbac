@@ -168,7 +168,7 @@ class AdminController extends Controller {
             return prompt('缺少有效参数：upload-no', 'error');
         }
         $basepath = storage_path('/upload-tmp');
-        is_dir($basepath) || mkdir($basepath, 0666, true);
+        is_dir($basepath) || mkdir($basepath, 0766, true);
         $filename = md5($file->getClientOriginalName() . $no . auth()->id()) . $ext;
         $fp = fopen($basepath . '/' . $filename, 'cb');
         flock($fp, LOCK_EX | LOCK_NB);
