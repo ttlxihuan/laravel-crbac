@@ -263,7 +263,29 @@
             success = url, url = null;
         }
         if (data.is('form')) {
-            if (!data.validate().form()) {
+            var validate = data.validate();
+            if (!validate.form()) {
+                $.popup.alert('参数验证未通过，请修改表单信息！', 'error', 3).on('close', function () {
+                    try {
+                        var err = validate.errorList[0].element;
+                        if ($.isFunction(err.scrollIntoView)) {
+                            err.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+                        } else {
+                            var rect = err.getBoundingClientRect();
+                            var elementTop = rect.top + window.scrollY;
+                            var elementCenter = elementTop - (window.innerHeight / 2);
+                            // 平滑滚动到元素中心
+                            window.scrollTo({
+                                top: elementCenter,
+                                behavior: 'smooth'
+                            });
+                        }
+                    } catch (e) {
+                    }
+                });
                 return false;
             }
             var fun = data.data('success');
