@@ -9,6 +9,7 @@ namespace Laravel\Crbac\Services\Power;
 use Illuminate\Support\Facades\DB;
 use Laravel\Crbac\Models\Power\MenuLevel;
 use Laravel\Crbac\Models\Power\MenuGroup as MenuGroupModel;
+use Laravel\Crbac\Services\CacheService;
 
 class MenuGroup extends Service {
 
@@ -32,6 +33,8 @@ class MenuGroup extends Service {
             }
             $delete->delete(); //删除不要的数据
             DB::commit();
+            //清理菜单缓存
+            CacheService::clearMenus();
         } catch (\Exception $err) {
             DB::rollBack();
             throw $err;

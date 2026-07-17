@@ -20,6 +20,9 @@ trait RoleRelateEditTrait {
      */
     protected function roleRelateEdit(Model $result, $relateClass, $relationField, $allowAll = true) {
         $roles = request('roles');
+        if ($roles === null) {
+            return; // 未传递 roles 字段，不做任何处理
+        }
         if ($roles === 'all' && $allowAll) {//关联到所有角色
             $role_ids = Role::get(['id'])
                     ->pluck('id')

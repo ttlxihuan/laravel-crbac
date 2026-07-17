@@ -53,7 +53,7 @@ class RoleController extends Controller {
             'name' => 'like',
             'status',
         ];
-        $order = ['created' => 'created_at'];
+        $order = ['created' => 'created_at', 'name' => 'name'];
         $default = ['order' => 'created', 'by' => 'desc'];
         list($lists, $toOrder) = $this->listsSelect(Role::class, $where, $order, $default);
         $description = $this->description;

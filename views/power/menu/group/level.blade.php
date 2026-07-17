@@ -1,101 +1,93 @@
 @extends('public.edit')
 @section('body')
-<div class="alert alert-info py-1">
-    菜单组：<span class="fs-4">{{$item->name}}</span>
-</div>
-<div class="alert alert-danger">选中菜单后编辑按键操作：向上移动（&uarr;）、向下移动（&darr;）、删除（Delete）</div>
-<div class="container-fluid">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light align-items-stretch">
-        <ul class="nav flex-column dropdown-menu">
+<style>
+    .menu-tree { padding: 0; }
+    .menu-tree, .tree-children { list-style: none; margin: 0; padding-left: 0; }
+    .tree-children { padding-left: 24px; border-left: 1px dashed #d1d5db; margin-left: 12px; transition: max-height .25s ease; }
+    .tree-item { margin: 4px 0; }
+    .tree-item.collapsed > .tree-children { display: none; }
+    .tree-item.collapsed > .tree-node .tree-collapse-icon { transform: rotate(-90deg); }
+    .tree-node { display: flex; align-items: center; padding: 6px 10px; border-radius: 6px; background: #fff; border: 1px solid #e5e7eb; transition: all .15s; }
+    .tree-node:hover { border-color: var(--lte-primary); background: #f0fdf4; }
+    .tree-toggle { flex: 1; cursor: pointer; font-size: .9rem; color: #374151; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tree-toggle.has-children { font-weight: 500; }
+    .tree-collapse-btn { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; cursor: pointer; border-radius: 3px; margin-right: 4px; flex-shrink: 0; }
+    .tree-collapse-btn:hover { background: #e5e7eb; }
+    .tree-collapse-icon { display: inline-block; transition: transform .2s; font-size: .65rem; color: #9ca3af; }
+    .tree-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .15s; }
+    .tree-node:hover .tree-actions { opacity: 1; }
+    .tree-add { margin-top: 4px; }
+    .tree-add .btn { font-size: .75rem; padding: 2px 8px; }
+</style>
+<div class="card">
+    <div class="card-header d-flex align-items-center">
+        <i class="fas fa-sitemap me-2"></i>
+        <strong>{{$item->name}}</strong>
+        <span class="text-muted ms-2">— 菜单层级编辑</span>
+        <span class="ms-auto">
+            <a href="javascript:void(0);" class="btn btn-sm btn-outline-secondary" onclick="collapseAll()" title="全部折叠"><i class="fas fa-compress"></i> 折叠</a>
+            <a href="javascript:void(0);" class="btn btn-sm btn-outline-secondary" onclick="expandAll()" title="全部展开"><i class="fas fa-expand"></i> 展开</a>
+        </span>
+    </div>
+    <div class="card-body">
+        <ul class="menu-tree">
             @include('power.menu.group.menus')
-            <li class="nav-item dropdown bg-warning my-1">
-                <span class="nav-link" onclick="addMenu('{{$level}}', this, '0');"  data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}">添加{{$level}}级菜单</span>
+            <li class="tree-item tree-add">
+                <a href="javascript:void(0);" class="btn btn-sm btn-outline-success" onclick="addMenu('{{$level}}', this, '0');" data-ids="{{implode(',',$lists->has(0)?array_pluck($lists[0],$lists[0][0]->getKeyName()):[])}}">
+                    <i class="fas fa-plus"></i> 添加{{$level}}级菜单
+                </a>
             </li>
         </ul>
-    </nav>
+    </div>
 </div>
 <script type="text/javascript">
-    $(function () {
-        $('body').on('click', 'span.dropdown-toggle,span.nav-link', function () {
-            var $this = $(this);
-            if($this.is('span.dropdown-toggle')){
-                var $this = $(this), curr = $this.nextAll('.dropdown-menu').toggleClass('show');
-                $('.dropdown-menu').not(curr).not($this.parents('.dropdown-menu')).removeClass('show');
-                $this.toggleClass('border-info');
-                $('span.dropdown-toggle.border').not($this).removeClass('border-info');
-            }
-            return false;
-        });
-        $(document).on('click', function () {
-            $('span.dropdown-toggle.border').removeClass('border-info');
-        });
-        var handle = {
-            moveUp: function (menu) {
-                var prev = menu.prev();
-                if(prev.size() > 0){
-                    prev.before(menu);
-                }else{
-                    $.popup.alert('已经是最上无法再向上移动', 'error', 1);
-                }
-            },
-            moveDown: function (menu) {
-                var _next = menu.next();
-                if(_next.size() > 0 && !_next.find('span:first').is('span[data-ids]')){
-                    _next.after(menu);
-                }else{
-                    $.popup.alert('已经是最下无法再向上移动', 'error', 1);
-                }
-            },
-            _delete: function (menu) {
-                var ids = getData(menu.nextAll('li').find('span[data-ids]')),
-                        id = menu.find('input:hidden:first').val();
-                menu.remove();
-                $.each(ids, function (k, v) {
-                    if (v == id) {
-                        delete ids[k];
-                    }
-                });
-            }
+    // 折叠/展开
+    function toggleCollapse(el) {
+        $(el).closest('.tree-item').toggleClass('collapsed');
+    }
+    function collapseAll() {
+        $('.tree-item:has(.tree-children .tree-item:not(.tree-add))').addClass('collapsed');
+    }
+    function expandAll() {
+        $('.tree-item.collapsed').removeClass('collapsed');
+    }
+    // 上移/下移
+    function handleMove(btn, direction) {
+        var $item = $(btn).closest('.tree-item');
+        if (direction === 'up') {
+            var $prev = $item.prev('.tree-item:not(.tree-add)');
+            if ($prev.length) $prev.before($item);
+            else $.popup.alert('已经是第一个，无法上移', 'warn', 1);
+        } else {
+            var $next = $item.next('.tree-item:not(.tree-add)');
+            if ($next.length) $next.after($item);
+            else $.popup.alert('已经是最后一个，无法下移', 'warn', 1);
         }
-        $('body').on('keydown', function (event) {
-            var method = null;
-            if (!event.ctrlKey) {
-                switch (event.keyCode) {
-                    case 38: // 向上
-                        method = 'moveUp';
-                        break;
-                    case 40: // 向下
-                        method = 'moveDown';
-                        break;
-                    case 46: // 删除
-                        method = '_delete';
-                        break;
-                    default:
-                        return;
-                }
-                var menu = $('span.dropdown-toggle.border-info:first').parent();
-                if(menu.size() > 0){
-                    handle[method](menu);
-                } else {
-                    $.popup.alert('没有选中菜单！', 'error', 1);
-                }
-            }
-        });
-    });
+    }
+    // 删除
+    function handleDelete(btn) {
+        var $item = $(btn).closest('.tree-item');
+        var $addBtn = $item.siblings('.tree-add').find('[data-ids]');
+        if ($addBtn.length) {
+            var ids = getData($addBtn[0]);
+            var id = $item.data('id').toString();
+            var idx = ids.indexOf(id);
+            if (idx > -1) ids.splice(idx, 1);
+        }
+        $item.remove();
+    }
     var setMenu;
-    //添加菜单
+    // 添加菜单
     function addMenu(level, elem, parent_id) {
         level++;
-        var _$ = $(elem),
-                ids = getData(elem),
-                myWindow = open_window('{{crbac_route("power.menu.select", ["callback"])}}');
+        var ids = getData(elem),
+            myWindow = open_window('{{crbac_route("power.menu.select", ["callback"])}}');
         setMenu = function (id, name) {
             var exist = false;
             ids = getData(elem);
             $.each(ids, function (k, v) {
                 return !(exist = v == id);
             });
-            //判断是否存在
             if (exist) {
                 return myWindow.$.popup.alert('菜单已经存在！');
             }
@@ -106,13 +98,13 @@
             html = html.replace(/\$menu_id/g, id);
             html = html.replace(/\$name/g, name);
             html = html.replace(/\$parent_id/g, parent_id > 0 ? parent_id : id);
-            $(elem).parent().before(html);
+            $(elem).closest('.tree-add').before(html);
         };
         return false;
     }
     function getData(elem) {
         var _$ = $(elem),
-                ids = _$.data('ids');
+            ids = _$.data('ids');
         if (ids === undefined) {
             ids = [];
         } else if (typeof ids !== 'object') {
@@ -125,12 +117,26 @@
     }
 </script>
 <script type="text/html" id="add-menu-html">
-    <li class="nav-item dropdown dropend my-1">
-        <span class="nav-link dropdown-toggle border border-3 rounded" title="$name">$name</span>
-        <input type="hidden" name="level[$level][$parent_id][]" value="$menu_id"/>
-        <ul class="dropdown-menu dropdown-menu-end" data-bs-popper="static">
-            <li class="nav-item dropdown bg-warning my-1">
-                <span class="nav-link" onclick="return addMenu('$levelName', this, '$menu_id');" data-ids="">添加$levelName级菜单</span>
+    <li class="tree-item" data-id="$menu_id">
+        <div class="tree-node">
+            <span class="tree-collapse-btn" onclick="toggleCollapse(this)" title="折叠/展开">
+                <i class="fas fa-chevron-down tree-collapse-icon"></i>
+            </span>
+            <span class="tree-toggle" title="$name">
+                <i class="fas fa-file-alt me-1"></i>$name
+            </span>
+            <input type="hidden" name="level[$level][$parent_id][]" value="$menu_id"/>
+            <span class="tree-actions" style="opacity:1;">
+                <a href="javascript:void(0);" class="btn btn-sm btn-outline-secondary" title="上移" onclick="handleMove(this,'up')"><i class="fas fa-arrow-up"></i></a>
+                <a href="javascript:void(0);" class="btn btn-sm btn-outline-secondary" title="下移" onclick="handleMove(this,'down')"><i class="fas fa-arrow-down"></i></a>
+                <a href="javascript:void(0);" class="btn btn-sm btn-outline-danger" title="删除" onclick="handleDelete(this)"><i class="fas fa-trash"></i></a>
+            </span>
+        </div>
+        <ul class="tree-children">
+            <li class="tree-item tree-add">
+                <a href="javascript:void(0);" class="btn btn-sm btn-outline-success" onclick="return addMenu('$levelName', this, '$menu_id');" data-ids="">
+                    <i class="fas fa-plus"></i> 添加$levelName级菜单
+                </a>
             </li>
         </ul>
     </li>

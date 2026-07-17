@@ -8,6 +8,7 @@ namespace Laravel\Crbac\Models\Power;
 
 use Laravel\Crbac\Models\Model;
 use Illuminate\Contracts\Auth\Authenticatable as UserContract;
+use Laravel\Crbac\Services\CacheService;
 
 class Item extends Model {
 
@@ -78,8 +79,15 @@ class Item extends Model {
      */
     public static function allow(UserContract $admin, string $code, bool $noneDefault = false) {
         static $allows = [];
+        // 第一层：请求级静态缓存
         if (isset($allows[$admin->getKey()][$code])) {
             return $allows[$admin->getKey()][$code];
+        }
+        // 第二层：跨请求缓存（含版本号）
+        $cacheKey = CacheService::permKey($admin->getKey()) . '.' . $code;
+        $cached = CacheService::get($cacheKey);
+        if ($cached !== null) {
+            return $allows[$admin->getKey()][$code] = $cached;
         }
         $item = static::where('code', '=', $code)->first();
         if (empty($item) || $item->status !== 'enable') {//不存在或禁用返回默认值
@@ -93,6 +101,8 @@ class Item extends Model {
                             })
                             ->count() ? $item : false;
         }
+        // 写入跨请求缓存
+        CacheService::put($cacheKey, $allow, 3600);
         return $allows[$admin->getKey()][$code] = $allow;
     }
 

@@ -60,7 +60,7 @@
             <th width="80">请求类型</th>
             <th width="80">路由可用</th>
             <th width="80">权限状态</th>
-            <th width="150">操作</th>
+            <th width="110">操作</th>
         </tr>
     </thead>
     <tbody>
@@ -80,8 +80,8 @@
             </td>
             <td>
                 @if(!$item->item)
-                @if(isControllerPower('add'))<a href="{{crbac_route('.add')}}?route={{$item->getKey()}}" title="添加权限项">到权限项</a>@endif
-                @if(isPower('Laravel\Crbac\Controllers\Power\MenuController@add'))<a href="{{crbac_route('power.menu.add')}}?route={{$item->getKey()}}" title="添加菜单">到菜单</a>@endif
+                @if(isControllerPower('add'))<a href="{{crbac_route('.add')}}?route={{$item->getKey()}}" title="添加权限项" class="btn btn-sm btn-outline-primary"><i class="fas fa-lock"></i></a>@endif
+                @if(isPower('Laravel\Crbac\Controllers\Power\MenuController@add'))<a href="{{crbac_route('power.menu.add')}}?route={{$item->getKey()}}" title="添加菜单" class="btn btn-sm btn-outline-info"><i class="fas fa-list"></i></a>@endif
                 @else
                 -
                 @endif

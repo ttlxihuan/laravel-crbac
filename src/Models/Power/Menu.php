@@ -15,12 +15,14 @@ class Menu extends Model {
         'name' => 'required|between:3,30|unique:power_menu', // varchar(35) not null comment '菜单名',
         'url' => 'required|between:1,55', // varchar(60) not null comment '链接地址',
         'power_item_id' => 'exists:power_item,id', // int unsigned not null default 0 comment '关联权限项ID',
+        'icon' => 'nullable|max:50', // varchar(50) not null default 'fa-circle' comment '菜单图标class',
         'comment' => 'required|between:1,955', //  varchar(1000) not null default '' comment '备注说明',
     ];
     public static $_validator_description = [//验证字段说明
         'name' => '菜单名', // varchar(35) not null comment '菜单名',
         'url' => '链接地址', // varchar(60) not null comment '链接地址',
         'power_item_id' => '权限项', // int unsigned not null default 0 comment '关联权限项ID',
+        'icon' => '菜单图标', // varchar(50) not null default 'fa-circle' comment '菜单图标class',
         'comment' => '备注说明', // varchar(1000) not null default '' comment '备注说明',
     ];
     public static $_validator_messages = []; //验证统一说明

@@ -19,6 +19,7 @@ class TablePowerRoleAdmin extends Migration {
         $table->unsignedInteger('power_role_id')->notnull()->comment('角色ID');
         $table->unsignedInteger('power_admin_id')->notnull()->comment('管理员ID');
         $table->unique(['power_role_id', 'power_admin_id'], 'role_admin');
+        $table->index('power_admin_id');
     }
 
 }

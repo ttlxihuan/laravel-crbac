@@ -1,9 +1,22 @@
 @if(isset($menus[$menu->level_id]))
-<ul class="dropdown-menu dropdown-menu-end"@if(isset($is_child)) data-bs-popper="static"@endif>
+@php $currentDepth = isset($depth) ? $depth : 2; @endphp
+<ul class="nav nav-treeview">
     @foreach($menus[$menu->level_id] as $menu)
-    <li class="nav-item{{isset($menus[$menu->level_id])?' dropdown dropend':''}}">
-        <a class="nav-link{{isset($menus[$menu->level_id])?' dropdown-toggle':''}}{{in_array($menu->getKey(), $crumbs_ids)?' active':''}}" title="{{$menu['comment']}}" href="{{$menu['url']}}">{{$menu['name']}}</a>
-        @include('public.sub_menu', ['is_child'=>true])
+    @php $hasChild = isset($menus[$menu->level_id]); @endphp
+    @php $isActive = in_array($menu->getKey(), $crumbs_ids); @endphp
+    <li class="nav-item menu-level-{{$currentDepth}}{{$hasChild && $isActive ? ' menu-open' : ''}}">
+        <a href="{{$menu['url']}}" class="nav-link{{$isActive ? ' active' : ''}}" title="{{$menu['comment']}}">
+            <i class="nav-icon fas {{ $menu->icon ?? 'fa-circle' }}"></i>
+            <p>
+                {{$menu['name']}}
+                @if($hasChild)
+                <i class="right fas fa-angle-left"></i>
+                @endif
+            </p>
+        </a>
+        @if($hasChild)
+        @include('public.sub_menu', ['depth' => $currentDepth + 1])
+        @endif
     </li>
     @endforeach
 </ul>

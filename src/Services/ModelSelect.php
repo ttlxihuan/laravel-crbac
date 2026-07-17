@@ -197,7 +197,7 @@ class ModelSelect {
         if ($this->builder->getQuery()->groups) {
             $BuilderPage = clone $this->builder;
             $BuilderPage->getQuery()->orders = null; //去掉无意义的排序
-            $total = \DB::Connection($this->builder->getModel()->getConnectionName())
+            $total = \DB::connection($this->builder->getModel()->getConnectionName())
                             ->selectOne('select count(1) as num from (' . $BuilderPage->toSql() . ') as t', $BuilderPage->getBindings())->num; //取出总记录数
             //兼容老板框架
             if (method_exists($this->builder->getQuery()->getConnection(), 'getPaginator')) {

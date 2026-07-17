@@ -10,6 +10,7 @@ use Laravel\Crbac\Models\Model;
 use Laravel\Crbac\Models\Power\RoleAdmin;
 use Laravel\Crbac\Services\Service as BaseService;
 use Laravel\Crbac\Models\Power\Admin as AdminModel;
+use Laravel\Crbac\Services\CacheService;
 
 class Admin extends Service {
 
@@ -37,6 +38,8 @@ class Admin extends Service {
      */
     protected function editAfter(Model $result, BaseService $service) {
         $this->roleRelateEdit($result, RoleAdmin::class, 'power_admin_id', false);
+        CacheService::clearPermission($result->getKey());
+        CacheService::clearMenus($result->getKey());
     }
 
 }

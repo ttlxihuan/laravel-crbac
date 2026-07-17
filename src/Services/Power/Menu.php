@@ -11,9 +11,34 @@ use Laravel\Crbac\Models\Power\MenuGroup;
 use Laravel\Crbac\Models\Power\MenuLevel;
 use Laravel\Crbac\Models\Power\Menu as MenuModel;
 use Laravel\Crbac\Models\Power\Item as ItemModel;
+use Laravel\Crbac\Services\CacheService;
 use Laravel\Crbac\Services\Service as BaseService;
 
 class Menu extends Service {
+
+    /**
+     * 预设菜单图标映射（菜单名关键词 => 图标class）
+     */
+    const ICON_PRESETS = [
+        '管理员' => 'fa-users',
+        '账号' => 'fa-users',
+        '用户' => 'fa-user',
+        '角色' => 'fa-user-shield',
+        '权限' => 'fa-key',
+        '菜单' => 'fa-bars',
+        '配置' => 'fa-cog',
+        '设置' => 'fa-cogs',
+        '日志' => 'fa-history',
+        '首页' => 'fa-home',
+        '仪表' => 'fa-tachometer-alt',
+        '系统' => 'fa-server',
+        '文件' => 'fa-folder',
+        '数据' => 'fa-database',
+        '路由' => 'fa-route',
+        '分组' => 'fa-layer-group',
+        '通知' => 'fa-bell',
+        '消息' => 'fa-envelope',
+    ];
 
     /**
      * 修改数据前处理，菜单权限项处理
@@ -23,6 +48,16 @@ class Menu extends Service {
      * @return mixed
      */
     protected function editBefore(&$data, BaseService $service, $item) {
+        // 自动分配默认图标（仅新增且未手动选择时）
+        if (!$item && empty($data['icon']) || ($data['icon'] ?? '') === 'fa-circle') {
+            $name = $data['name'] ?? request('name', '');
+            foreach (self::ICON_PRESETS as $keyword => $icon) {
+                if (mb_strpos($name, $keyword) !== false) {
+                    $data['icon'] = $icon;
+                    break;
+                }
+            }
+        }
         $code = request('code');
         if (!$code) {
             $data['power_item_id'] = 0;
@@ -121,6 +156,8 @@ class Menu extends Service {
             $this->deleteLevel($group_id, $parent_ids);
             MenuLevel::where('id', $parent_ids)->delete();
         }
+        //清理菜单缓存
+        CacheService::clearMenus();
     }
 
     /**

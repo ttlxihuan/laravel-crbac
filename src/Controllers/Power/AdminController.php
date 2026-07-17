@@ -39,6 +39,8 @@ class AdminController extends Controller {
             if ($admin) {
                 if ($admin->status === 'lock' && $admin->locked_at < time()) {
                     $admin->status = 'enable';
+                    $admin->abnormal = 0;
+                    $admin->save();
                 }
                 if ($res && $admin->status === 'enable') {
                     $admin->abnormal = 0;
@@ -136,7 +138,7 @@ class AdminController extends Controller {
             'username' => 'like',
             'status',
         ];
-        $order = ['created' => 'created_at'];
+        $order = ['created' => 'created_at', 'username' => 'username', 'realname' => 'realname', 'locked' => 'locked_at'];
         $default = ['order' => 'created', 'by' => 'desc'];
         list($lists, $toOrder) = $this->listsSelect(auth_model(), $where, $order, $default, function ($builder) {
             $builder->with('menuGroup');
@@ -171,7 +173,6 @@ class AdminController extends Controller {
         is_dir($basepath) || mkdir($basepath, 0766, true);
         $filename = md5($file->getClientOriginalName() . $no . auth()->id()) . $ext;
         $fp = fopen($basepath . '/' . $filename, 'cb');
-        flock($fp, LOCK_EX | LOCK_NB);
         fseek($fp, $index, SEEK_SET);
         fwrite($fp, file_get_contents($file->getPathname()));
         fclose($fp);

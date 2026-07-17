@@ -30,7 +30,7 @@
             <th width="200">菜单组名</th>
             <th>备注说明</th>
             <th width="170" class="{{$toOrder('created',false)}}" onclick="location.href ='{{$toOrder('created')}}'">创建时间</th>
-            <th width="170">操作</th>
+            <th width="200">操作</th>
         </tr>
     </thead>
     <tbody>
@@ -42,12 +42,12 @@
             <td>{{$item->created_at}}</td>
             <td>
                 @if(isAction('lists'))
-                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑{{$description}}">编辑</a>@endif
-                @if(isControllerPower('menus'))<a href="{{crbac_route('.menus', [$item->getKey()])}}" title="编辑菜单组下菜单层级关系">菜单</a>@endif
-                @if(isControllerPower('copy'))<a href="{{crbac_route('.copy', [$item->getKey()])}}" title="复制菜单组下关系">复制</a>@endif
-                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete', [$item->getKey()])}}" title="删除{{$description}}" class="confirm">删除</a>@endif
+                @if(isControllerPower('edit'))<a href="{{crbac_route('.edit', [$item->getKey()])}}" title="编辑{{$description}}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>@endif
+                @if(isControllerPower('menus'))<a href="{{crbac_route('.menus', [$item->getKey()])}}" title="编辑菜单组下菜单层级关系" class="btn btn-sm btn-outline-info"><i class="fas fa-bars"></i></a>@endif
+                @if(isControllerPower('copy'))<a href="{{crbac_route('.copy', [$item->getKey()])}}" title="复制菜单组下关系" class="btn btn-sm btn-outline-secondary"><i class="fas fa-copy"></i></a>@endif
+                @if(isControllerPower('delete'))<a href="{{crbac_route('.delete', [$item->getKey()])}}" title="删除{{$description}}" class="btn btn-sm btn-outline-danger confirm"><i class="fas fa-trash"></i></a>@endif
                 @else
-                @if(isControllerPower('pasted'))<a href="{{crbac_route('.pasted', [$copy->getKey(), $item->getKey()])}}" title="粘贴菜单组关系去编辑">粘贴</a>@endif
+                @if(isControllerPower('pasted'))<a href="{{crbac_route('.pasted', [$copy->getKey(), $item->getKey()])}}" title="粘贴菜单组关系去编辑" class="btn btn-sm btn-outline-success"><i class="fas fa-paste"></i></a>@endif
                 @endif
             </td>
         </tr>

@@ -56,7 +56,7 @@ $uses_confirm = true;
             <th>帐号</th>
             <th>状态</th>
             <th width="170">创建时间</th>
-            <th width="180">操作</th>
+            <th width="80">操作</th>
         </tr>
     </thead>
     <tbody>
@@ -69,9 +69,9 @@ $uses_confirm = true;
             <td>{{$item->created_at}}</td>
             <td>
                 @if($type==='bind')
-                @if(isControllerPower('removeAdmin'))<a href="{{crbac_route('power.role.remove-admin',[$role->getKey(), $item->getKey()])}}" title="移除当前角色" data-confirm="确定把{{$item->realname}}移除角色吗？" class="confirm">移除</a>@endif
+                @if(isControllerPower('removeAdmin'))<a href="{{crbac_route('power.role.remove-admin',[$role->getKey(), $item->getKey()])}}" title="移除当前角色" data-confirm="确定把{{$item->realname}}移除角色吗？" class="btn btn-sm btn-outline-danger confirm"><i class="fas fa-trash"></i></a>@endif
                 @else
-                @if(isControllerPower('addAdmin'))<a href="{{crbac_route('power.role.add-admin',[$role->getKey(), $item->getKey()])}}" title="添加到当前角色" data-confirm="确定把{{$item->realname}}添加到角色吗？" class="confirm">添加</a>@endif
+                @if(isControllerPower('addAdmin'))<a href="{{crbac_route('power.role.add-admin',[$role->getKey(), $item->getKey()])}}" title="添加到当前角色" data-confirm="确定把{{$item->realname}}添加到角色吗？" class="btn btn-sm btn-outline-danger confirm"><i class="fas fa-plus"></i></a>@endif
                 @endif
             </td>
         </tr>

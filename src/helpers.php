@@ -207,9 +207,8 @@ if (!function_exists('crbac_route')) {
                 $newParameters['controller'] = implode('/', array_slice($tArray, $tKey + 1));
             }
             $parameters = array_merge($newParameters, $parameters);
-            $name = $route->getName();
         }
-        return route($name, $parameters, $absolute);
+        return route($routeName, $parameters, $absolute);
     }
 
 }
@@ -403,6 +402,20 @@ if (!function_exists('studly_case')) {
      */
     function studly_case($value) {
         return Str::studly($value);
+    }
+
+}
+
+if (!function_exists('crbac_config')) {
+
+    /**
+     * 获取系统配置值
+     * @param string $key
+     * @param mixed $default
+     * @return mixed
+     */
+    function crbac_config($key, $default = null) {
+        return app('crbac.config')->get($key, $default);
     }
 
 }

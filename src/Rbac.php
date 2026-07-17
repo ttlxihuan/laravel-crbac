@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Container\Container;
 use Laravel\Crbac\Models\Power\Menu;
 use Laravel\Crbac\Models\Power\Item;
+use Laravel\Crbac\Services\CacheService;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Contracts\Auth\Authenticatable as UserContract;
 
@@ -64,8 +65,15 @@ class Rbac {
         if (is_array($this->menus)) {
             return $this->menus;
         }
-        $menus = Menu::menus($this->admin); //取出用户所有菜单
-        list($this->menus, $this->crumbs) = $this->group($menus);
+        // 缓存原始菜单数据（DB查询结果），避免重复查库
+        $cacheKey = CacheService::menuKey($this->admin->getKey());
+        $lists = CacheService::get($cacheKey);
+        if ($lists === null) {
+            $lists = Menu::menus($this->admin);
+            CacheService::put($cacheKey, $lists, 1800);
+        }
+        // 每次请求重新根据当前URL计算菜单结构和面包屑
+        list($this->menus, $this->crumbs) = $this->group($lists);
         return $this->menus;
     }
 
@@ -117,10 +125,14 @@ class Rbac {
             $uses = currentRouteUses();
         }
         $url = $menu['url'];
-        if ($menu['url'] && strpos('?', $menu['url']) !== false) {
-            $url = strstr('?', $url, true);
+        if ($menu['url'] && strpos($menu['url'], '?') !== false) {
+            $url = strstr($menu['url'], '?', true);
         }
-        return Request::is(trim($url, '/')) && (empty($menu['item']) || strcasecmp($menu['item']['code'], $uses) === 0);
+        $url = trim($url, '/');
+        if ($url === '') {
+            $url = '/';
+        }
+        return Request::is($url) && (empty($menu['item']) || strcasecmp($menu['item']['code'], $uses) === 0);
     }
 
     /**
@@ -150,7 +162,14 @@ class Rbac {
             $referer = urldecode((string) URL::previous());
             $referer = $referer ? parse_url($referer, PHP_URL_PATH) : '/';
         }
-        return $referer && Str::is($menu['url'], $referer);
+        if (!$referer || !$menu['url']) {
+            return false;
+        }
+        $menuUrl = $menu['url'];
+        if (strpos($menuUrl, '?') !== false) {
+            $menuUrl = strstr($menuUrl, '?', true);
+        }
+        return Str::is($menuUrl, $referer);
     }
 
     /**
@@ -163,6 +182,7 @@ class Rbac {
      */
     private function parseCrumbs($lists, $action_menu, $controller_menu, $referer_menu) {
         $lists = $lists->keyBy('level_id');
+        $menu = null;
         //优先处理当前action
         $parents_level = [];
         if (count($action_menu)) {//有当前处理action

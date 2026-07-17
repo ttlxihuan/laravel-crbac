@@ -52,7 +52,7 @@
                     var update_old_{{$index}} = {!!$item->old_data!!};
                     var update_new_{{$index}} = {!!$item->new_data!!};
                 </script>
-                <a href="javascript:void(0);" data-index="{{$index}}" title="查看变动数据">查看数据</a>
+                <a href="javascript:void(0);" data-index="{{$index}}" title="查看变动数据" class="btn btn-sm btn-outline-info"><i class="fas fa-eye"></i></a>
             </td>
         </tr>
         @endforeach

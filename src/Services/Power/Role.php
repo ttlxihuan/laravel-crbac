@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Laravel\Crbac\Models\Power\Item;
 use Laravel\Crbac\Models\Power\RoleItem;
 use Laravel\Crbac\Models\Power\Role as RoleModel;
+use Laravel\Crbac\Services\CacheService;
 
 class Role extends Service {
 
@@ -45,6 +46,7 @@ class Role extends Service {
                 RoleItem::insert($inserts);
             }
             DB::commit();
+            CacheService::clearPermission();
         } catch (\Exception $err) {
             DB::rollBack();
             throw $err;

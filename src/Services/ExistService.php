@@ -42,6 +42,7 @@ class ExistService extends Service {
             'crbac/menu/group' => \Laravel\Crbac\Models\Power\MenuGroup::class,
             'crbac/role' => \Laravel\Crbac\Models\Power\Role::class,
             'crbac/admin' => \Laravel\Crbac\Models\Power\Admin::class,
+            'crbac/config' => \Laravel\Crbac\Models\Power\Config::class,
         ];
         if ($name) {
             return array_search($model, $models);

@@ -24,8 +24,8 @@ class TablePowerAdmin extends Migration {
         $table->string('email', 64)->notnull()->comment('邮箱名');
         $table->string('remember_token', 64)->notnull()->default('')->comment('记住登录');
         $table->unsignedInteger('power_menu_group_id')->notnull()->comment('菜单组ID');
-        $table->unsignedInteger('abnormal', 0)->notnull()->comment('异常登录次数');
-        $table->unsignedInteger('locked_at', 0)->notnull()->comment('锁定登录时间');
+        $table->unsignedInteger('abnormal')->notnull()->default(0)->comment('异常登录次数');
+        $table->unsignedInteger('locked_at')->notnull()->default(0)->comment('锁定登录时间');
         $table->enum('status', ['disable', 'enable', 'lock'])->notnull()->default('enable')->comment('状态，enable为启用');
         $table->unique('username');
     }

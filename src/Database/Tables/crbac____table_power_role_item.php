@@ -19,6 +19,7 @@ class TablePowerRoleItem extends Migration {
         $table->unsignedInteger('power_role_id')->notnull()->comment('角色ID');
         $table->unsignedInteger('power_item_id')->notnull()->comment('权限项ID');
         $table->unique(['power_role_id', 'power_item_id'], 'role_item');
+        $table->index('power_item_id');
     }
 
 }

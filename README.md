@@ -118,6 +118,8 @@ table
  power_role_admin   | 角色与管理员关联表
  power_role_item    | 角色与权限项关联表
  power_route        | 路由记录表，方便添加权限项。
+ power_admin        | 管理员表
+ power_config       | 系统配置项表，用于外部添加系统配置项
 
 use
 -------------
@@ -310,6 +312,12 @@ class TestController extends Controller {
         return prompt(['url' => '/static/images/' . $file->getBasename()]);
     }
 }
+```
+
+#### 系统配置项
+可以添加常用系统配置项，方便管理系统信息。通过后台添加配置项，在业务代码中提取使用即可。
+```php
+crbac_config($key, $default);
 ```
 
 attention

@@ -15,6 +15,23 @@ $menuGroups = MenuGroup::all();
     </div>
 </div>
 <div class="row my-3">
+    <label class="col-sm-2 col-form-label text-end bg-light"> 菜单图标</label>
+    <div class="col-sm-6">
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas {{ $item ? $item->icon : 'fa-circle' }}" id="icon-preview"></i></span>
+            <input type="text" class="form-control" name="icon" id="icon-input" placeholder="图标class名，如 fa-home" value="{{ $item ? $item->icon : 'fa-circle' }}" readonly="readonly"/>
+            <button class="btn btn-outline-secondary" type="button" id="icon-picker-toggle">选择图标</button>
+        </div>
+        <div id="icon-picker-panel" style="display:none; margin-top:10px; padding:10px; border:1px solid #e5e7eb; border-radius:6px; background:#fff; max-height:300px; overflow-y:auto;">
+            <div class="mb-2">
+                <input type="text" class="form-control form-control-sm" id="icon-search" placeholder="搜索图标名..."/>
+            </div>
+            <div id="icon-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(42px,1fr)); gap:6px;">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row my-3">
     <label class="col-sm-2 col-form-label text-end bg-light"><b class="text-danger">*</b> URL地址</label>
     <div class="col-sm-4">
         <div class="position-relative">
@@ -50,7 +67,7 @@ $menuGroups = MenuGroup::all();
         @if($item && $item->groups)
         @foreach($item->groups as $key=>$_group)
         <div class="input-group mb-3">
-            <select class="menu-group-select">
+            <select class="form-select">
                 <option value="">--请选择组--</option>
                 @foreach($menuGroups as $group)
                 <option value="{{$group->getKey()}}"<?php if ($_group->getKey() == $group->getKey()) { ?> selected="selected"<?php } ?>>{{$group->name}}</option>
@@ -70,7 +87,7 @@ $menuGroups = MenuGroup::all();
             ?>
             <!--每级菜单显示-->
             @foreach(array_reverse($levels,true) as $select_id=>$menus)
-            <select class="menu-level-select" data-groupid="{{$_group->getKey()}}">
+            <select class="menu-level-select form-select" data-groupid="{{$_group->getKey()}}">
                 <option value="">--这级显示--</option>
                 @foreach($menus as $menu)
                 <option value="{{$menu->level_id}}"<?php if ($menu->level_id == $select_id) { ?> selected="selected"<?php } ?>>{{$menu->name}}</option>
@@ -82,7 +99,7 @@ $menuGroups = MenuGroup::all();
         @endforeach
         @endif
         <div class="input-group mb-3">
-            <select class="menu-group-select">
+            <select class="form-select">
                 <option value="">--请选择组--</option>
                 @foreach($menuGroups as $group)
                 <option value="{{$group->getKey()}}">{{$group->name}}</option>
@@ -121,7 +138,7 @@ $menuGroups = MenuGroup::all();
             dataType: 'json',
             success: function (json) {
                 if (json.status === 'success') {
-                    var select = $('<select class="menu-level-select" data-groupid="' + group_id + '"><option value="">--这级显示--</option></select>');
+                    var select = $('<select class="menu-level-select form-select" data-groupid="' + group_id + '"><option value="">--这级显示--</option></select>');
                     //添加选项
                     $.each(json.message.options, function (k, v) {
                         select.append('<option value="' + v.id + '">' + v.name + '</option>');
@@ -148,7 +165,7 @@ $menuGroups = MenuGroup::all();
         updateSelectName();
     });
     //菜单组选择处理
-    $(document).on('change focus', 'select.menu-group-select,select.menu-level-select', function (event) {
+    $(document).on('change focus', 'select.form-select,select.menu-level-select', function (event) {
         if (event.type === 'change' || (this.value > 0 && $(this).nextAll('select.menu-level-select').length <= 0)) {
             getMenuLevel($(this));
         }
@@ -161,7 +178,7 @@ $menuGroups = MenuGroup::all();
         }
     });
     $('#add-menu-group').click(function () {
-        var select = $(this).parent().prev('div.input-group').find('select.menu-group-select,:button.remove-menu-group').clone(true);
+        var select = $(this).parent().prev('div.input-group').find('select.form-select,:button.remove-menu-group').clone(true);
         var div = $('<div class="input-group mb-3"></div>').append(select);
         $(this).parent().before(div);
     });
@@ -181,5 +198,47 @@ $menuGroups = MenuGroup::all();
             this.disabled = true;
         });
 <?php } ?>
+    // 图标选择器
+    var iconList = [];
+    if(document.styleSheets){
+        for (var i = 0; i < document.styleSheets.length; i++) {
+            var styleSheet = document.styleSheets[i];
+            if (/fontawesome/.test(styleSheet.href) && styleSheet.cssRules.length > 0) {
+                for (var j = 0; j < styleSheet.cssRules.length; j++) {
+                    var cssRule = styleSheet.cssRules[j];
+                    if (/^\.fa-[^:]+::before/.test(cssRule.selectorText)) {
+                        iconList.push(cssRule.selectorText.match(/\.(fa-[^:]+)::before/)[1]);
+                    }
+                }
+            }
+        }
+    }
+    function renderIcons(filter) {
+        var html = '';
+        $.each(iconList, function(i, icon) {
+            if (filter && icon.indexOf(filter) === -1) return;
+            var active = ($('#icon-input').val() === icon) ? 'background:#d1fae5;border-color:#10b981;' : '';
+            html += '<div class="icon-item text-center" data-icon="' + icon + '" style="cursor:pointer;padding:8px;border:1px solid #e5e7eb;border-radius:4px;' + active + '" title="' + icon + '"><i class="fas ' + icon + '"></i></div>';
+        });
+        $('#icon-grid').html(html);
+    }
+    $('#icon-picker-toggle').click(function() {
+        var panel = $('#icon-picker-panel');
+        if (panel.is(':visible')) {
+            panel.slideUp(150);
+        } else {
+            renderIcons('');
+            panel.slideDown(150);
+        }
+    });
+    $('#icon-search').on('input', function() {
+        renderIcons($(this).val().toLowerCase());
+    });
+    $(document).on('click', '.icon-item', function() {
+        var icon = $(this).data('icon');
+        $('#icon-input').val(icon);
+        $('#icon-preview').attr('class', 'fas ' + icon);
+        renderIcons($('#icon-search').val());
+    });
 </script>
 @stop

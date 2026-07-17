@@ -7,7 +7,7 @@
     <table class="table table-sm table-striped table-hover table-bordered">
         <thead>
             <tr class="table-secondary">
-                <th width="120">
+                <th width="140">
                     权限组
                 </th>
                 <th>菜单权限项</th>
@@ -19,8 +19,8 @@
             @if($lists->has($group->getKey()))
             <tr>
                 <td>
-                    <input type="checkbox" class="all-checked"/>
-                    {{$group->name}}
+                    <input type="checkbox" class="all-checked" id="power_group_{{$group->getKey()}}"/>
+                    <label class="form-check-label" for="power_group_{{$group->getKey()}}">{{$group->name}}</label>
                 </td>
                 <td>
                     <div class="row m-0">
@@ -38,7 +38,7 @@
                     <div class="row m-0">
                         @foreach($lists[$group->getKey()] as $item)
                         @if(!$item->is_menu)
-                        <div class="form-check form-check-inline col-2" title="{{$item->comment}}">
+                        <div class="form-check form-check-inline col-3 m-0" title="{{$item->comment}}">
                             <input class="form-check-input" name="items[]" value="{{$item->getKey()}}" type="checkbox" id="power_item_{{$item->getKey()}}"<?php if (in_array($item->getKey(), $items)) { ?> checked="checked"<?php } ?>>
                             <label class="form-check-label" for="power_item_{{$item->getKey()}}">
                                 {{$item->name}}

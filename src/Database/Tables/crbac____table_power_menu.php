@@ -17,6 +17,7 @@ class TablePowerMenu extends Migration {
         $table->string('name', 40)->notnull()->comment('菜单名');
         $table->string('url', 100)->notnull()->comment('路由地址串');
         $table->unsignedInteger('power_item_id')->notnull()->default(0)->comment('权限项ID');
+        $table->string('icon', 50)->notnull()->default('fa-circle')->comment('菜单图标class');
         $table->string('comment', 500)->notnull()->default('')->comment('备注说明');
     }
 

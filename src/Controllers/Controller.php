@@ -32,7 +32,8 @@ abstract class Controller extends BaseController {
      */
     public function __construct() {
         // 添加内置视图目录
-        view()->addLocation(realpath(__DIR__ . '/../../views'));
+        view()->addLocation($path = realpath(__DIR__ . '/../../views'));
+        View::addNamespace('power', $path);
         //分页定义
         if (method_exists(Paginator::class, 'presenter')) {
             Paginator::presenter(function ($paginator) {

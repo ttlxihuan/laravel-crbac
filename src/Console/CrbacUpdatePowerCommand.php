@@ -12,8 +12,7 @@ use Laravel\Crbac\PathRouter;
 use Illuminate\Console\Command;
 use \Laravel\Crbac\Annotation\{
     PowerMenu,
-    PowerItem,
-    Request\Methods
+    PowerItem
 };
 use Illuminate\Support\Facades\DB;
 use Laravel\Crbac\Models\Power\Role;

@@ -23,6 +23,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $this->app->singleton('crbac', function ($app) {// 取菜单，判断是否有权限
             return new Rbac($app);
         });
+        $this->app->singleton('crbac.config', function ($app) {
+            return new \Laravel\Crbac\Services\Power\Config();
+        });
         $this->app['events']->listen('auth.login', function ($admin) {
             Crbac::setAdmin($admin);
         });
@@ -165,7 +168,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
                 break;
             case 'static':
                 $file = __DIR__ . "/../static/$controllerParam.$actionParam";
-                $types = ['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png', 'gif' => 'image/gif'];
+                $types = ['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png', 'gif' => 'image/gif', 'woff2' => 'font/woff2', 'woff' => 'font/woff', 'ttf' => 'font/ttf'];
                 if (file_exists($file) && isset($types[$actionParam])) {
                     $contentType = $types[$actionParam];
                     $action = [
@@ -201,6 +204,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider {
         $this->app->singleton('crbac.power', function () {
             return new Console\CrbacUpdatePowerCommand();
         });
-        $this->commands('crbac.table', 'crbac.seeder', 'crbac.lang', 'crbac.power');
+        $this->app->singleton('crbac.cache', function () {
+            return new Console\CrbacCacheCommand();
+        });
+        $this->commands('crbac.table', 'crbac.seeder', 'crbac.lang', 'crbac.power', 'crbac.cache');
     }
 }

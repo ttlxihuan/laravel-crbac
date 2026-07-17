@@ -8,6 +8,7 @@ namespace Laravel\Crbac\Services\Power;
 
 use Laravel\Crbac\Models\Model;
 use Laravel\Crbac\Models\Power\RoleItem;
+use Laravel\Crbac\Services\CacheService;
 use Laravel\Crbac\Services\Service as BaseService;
 
 class Item extends Service {
@@ -21,6 +22,8 @@ class Item extends Service {
      */
     protected function editAfter(Model $result, BaseService $service) {
         $this->roleRelateEdit($result, RoleItem::class, 'power_item_id');
+        //清理权限缓存
+        CacheService::clearPermission();
     }
 
 }
